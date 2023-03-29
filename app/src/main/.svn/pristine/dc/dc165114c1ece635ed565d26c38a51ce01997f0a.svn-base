@@ -1,0 +1,417 @@
+package com.softigress.magicsigns.Activities.MainActivity;
+
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.os.Vibrator;
+import android.widget.Toast;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.softigress.magicsigns.Activities.AdActivity.VideoAdActivity;
+import com.softigress.magicsigns.Activities._base.BaseSurfaceActivity;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns._system.Audios;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.Authentication.AuthManager;
+import com.softigress.magicsigns._system.FireBase.DataBase.DataBaseManager;
+import com.softigress.magicsigns._system.FireBase.DataBase.IUserVideoCountsListener;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserScoreInfo;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserVideoCount;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.RemoteConfigManager;
+import com.softigress.magicsigns._system.FireBase.Storage.DownloadQueue.DownloadQueue;
+import com.softigress.magicsigns._system.FireBase.Storage.StorageManager;
+import com.softigress.magicsigns._system.MusicPlayer;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Settings.SettingsManager;
+import com.softigress.magicsigns._system.Utils.AdUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class MainActivity extends BaseSurfaceActivity {
+
+    //public static final int REQUEST_VIDEO_REWARD = 1001;
+    public static final int REQUEST_SHARE_LINK = 2001;
+    public static final int REQUEST_SHARE_SCREENSHOT = 2002;
+
+    // AdMob ads
+    private AdView mAdView; // вью баннера
+    private InterstitialAd mInterstitialAd; // межстраничное объявление
+
+    private Context context;
+    private MainActivityGroups mainActivityGroups;
+
+    public MainActivity() {
+        super(R.layout.activity_main);
+    }
+
+    @Override
+    public synchronized void onCreated() {
+        super.onCreated();
+        int step = 0;
+        try {
+            //Utils.resources = getResources(); // раскомментировать, чтобы отображать Bitmap на экране загрузки
+            Utils.assetManager = getAssets();
+            step = 1;
+            TextUtils.loadTypefaces();
+
+            // Activity groups
+            step = 3;
+            if (!CurrentSettings.isTestOpenGL)
+                mainActivityGroups = new MainActivityGroups(this);
+
+        } catch (Throwable t) {
+            Utils.CrashReport("MainActivity.onCreated [" + step + "]", t);
+        }
+    }
+
+    @Override
+    public synchronized boolean onLoad() {
+        super.onLoad();
+        int step = 0;
+        try {
+            if (mainActivityGroups != null) {
+                //region Utils
+                step = 1;
+                this.context = this.getApplicationContext();
+                Utils.packageName = this.context.getApplicationInfo().packageName;
+                step = 2;
+                mainActivityGroups.setLoadGameProgress(.10f, "resources");
+                Utils.resources = getResources();
+                step = 3;
+                mainActivityGroups.setLoadGameProgress(.15f, "analytics");
+                Utils.analyticsManager = new AnalyticsManager(this);
+                step = 4;
+                mainActivityGroups.setLoadGameProgress(.20f, "auth");
+                Utils.authManager = new AuthManager(this, (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE));
+                step = 5;
+                mainActivityGroups.setLoadGameProgress(.25f, "download queue");
+                Utils.downloadQueue = new DownloadQueue();
+                step = 6;
+                mainActivityGroups.setLoadGameProgress(.30f, "storage");
+                Utils.storageManager = new StorageManager(this);
+                step = 7;
+                mainActivityGroups.setLoadGameProgress(.35f, "database");
+                Utils.dataBaseManager = new DataBaseManager();
+                step = 8;
+                mainActivityGroups.setLoadGameProgress(.40f, "config");
+                Utils.remoteConfigManager = new RemoteConfigManager(this);
+                step = 9;
+                mainActivityGroups.setLoadGameProgress(.45f, "sound");
+                Utils.mAudios = new Audios(this, (AudioManager) getSystemService(Context.AUDIO_SERVICE));
+                step = 10;
+                mainActivityGroups.setLoadGameProgress(.50f, "music");
+                Utils.musicPlayer = new MusicPlayer(this);
+                step = 11;
+                mainActivityGroups.setLoadGameProgress(.55f, "vibrator");
+                Utils.vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                step = 12;
+                mainActivityGroups.setLoadGameProgress(.60f, "assets");
+                Utils.assetManager = getAssets();
+                step = 13;
+                mainActivityGroups.setLoadGameProgress(.65f, "typefaces");
+                TextUtils.loadTypefaces();
+                step = 14;
+                mainActivityGroups.setLoadGameProgress(.70f, "bitmaps");
+                Utils.bitmapManager = new BitmapManager();
+                Utils.bitmapManager.loadGameBitmaps();
+                step = 15;
+                mainActivityGroups.setLoadGameProgress(.71f, "bitmaps85");
+                Utils.bitmapManager.parseBitmaps(R.drawable.bitmaps85, R.xml.bitmaps85);
+                step = 16;
+                mainActivityGroups.setLoadGameProgress(.72f, "bitmaps100");
+                Utils.bitmapManager.parseBitmaps(R.drawable.bitmaps100, R.xml.bitmaps100);
+                step = 17;
+                mainActivityGroups.setLoadGameProgress(.73f, "bitmaps200");
+                Utils.bitmapManager.parseBitmaps(R.drawable.bitmaps200, R.xml.bitmaps200);
+                step = 18;
+                mainActivityGroups.setLoadGameProgress(.75f, "sings");
+                SignInfos.loadSignInfos();
+                //endregion
+
+                //region Загружаем параметры
+                step = 19;
+                mainActivityGroups.setLoadGameProgress(.80f, "shared preferences");
+                SharedPreferences sp = getSharedPreferences(CurrentSettings.APP_SETTINGS_NAME, Context.MODE_PRIVATE);
+                mainActivityGroups.setLoadGameProgress(.85f, "settings manager");
+                Utils.settingsManager = new SettingsManager(sp);
+                mainActivityGroups.setLoadGameProgress(.90f, "check data");
+                //if (Utils.containsTime())
+                    if (!Utils.loadSettings()) {
+                        Utils.Toast(R.string.game_bad_data);
+                        finish();
+                        return false;
+                    }
+                //endregion
+
+                step = 20;
+                mainActivityGroups.setLoadGameProgress(.95f, "main activity load");//Utils.getRes(R.string.game_loading));// Utils.resources != null
+                mainActivityGroups.setLoadGameProgress(1f, "");
+                step = 21;
+                mainActivityGroups.load();
+                step = 22;
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("MainActivity.onLoad [" + step + "]", t);
+        }
+        return true;
+    }
+
+    public void onToast(String message) {
+        if (context != null)
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+    }
+
+    private boolean isAdInitialized = false;
+    public void initAd() {
+        // если возраст пользователя определен
+        if (Utils.isUserAge()) {
+            if (!isAdInitialized) {
+                isAdInitialized = true;
+                int step = 0;
+                try {
+                    step = 1;
+                    AdUtils.init(this.getApplicationContext());
+                    step = 2;
+                    initBannerAd(); // инициализация AdMob баннера
+                    step = 3;
+                    //initPageAd(); // инициализация AdMob межстраничного объявления
+                    step = 4;
+                    initVideoAd(); // инициализация AdMob видео
+                    step = 5;
+                } catch (Throwable t) {
+                    Utils.CrashReport("MainActivity.initAd [" + step + "]", t);
+                }
+            }
+        }
+    }
+
+    //region Banner Ad
+    private void initBannerAd() {
+        // AdMob banner
+        if (CurrentSettings.isShowBanner) {
+            mAdView = findViewById(R.id.adView);
+            //AdRequest r = AdUtils.getRequest();
+            //boolean i = r.isTestDevice(Utils.context);
+            mAdView.loadAd(AdUtils.getRequest());
+        }
+    }
+    //endregion
+
+    //region Page Ad
+    private void initPageAd() {
+        String ad_id = Utils.getRes(R.string.page_ad_unit_id);
+        MobileAds.initialize(this, ad_id);
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(ad_id);
+        mInterstitialAd.setAdListener(new AdListener() {
+            // Code to be executed when an ad finishes loading.
+            @Override public void onAdLoaded() { onShowPageAd(); } // показываем рекламу
+            // Code to be executed when an ad request fails.
+            @Override public void onAdFailedToLoad(int errorCode) {
+                String err = AdUtils.getRequestErrorString(errorCode);
+            }
+            // Code to be executed when the ad is displayed.
+            @Override public void onAdOpened() { }
+            // Code to be executed when the user has left the app.
+            @Override public void onAdLeftApplication() { }
+            // Code to be executed when when the interstitial ad is closed.
+            @Override public void onAdClosed() { onClosePageAd(); } // при закрытии рекламы
+        });
+    }
+
+    private void loadPageAd() {
+        if (mInterstitialAd != null)
+            mInterstitialAd.loadAd(AdUtils.getRequest());
+    }
+
+    private void onShowPageAd() {
+        try {
+            if (mInterstitialAd != null && mInterstitialAd.isLoaded())
+                mInterstitialAd.show();
+            //else
+            //    Log.d("TAG", "The interstitial wasn't loaded yet.");
+        }
+        catch (Throwable t) {
+            Utils.CrashReport("MainActivity.showPageAd", t);
+        }
+    }
+
+    private void onClosePageAd() { }
+
+    public void showInterstitialAd() {
+        // загружаем и отображаем межстраничное объявление
+        /*loadPageAd();
+        Intent adIntent = new Intent(this, InterstitialAdActivity.class);
+        if (!isActivityStarted(adIntent, null)) {
+            // активность не открыта
+            Utils.Toast(Utils.getRes(R.string.));
+        }*/
+    }
+    //endregion
+
+    //region VideoAd
+    private void initVideoAd() { }
+
+    public void showVideoAd(AchievementType type) {
+        try {
+            Intent adIntent = new Intent(this, VideoAdActivity.class);
+            adIntent.putExtra(VideoAdActivity.ACHIEVEMENT_TYPE, type);
+            startActivityForResult(adIntent, VideoAdActivity.REQUEST_VIDEO_REWARD);
+        }
+        catch (ActivityNotFoundException t) {
+            Utils.CrashReport("MainActivity.onShowVideoAd", t);
+        }
+    }
+
+    private void onVideoReward(final AchievementType type, final int reward) {
+        Utils.dataBaseManager.getUserVideoCounts(new IUserVideoCountsListener() {
+            @Override
+            public void handle(UserVideoCount uvc) {
+                if (type != null) {
+                    uvc.increaseVideoCountByAchievementType(type, reward);
+                    Utils.dataBaseManager.saveVideoCounts(uvc); // сохраняем в БД количество просмотренных роликов
+                    Utils.dataBaseManager.updatePotionEnabled(type, uvc.isPotionEnabled(type)); // сохраняем в БД признак того, что эликсир доступен
+                }
+                Utils.LogEvent(AnalyticsManager.MS_EVENT_AD_VIDEO, type != null ? type.toString() : "ad_video"); // статистика просмотра рекламного видео
+                if (currentGroup != null)
+                    currentGroup.onVideoReward(type, reward);
+            }
+        });
+    }
+    //endregion
+
+    //region Share result
+    private void onShareLinkResult() {
+        UserScoreInfo usi = Utils.dataBaseManager.currentUserScoreInfo;
+        if (usi != null) {
+            // определим тип первого неполученного potion
+            final AchievementType type = usi.firstDisabledAchievementType();
+            if (type != null) {
+                Utils.dataBaseManager.getUserVideoCounts(new IUserVideoCountsListener() {
+                    @Override
+                    public void handle(UserVideoCount uvc) {
+                        if (uvc.increaseSharedLinks()) {
+                            Utils.dataBaseManager.saveVideoCounts(uvc); // сохраняем в БД количество отправленных ссылок
+                            boolean isAchievementEnabled = uvc.sharedPotionEnabled(); // проверяем доступность potion на основе количества отправленных ссылок и скриншотов
+                            Utils.dataBaseManager.updatePotionEnabled(type, isAchievementEnabled); // сохраняем в БД признак того, что эликсир доступен
+                            Utils.LogEvent(AnalyticsManager.MS_EVENT_SHARE, "share_link"); // отправлена ссылка
+                            if (currentGroup != null)
+                                currentGroup.onSharedLink(type, isAchievementEnabled);
+                        }
+                    }
+                });
+            }
+        }
+    }
+    private void onShareScreenshotResult() {
+        UserScoreInfo usi = Utils.dataBaseManager.currentUserScoreInfo;
+        if (usi != null) {
+            // определим тип первого неполученного potion
+            final AchievementType type = usi.firstDisabledAchievementType();
+            if (type != null) {
+                Utils.dataBaseManager.getUserVideoCounts(new IUserVideoCountsListener() {
+                    @Override
+                    public void handle(UserVideoCount uvc) {
+                        if (uvc.increaseSharedScreenshots()) {
+                            Utils.dataBaseManager.saveVideoCounts(uvc); // сохраняем в БД количество отправленных скриншотов
+                            boolean isAchievementEnabled = uvc.sharedPotionEnabled(); // проверяем доступность potion на основе количества отправленных ссылок и скриншотов
+                            Utils.dataBaseManager.updatePotionEnabled(type, isAchievementEnabled); // сохраняем в БД признак того, что эликсир доступен
+                            Utils.LogEvent(AnalyticsManager.MS_EVENT_SHARE, "share_screenshot"); // отправлен скриншот
+                            if (currentGroup != null)
+                                currentGroup.onSharedScreenshot(type, isAchievementEnabled);
+                        }
+                    }
+                });
+            }
+        }
+    }
+    //endregion
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        int step = 0;
+        try {
+            super.onActivityResult(requestCode, resultCode, data);
+            step = 1;
+            if (resultCode == RESULT_OK) {
+                switch (requestCode) {
+                    case VideoAdActivity.REQUEST_VIDEO_REWARD:
+                        //region VideoAd
+                        step = 2;
+                        AchievementType type = (AchievementType) data.getSerializableExtra(VideoAdActivity.ACHIEVEMENT_TYPE);
+                        step = 3;
+                        // определим размер награды за просмотренное видео
+                        int reward = 1; //data.getIntExtra(VideoAdActivity.REWARD, 0);
+                        onVideoReward(type, reward);
+                        //endregion
+                        break;
+                    case MainActivity.REQUEST_SHARE_LINK:
+                        step = 4;
+                        onShareLinkResult();
+                        break;
+                    case MainActivity.REQUEST_SHARE_SCREENSHOT:
+                        step = 5;
+                        onShareScreenshotResult();
+                        break;
+                    default:
+                        //region Authorization
+                        step = 6;
+                        Utils.authManager.onActivityResult(requestCode, resultCode, data);
+                        //endregion
+                }
+                step = 8;
+            }
+            step = 9;
+        } catch (Throwable t) {
+            Utils.CrashReport("MainActivity.onActivityResult [" + step + "]", t);
+        }
+    }
+
+    //region pause / resume
+    @Override
+    public void onPause() {
+        if (mAdView != null)
+            mAdView.pause();
+        MainActivityUtils.doPause(null);
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mAdView != null)
+            mAdView.resume();
+    }
+    //endregion
+
+    @Override
+    public void onDestroy() {
+        if (mAdView != null)
+            mAdView.destroy();
+        super.onDestroy();
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        try {
+            if (mainActivityGroups != null)
+                mainActivityGroups.recycle();
+            mainActivityGroups = null;
+
+            Utils.recycle();
+            SignInfos.recycle();
+        }
+        catch (Throwable t) {
+            Utils.CrashReport("MainActivity.recycle", t);
+        }
+    }
+}

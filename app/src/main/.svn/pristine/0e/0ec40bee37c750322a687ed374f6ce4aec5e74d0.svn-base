@@ -1,0 +1,80 @@
+package com.softigress.magicsigns.UI._Main.Dialogs;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDropOnExit;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+
+public class GrpPauseMenuDialog extends GrpDialog {
+
+    public final static int DIALOG_RESULT_OPTIONS = 1;
+    public final static int DIALOG_RESULT_EXIT = 3;
+    public final static int DIALOG_RESULT_PLAY = 4;
+
+    private static final float dxDrop =   .50f, dyDrop =     .485f;
+    private static final float dyStart =  1 / 6f;
+    private static final float dxBtn0 =    .2f;
+    private static final float dxBtn1 =    .25f;
+    private static final float dxBtn2 =   .75f;
+    private static final float dyBtn =    (1f - 4f * dyStart) / 2f;
+    private static final float fdBtn =    .1f;
+
+    private final DialogItem itemDrop;
+    private final FunnyDropOnExit drop;
+
+    public GrpPauseMenuDialog() {
+        super(.8f, .62f);//), R.string.bmp_btn_ok, .8f, .85f);
+        name = "dlg_resume_game";
+        setDlgMessageText(R.string.dlg_Pause_Title, .5f, .1f);
+        //setDlgIdeaText(R.string.dlg_Pause_IdeaText, .5f, .625f);
+        //setDlgDrawing(R.drawable.star, .8f, .68f, .1666f);
+
+        drop = new FunnyDropOnExit();
+        itemDrop = addDlgControlTouchable(drop, dxDrop, dyDrop);
+
+        //region options
+        BtnBase btnOptions = new BtnBase(getByDx(dxBtn0), getByDy(3f * dyStart + .5f * dyBtn), fdBtn, R.string.bmp_btn_options);
+        btnOptions.name = "btn_menu_options";
+        btnOptions.setLabelText(R.string.dlg_Menu_Options, DrawingHAlign.LEFT);
+        btnOptions.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_OPTIONS); }
+        });
+        addDlgControlTouchable(btnOptions, dxBtn0, 3f * dyStart + .5f * dyBtn);
+        //endregion
+
+        float dy = 3f * dyStart + 1.75f * dyBtn;
+
+        //region exit
+        BtnBase btnExit = new BtnBase(getByDx(dxBtn1), getByDy(dy), fdBtn, R.string.bmp_btn_exit);
+        btnExit.name = "btn_menu_exit";
+        btnExit.setLabelText(R.string.dlg_Exit);//, DrawingHAlign.LEFT);
+        btnExit.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_EXIT); }
+        });
+        addDlgControlTouchable(btnExit, dxBtn1, dy);
+        //endregion
+
+        //region play
+        BtnBase btnPlay = new BtnBase(getByDx(dxBtn2), getByDy(dy), fdBtn, R.string.bmp_btn_play);
+        btnPlay.name = "btn_menu_play";
+        btnPlay.setLabelText(R.string.dlg_Play); //R.string.dlg_Menu_Continue);//, DrawingHAlign.RIGHT);
+        btnPlay.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_PLAY); }
+        });
+        addDlgControlTouchable(btnPlay, dxBtn2, dy);
+        //endregion
+
+        addDlgCloseButton();
+    }
+
+    @Override
+    public void show() {
+        super.show();
+
+        itemDrop.setDxDyPoint(dxDrop, dyDrop);
+        drop.doMotion();
+    }
+}

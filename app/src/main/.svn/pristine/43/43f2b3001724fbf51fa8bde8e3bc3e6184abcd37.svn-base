@@ -1,0 +1,130 @@
+package com.softigress.magicsigns.UI._base.Controls.Achievements;
+
+import android.graphics.Canvas;
+import androidx.annotation.Keep;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingAchievement implements IDrawing {
+
+    private static final int showDuration = 3000;
+    private static final float starFd = .2f;
+
+    private boolean isVisible = false;
+    private DrawingBase item;
+    private DrawingText txtTitle;
+    private DrawingBase itemBack;
+
+    public DrawingAchievement(AchievementType type) {
+
+        int bitmapId = SignInfos.getBitmapIdByAchievementType(type);
+
+        item = new DrawingBase(starFd, bitmapId);
+        item.setAlpha(0);
+        item.hide();
+
+        txtTitle = new DrawingText(DrawingHAlign.CENTER, TextUtils.controls_game_ach_title);
+        txtTitle.setVerticalAlign(DrawingVAlign.TOP);
+        txtTitle.setTextBack(4f, 32, 0, 0, 0);
+        txtTitle.setAlpha(0);
+        txtTitle.hide();
+        txtTitle.setText(R.string.ach_potion_title);
+
+        itemBack = new DrawingBase(starFd, R.string.bmp_spot_orange);
+        itemBack.setAlpha(0);
+        itemBack.hide();
+    }
+
+    @Keep
+    public void setFx(float fx) {
+        item.setFx(fx);
+        txtTitle.setFx(fx);
+        //starBack.setFx(fx);
+    }
+    @Keep
+    public void setFy(float fy) {
+        item.setFy(fy + starFd / 2);
+        txtTitle.setFy(fy + starFd);
+        itemBack.setFy(fy + .62f * starFd);
+    }
+    public void setPoint(float fx, float fy) {
+        item.setPoint(fx, fy + starFd / 2);
+        txtTitle.setPoint(fx, fy + starFd);
+        itemBack.setPoint(fx, fy + .62f * starFd);
+    }
+
+    public void startAnim() {
+        isVisible = true;
+
+        setPoint(Utils.getRandomBetween(.3f, .7f), Utils.getRandomBetween(.3f, .5f));
+        item.setScale(0);
+        itemBack.setScale(0);
+
+        item.show();
+        txtTitle.show();
+        itemBack.show();
+
+        new AnimUtil()
+                .add(item, "scale", 0f, 1.2f, 1f)
+                .add(itemBack, "scale", 1f, 3f)
+                .add(txtTitle, "alpha", 0, 255, 255, 255, 0)
+                .add(item, "alpha", 0, 255, 255, 255, 0)
+                .add(itemBack, "alpha", 0, 128, 0)
+                .startAD(showDuration);
+        /*ObjectAnimator aIS = ObjectAnimator.ofFloat(item, "scale", 0f, 1.2f, 1f).setDuration(showDuration);
+        ObjectAnimator aBS = ObjectAnimator.ofFloat(itemBack, "scale", 1f, 3f).setDuration(showDuration);
+        ObjectAnimator aTA = ObjectAnimator.ofInt(txtTitle, "alpha", 0, 255, 255, 255, 0).setDuration(showDuration);
+        ObjectAnimator aIA = ObjectAnimator.ofInt(item, "alpha", 0, 255, 255, 255, 0).setDuration(showDuration);
+        ObjectAnimator aBA = ObjectAnimator.ofInt(itemBack, "alpha", 0, 128, 0).setDuration(showDuration);
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(aTA, aIS, aBS, aIA, aBA);
+        set.setInterpolator(new AccelerateDecelerateInterpolator());
+        set.start();*/
+
+        TaskUtils.postDelayed(showDuration, new Runnable() {
+            @Override
+            public void run() { isVisible = false; }
+        });
+        Utils.playSound(R.raw.potion19, showDuration / 4);
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isVisible) {
+            itemBack.drawFrame(c);
+            txtTitle.drawFrame(c);
+            item.drawFrame(c);
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (item != null)
+            item.recycle();
+        if (txtTitle != null)
+            txtTitle.recycle();
+        if (itemBack != null)
+            itemBack.recycle();
+        item = null;
+        txtTitle = null;
+        itemBack = null;
+    }
+}

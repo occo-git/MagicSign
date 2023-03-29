@@ -1,0 +1,110 @@
+package com.softigress.magicsigns.UI._Main.Dialogs.PotionVideos;
+
+import android.util.SparseArray;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI.Rating.RatingRow.UserRatingRowInfo;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.PotionVideos.Item.GrpPotionVideoItem;
+import com.softigress.magicsigns.UI._Main.Dialogs.PotionVideos.Item.IGrpPotionVideoItemListener;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserVideoCount;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+
+public class GrpPotionVideosDialog extends GrpDialog {
+
+    private static final float dxRow = .2f, dyRow = .26f, fwRow = .17f, fhRow = .15f;
+    private static final float ddxRow = .3f, ddyRow = .2f;
+
+    private final SparseArray<GrpPotionVideoItem> videoItems;
+
+    public GrpPotionVideosDialog() {
+        super(.8f, .68f);
+
+        DrawingText txtMessage = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_normal);
+        txtMessage.setTextBack(4f, 64, 0, 0, 0);
+        txtMessage.setText(R.string.lab_potion_for_video);
+        addDlgControl(txtMessage, .5f, .075f);
+
+        videoItems = new SparseArray<>();
+        float dx = dxRow;
+        float dy = dyRow;
+        addVideoItem(AchievementType.SIMPLE_01,         dx,                 dy);
+        addVideoItem(AchievementType.HARD_03,           dx + ddxRow,        dy);
+        addVideoItem(AchievementType.CRAZY_05,          dx + 2 * ddxRow,    dy);
+        dy +=ddyRow;
+        addVideoItem(AchievementType.NORMAL_02,         dx + .5f * ddxRow,  dy);
+        addVideoItem(AchievementType.INSANE_04,         dx + 1.5f * ddxRow, dy);
+        dy += ddyRow;
+        addVideoItem(AchievementType.SIMPLE_01_GROUP,   dx,                 dy);
+        addVideoItem(AchievementType.HARD_03_GROUP,     dx + ddxRow,        dy);
+        addVideoItem(AchievementType.CRAZY_05_GROUP,    dx + 2 * ddxRow,    dy);
+        dy += ddyRow;
+        addVideoItem(AchievementType.NORMAL_02_GROUP,   dx + .5f * ddxRow,  dy);
+        addVideoItem(AchievementType.INSANE_04_GROUP,   dx + 1.5f * ddxRow, dy);
+
+        addDlgCloseButton();
+    }
+
+    private IGrpPotionVideosDialogListener listener;
+    public void setListener(IGrpPotionVideosDialogListener l) { listener = l; }
+
+    private void addVideoItem(AchievementType achievementType, float dx, float dy) {
+        if (videoItems != null) {
+            GrpPotionVideoItem item = new GrpPotionVideoItem(achievementType, getByDx(dx), getByDy(dy), fwRow, fhRow);
+            item.setListener(new IGrpPotionVideoItemListener() {
+                @Override
+                public void onViewVideoClick(AchievementType type) {
+                    if (listener != null)
+                        listener.onShowVideo(type);
+                }
+            });
+            int id = SignInfos.getBitmapIdByAchievementType(achievementType);
+            videoItems.append(id, item);
+            addDlgControlTouchable(item, dx, dy);
+        }
+    }
+
+    private GrpPotionVideoItem getVideoItemByAchievementType(AchievementType achievementType) {
+        int id = SignInfos.getBitmapIdByAchievementType(achievementType);
+        if (videoItems != null && videoItems.indexOfKey(id) >= 0)
+            return videoItems.get(id);
+        else
+            return null;
+    }
+
+    public void applySettings(UserRatingRowInfo uri, UserVideoCount uvc) {
+        applyVideoCount(uri, uvc, AchievementType.SIMPLE_01);
+        applyVideoCount(uri, uvc, AchievementType.NORMAL_02);
+        applyVideoCount(uri, uvc, AchievementType.HARD_03);
+        applyVideoCount(uri, uvc, AchievementType.INSANE_04);
+        applyVideoCount(uri, uvc, AchievementType.CRAZY_05);
+        applyVideoCount(uri, uvc, AchievementType.SIMPLE_01_GROUP);
+        applyVideoCount(uri, uvc, AchievementType.NORMAL_02_GROUP);
+        applyVideoCount(uri, uvc, AchievementType.HARD_03_GROUP);
+        applyVideoCount(uri, uvc, AchievementType.INSANE_04_GROUP);
+        applyVideoCount(uri, uvc, AchievementType.CRAZY_05_GROUP);
+    }
+
+    public void onVideoReward(AchievementType type, int reward) {
+        // отобразить получение награды за просмотренное видео
+        GrpPotionVideoItem item = getVideoItemByAchievementType(type);
+        if (item != null)
+            item.onVideoReward(reward);
+    }
+
+    private void applyVideoCount(UserRatingRowInfo uri, UserVideoCount uvc, AchievementType type) {
+        GrpPotionVideoItem item = getVideoItemByAchievementType(type);
+        if (item != null) {
+            if (uri.userScoreInfo != null && uri.userScoreInfo.isAchievementEnabled(type))
+                item.setVideoCount(0);
+            else {
+                int leftCount = SignInfos.getVideoCountByAchievementType(type) - uvc.getVideoCountByAchievementType(type);
+                item.setVideoCount(leftCount);
+            }
+        }
+    }
+}

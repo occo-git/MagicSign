@@ -1,0 +1,471 @@
+package com.softigress.magicsigns._Base._Drawing._base;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+import androidx.annotation.Keep;
+import android.util.SparseArray;
+
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IDialogItemControl;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingBase implements IDialogItemControl {
+
+    protected static final int STATUS_HIDDEN = -1;
+    protected static final int STATUS_DEFAULT = 0;
+
+    private DrawingHAlign halign;
+    private DrawingVAlign valign;
+
+    protected float x;
+    protected float y;
+    protected float w;
+    protected float h;
+    private float rx;
+    private float ry;
+
+    public float fx;
+    public float fy;
+    public float fw;
+    public float fh;
+    public float fd;
+    private float widthScale = 1f;
+    private float heightScale = 1f;
+    private boolean isRound = false;
+    private float rfx;
+    private float rfy;
+    private float angel = 0;
+    public int alpha = 255;
+
+    //region props
+    public float getX() { return x; }
+    public float getY() { return y; }
+    public float getW() { return w; }
+    public float getH() { return h; }
+
+    public float getFx() { return fx; }
+    public float getFy() { return fy; }
+    public float getFw() { return fw; }
+    public float getFh() { return fh; }
+    public float getFd() { return fd; }
+    public float getWidthScale() { return widthScale; }
+    public float getHeightScale() { return heightScale; }
+    public float getScale() { return widthScale; }
+    public float getRfx() { return rfx; }
+    public float getRfy() { return rfy; }
+    public float getAngel() { return angel; }
+    public int getAlpha() { return alpha; }
+
+    protected void onChange() { }
+
+    @Keep
+    public void setFx(float fx) {
+        if (this.fx != fx) {
+            this.fx = fx;
+            onChange();
+        }
+    }
+    @Keep
+    public void setFy(float fy) {
+        if (this.fy != fy) {
+            this.fy = fy;
+            onChange();
+        }
+    }
+    @Keep
+    public void setFw(float fw) {
+        if (this.fw != fw) {
+            this.fw = fw;
+            onChange();
+        }
+    }
+    @Keep
+    public void setFh(float fh) {
+        if (this.fh != fh) {
+            this.fh = fh;
+            onChange();
+        }
+    }
+    @Keep
+    public void setFd(float fd) {
+        this.isRound = true;
+        this.fd = fd;
+        setSize(fd, fd);
+    }
+    @Keep
+    public void setWidthScale(float widthScale) { this.widthScale = widthScale; }
+    @Keep
+    public void setHeightScale(float heightScale) { this.heightScale = heightScale; }
+    @Keep
+    public void setScale(float scale) {
+        this.widthScale = scale;
+        this.heightScale = scale;
+    }
+    public void setRfx(float rfx) { this.rfx = rfx; }
+    public void setRfy(float rfy) { this.rfy = rfy; }
+    @Keep
+    public void setAngel(float degrees) {
+        if (degrees > 360 || degrees < -360)
+            degrees = degrees % 360;
+        this.angel = degrees;
+    }
+    @Keep
+    public void setAngelRadians(float angelRadians) {
+        setAngel(Utils.PI_180 * angelRadians);
+    }
+    @Keep
+    public void setAlpha(int a) {
+        if (this.paint != null)
+            this.paint.setAlpha(a);
+        if (this.alpha != a) {
+            this.alpha = a;
+            onChange();
+        }
+    }
+
+    public void setPoint(float fx, float fy) {
+        if (this.fx != fx || this.fy != fy) {
+            this.fx = fx;
+            this.fy = fy;
+            onChange();
+        }
+    }
+    public void setPoint(PointF p) {
+        if (p != null)
+            setPoint(p.x, p.y);
+    }
+    public void setSize(float fw, float fh) {
+        if (this.fw != fw || this.fh != fh) {
+            this.fw = fw;
+            this.fh = fh;
+            onChange();
+        }
+    }
+    public void setScale(float widthScale, float heightScale) {
+        this.widthScale = widthScale;
+        this.heightScale = heightScale;
+    }
+    public void setCenterXY(float rfx, float rfy) {
+        this.rfx = rfx;
+        this.rfy = rfy;
+    }
+    public void setAlign(DrawingHAlign halign, DrawingVAlign valign) {
+        this.halign = halign;
+        this.valign = valign;
+        switch (halign) {
+            case LEFT: this.rfx = 0f; break;
+            case CENTER: this.rfx = 0.5f; break;
+            case RIGHT: this.rfx = 1f; break;
+        }
+        switch (valign) {
+            case TOP: this.rfy = 0f; break;
+            case CENTER: this.rfy = 0.5f; break;
+            case BOTTOM: this.rfy = 1f; break;
+        }
+    }
+    //endregion
+
+    protected Paint paint;
+    private Matrix m1 = new Matrix();
+    private Paint maskPaint;
+    private Matrix maskMatrix0 = new Matrix();
+    private Matrix maskMatrix1 = new Matrix();
+
+    public int statusId = STATUS_HIDDEN;
+    protected Bitmap currentBitmap;
+    private SparseArray<Bitmap> bitmapDictionary;
+    //private static final boolean isAltBitmap = false;
+    //private final SparseArray<Bitmap> altBitmapDictionary;
+
+    public DrawingBase(float fd) {
+        this();
+        setFd(fd);
+        calc();
+    }
+    protected DrawingBase() {
+        this.paint = BitmapManager.getBitmapPaint();
+        this.bitmapDictionary = new SparseArray<>();
+        //this.altBitmapDictionary = new SparseArray<>();
+        setAlign(DrawingHAlign.CENTER, DrawingVAlign.CENTER);
+    }
+    public DrawingBase(float fd, int bitmapId) {
+        this();
+        setFd(fd);
+        calc();
+        setDefaultBitmap(bitmapId);
+    }
+    public DrawingBase(float fd, Bitmap b) {
+        this();
+        setFd(fd);
+        calc();
+        setDefaultBitmap(b);
+    }
+    public DrawingBase(float fx, float fy, float fd) {
+        this();
+        setPoint(fx, fy);
+        setFd(fd);
+        calc();
+    }
+    public DrawingBase(float fw, float fh) {
+        this();
+        setSize(fw, fh);
+        calc();
+    }
+    public DrawingBase(float fx, float fy, float fw, float fh) {
+        this();
+        setPoint(fx, fy);
+        setSize(fw, fh);
+        calc();
+    }
+
+    //region Status
+    public void setDefaultBitmap(int bitmapId) {
+        setStatusBitmap(STATUS_DEFAULT, bitmapId);
+        setStatus(STATUS_DEFAULT);
+    }
+    public void setDefaultBitmap(Bitmap b) {
+        setStatusBitmap(STATUS_DEFAULT, b);
+        setStatus(STATUS_DEFAULT);
+    }
+    //region add status bitmap
+    public void setStatusBitmap(int statusId, int bitmapId) {
+        setStatusBitmap(statusId, Utils.getBitmap(bitmapId));
+    }
+
+    /*public void setStatusBitmap(int statusId, Bitmap bitmap, Bitmap altBitmap) {
+        setStatusBitmap(statusId, bitmap);
+        if (altBitmap != null) {
+            if (altBitmapDictionary.indexOfKey(statusId) < 0)
+                altBitmapDictionary.put(statusId, altBitmap);
+            else {
+                int key = altBitmapDictionary.indexOfKey(statusId);
+                if (key >= 0)
+                    altBitmapDictionary.setValueAt(key, altBitmap);
+            }
+        }
+    }*/
+    protected void setStatusBitmap(int statusId, Bitmap b) {
+        //if (b != null) {
+            if (bitmapDictionary.indexOfKey(statusId) < 0)
+                bitmapDictionary.put(statusId, b);
+            else {
+                int key = bitmapDictionary.indexOfKey(statusId);
+                if (key >= 0)
+                    bitmapDictionary.setValueAt(key, b);
+            }
+        //}
+    }
+    //endregion
+    public void setStatus(int statusId) {
+        if (this.statusId != statusId) {
+            this.statusId = statusId;
+
+            //if (isAltBitmap) {
+            //    if (altBitmapDictionary != null && altBitmapDictionary.indexOfKey(statusId) >= 0)
+            //        currentBitmap = altBitmapDictionary.get(statusId);
+            //} else {
+                if (bitmapDictionary != null && bitmapDictionary.indexOfKey(statusId) >= 0)
+                    currentBitmap = bitmapDictionary.get(statusId);
+            //}
+            onStatusChanged();
+        }
+    }
+    protected void onStatusChanged() { }
+    public void refreshCurrentStatus() {
+        //if (isAltBitmap) {
+        //    if (altBitmapDictionary != null && altBitmapDictionary.indexOfKey(statusId) >= 0)
+        //        currentBitmap = altBitmapDictionary.get(statusId);
+        //}
+        //else {
+            if (bitmapDictionary != null && bitmapDictionary.indexOfKey(statusId) >= 0)
+                currentBitmap = bitmapDictionary.get(statusId);
+        //}
+    }
+    //endregion
+
+    public boolean inBounds(float px, float py) {
+        boolean bx = false;
+        switch (halign) {
+            case LEFT:     bx = (x             <= px && px <= x + w);          break;
+            case CENTER:   bx = (x - 0.5f * w  <= px && px <= x + 0.5f * w);   break;
+            case RIGHT:    bx = (x - w         <= px && px <= x);              break;
+        }
+        boolean by = false;
+        switch (valign) {
+            case TOP:      by = (y             <= py && py <= y + h);          break;
+            case CENTER:   by = (y - 0.5f * h  <= py && py <= y + 0.5f * h);   break;
+            case BOTTOM:   by = (y - h         <= py && py <= y);              break;
+        }
+        return bx && by;
+    }
+
+    //region show hide
+    public void showhide(boolean showhide) {
+        if (showhide)
+            show();
+        else
+            hide();
+    }
+    public void show() { setStatus(STATUS_DEFAULT); }
+    public long hide() {
+        setStatus(STATUS_HIDDEN);
+        return 0;
+    }
+
+    private boolean isOnHide = false;
+    public long hide(long delay) {
+        if (!isOnHide) {
+            isOnHide = true;
+            TaskUtils.postDelayed(
+                    delay,
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            setStatus(STATUS_HIDDEN);
+                            isOnHide = false;
+                        }
+                    });
+            return delay;
+        }
+        return 0;
+    }
+    //endregion
+
+    public boolean isVisible() { return statusId > STATUS_HIDDEN; }
+
+    public int getLengthTo(float x, float y) {
+        float rx = this.x - x;
+        float ry = this.y - y;
+        return (int)Math.sqrt(rx * rx + ry * ry);
+    }
+
+    //region Bitmap
+        /*public Bitmap getBitmap() {
+        if (currentBitmap != null) {
+            Bitmap b = Bitmap.createBitmap((int)w, (int)h, Bitmap.Config.ARGB_8888);//currentBitmap.getConfig());
+            m1 = new Matrix();
+            m1.setScale(this.w / currentBitmap.getWidth(), this.h / currentBitmap.getHeight());
+            Canvas c = new Canvas(b);
+            c.drawBitmap(currentBitmap, m1, paint);
+            return b;
+        }
+        return null;
+    }*/
+
+    //Bitmap maskedBitmap;
+    protected void setDefaultMaskedBitmap(Bitmap bitmap, int maskBitmapId) {
+        setDefaultBitmap(getBitmapByMask(bitmap, maskBitmapId));
+    }
+
+    private Bitmap getBitmapByMask(Bitmap bitmap, int maskBitmapId) {
+        Bitmap maskBitmap = Utils.getBitmap(maskBitmapId);
+        if (maskBitmap != null) {
+            Bitmap result = Bitmap.createBitmap((int) w, (int) h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(result);
+
+            // draw mask
+            maskPaint = BitmapManager.getBitmapPaint();
+            maskMatrix0.reset();
+            maskMatrix0.setScale(this.w / maskBitmap.getWidth(), this.h / maskBitmap.getHeight());
+            canvas.drawBitmap(maskBitmap, maskMatrix0, maskPaint);
+
+            // draw current bitmap
+            maskPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+            maskMatrix1.reset();
+            maskMatrix1.setScale(this.w / bitmap.getWidth(), this.h / bitmap.getHeight());
+            canvas.drawBitmap(bitmap, maskMatrix1, maskPaint);
+
+            return result;
+        }
+        else
+            return bitmap;
+    }
+    //endregion
+
+    //region IDrawing
+    private int layerIndex = 0;
+    @Override
+    public int getLayer() { return layerIndex; }
+
+    public void setLayer(int index) { layerIndex = index; }
+
+    @Override
+    public void calc() {
+        // point
+        this.x = MetrixUtils.screen_metrix_width * fx;
+        this.y = MetrixUtils.screen_metrix_height * fy;
+        // size
+        if (isRound) {
+            this.w = this.widthScale * MetrixUtils.screen_metrix_height * fd;
+            this.h = this.heightScale * MetrixUtils.screen_metrix_height * fd;
+        } else {
+            this.w = this.widthScale * MetrixUtils.screen_metrix_width * fw;
+            this.h = this.heightScale * MetrixUtils.screen_metrix_height * fh;
+        }
+        // rotate
+        this.rx = this.w * rfx;
+        this.ry = this.h * rfy;
+    }
+
+    public void drawBackground(Canvas c) { }
+    public void drawOverground(Canvas c) { }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isVisible()) {
+            calc();
+            drawBitmap(c, x, y, paint);
+        }
+    }
+
+    protected void drawBitmap(Canvas c, float x0, float y0, Paint p) {
+        try {
+            drawBackground(c);
+            if (currentBitmap != null) {
+                m1.reset();
+                m1.setScale(this.w / currentBitmap.getWidth(), this.h / currentBitmap.getHeight());
+                if (angel != 0) {
+                    m1.postTranslate(-rx, -ry);
+                    m1.postRotate(angel);
+                    m1.postTranslate(rx, ry);
+                }
+                m1.postTranslate(x0 - rx, y0 - ry);
+                c.drawBitmap(currentBitmap, m1, p);
+            }
+            drawOverground(c);
+        }
+        catch (Throwable t) {
+            Utils.CrashReport("DrawingBase.drawFrame [" + toString() + "]", t);
+            throw t;
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (bitmapDictionary != null)
+            BitmapManager.clearBitmaps(bitmapDictionary);
+        //if (altBitmapDictionary != null)
+        //    BitmapUtils.recycle(altBitmapDictionary);
+        if (currentBitmap != null)
+            currentBitmap.recycle();
+
+        paint = null;
+        //m1 = null;
+        maskPaint = null;
+        //maskMatrix0 = null;
+        //maskMatrix1 = null;
+        bitmapDictionary = null;
+        currentBitmap = null;
+    }
+    //endregion
+}

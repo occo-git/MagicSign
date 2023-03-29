@@ -1,0 +1,65 @@
+package com.softigress.magicsigns.Game.Cells._base;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PointF;
+
+import com.softigress.magicsigns._Base._Drawing._base.DrawingSimpleNoPaint;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+class DrawingCellPod extends DrawingSimpleNoPaint { // DrawingSimple {
+
+    public long duration = 1000;
+    private long offset = 0;
+
+    private float fl;
+    private float l;
+
+    //private static final boolean isRound = false;
+
+    public DrawingCellPod(float fr, float fl) {
+        super(fr);
+        this.fl = fl;
+    }
+
+    public float getFl() { return this.fl; }
+    public void setFl(float fl) { this.fl = fl; }
+
+    public void setOffset(long offset) { this.offset = offset; }
+
+    //region Draw
+    private float x1, y1;
+    public PointF getPoint() {
+        //if (isRound)
+        //    return new PointF(x, y);
+        //else
+            return new PointF(x1, y1);
+    }
+
+    public void nextFrame(long delta) {
+        calc();
+        float lK = (float)((delta + offset) % duration) / duration;
+        float k = (1f + (float)Math.sin(Utils.PI2 * lK)) * .5f;
+        l = MetrixUtils.screen_metrix_height * fl * k;
+        x1 = x + l * angelCos;
+        y1 = y - l * angelSin;
+    }
+
+    public void drawPod(Canvas c, Paint paint) {
+        c.drawCircle(x1, y1, r, paint);
+    }
+
+    public void drawPod(Canvas c, Paint paint, Paint paint1) {
+        //if (isRound) {
+        //    c.drawCircle(x, y, l, paint1);
+        //    c.drawCircle(x, y, r, paint);
+        //} else {
+            /*c.drawCircle(x1, y1, r / 2, paint);
+            c.drawCircle(x, y, r, paint);
+            c.drawLine(x, y, x1, y1, paint);*/
+            c.drawCircle(x1, y1, r, paint);
+        //}
+    }
+    //endregion
+}

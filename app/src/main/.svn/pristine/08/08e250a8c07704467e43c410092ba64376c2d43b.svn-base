@@ -1,0 +1,143 @@
+package com.softigress.magicsigns.UI._Main.Dialogs;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI.Lab.LabIndex;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDropOnExit;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingRect;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+
+import java.util.ArrayList;
+
+public class GrpAgeDialog extends GrpDialog {
+
+    private static final float dxAge =          .5f, dyAge =    .175f;
+    private static final float dxIdea =         .50f, dyIdea =  .125f;
+    private static final float dxRect =         .50f, dyRect =  .125f, dwRect = .6f, dhRect = .3f;
+    private static final float dxStart =        .25f, dyStart = .375f;
+    private static final float dxBtn = (1f - 2f * dxStart) / 2f;
+    private static final float dyBtn = (1f - dyStart - .2f) / 3f;
+    private static final float dxBackspace =    .20f, dyBackspace = .85f, fdBackspace = .085f;
+    private static final float dxOk =           .80f, dyOk =        .85f, fdOk =        .085f;
+
+    private final DrawingText txtAge;
+    private final DialogItem itemAge;
+    private final DialogItem itemBackspace;
+    private final DialogItem itemOk;
+    private final ArrayList<LabIndex> ageIndices = new ArrayList<>();
+
+    private Integer age = 0;
+
+    public GrpAgeDialog() {
+        super(.8f, .62f);//, R.string.bmp_btn_play, .8f, .85f);
+        name = "dlg_age";
+        //setDlgMessageText(R.string.dlg_Age_Title, .5f, .1f);
+        setDlgIdeaText(R.string.dlg_Age_IdeaText, dxIdea, dyIdea);
+        //setDlgDrawing(R.drawable.star, .8f, .68f, .1666f);
+        isUserCanHide = false;
+
+        //region rect
+        //addDlgRect(dxRect, dyRect, dwRect, dhRect);
+        //endregion
+
+        //region age
+        txtAge = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_age_text);
+        txtAge.setPoint(getByDx(dxAge), getByDy(dyAge));
+        itemAge = addDlgControl(txtAge, dxAge, dyAge);
+        //endregion
+
+        //region indices
+        float dx = dxStart;
+        float dy = dyStart;
+        addAgeIndex(7, dx, dy); dx += dxBtn;
+        addAgeIndex(8, dx, dy); dx += dxBtn;
+        addAgeIndex(9, dx, dy); dx = dxStart;
+        dy += dyBtn;
+        addAgeIndex(4, dx, dy); dx += dxBtn;
+        addAgeIndex(5, dx, dy); dx += dxBtn;
+        addAgeIndex(6, dx, dy); dx = dxStart;
+        dy += dyBtn;
+        addAgeIndex(1, dx, dy); dx += dxBtn;
+        addAgeIndex(2, dx, dy); dx += dxBtn;
+        addAgeIndex(3, dx, dy); dx = dxStart; dx += dxBtn;
+        dy += dyBtn;
+        addAgeIndex(0, dx, dy); dx += dxBtn; dx += dxBtn;
+        //endregion
+
+        //region backspace
+        BtnBase btnBackspace = new BtnBase(getByDx(dxBackspace), getByDy(dyBackspace), fdBackspace, R.string.bmp_btn_exit);
+        btnBackspace.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                onBackspace();
+            }
+        });
+        itemBackspace = addDlgControlTouchable(btnBackspace, dxBackspace, dyBackspace);
+        //endregion
+
+        //region Ok
+        BtnBase btnOk = new BtnBase(getByDx(dxOk), getByDy(dyOk), fdOk, R.string.bmp_btn_play);
+        btnOk.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnOk();
+            }
+        });
+        itemOk = addDlgControlTouchable(btnOk, dxOk, dyOk);
+        //endregion
+
+        setAge(0);
+    }
+
+    private void addAgeIndex(int index, float dx, float dy) {
+        LabIndex i = new LabIndex(index, getByDx(dx), getByDy(dy));
+        i.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable item) {
+                onIndexClick((LabIndex) item);
+            }
+        });
+        i.hide();
+        ageIndices.add(i);
+        addDlgControlTouchable(i, dx, dy);
+    }
+
+    private void onIndexClick(LabIndex item) {
+        if (item != null) {
+            Integer newVal = item.index;
+            if (age > 0 && age < 10)
+                newVal += 10 * age;
+            setAge(newVal);
+        }
+    }
+
+    private void onBackspace() {
+        setAge(age > 10 ? age / 10 : 0);
+    }
+
+    private void setAge(int val) {
+        age = val;
+        txtAge.setText(age > 0 ? age.toString() : "");
+
+        // видимость контролов
+        //setOkVisible(age > 0);
+        //setOkEnabled(age > 0);
+        setIdeaVisible(age <= 0);
+        itemAge.setHidden(age <= 0);
+        itemBackspace.setHidden(age <= 0);
+        itemOk.setHidden(age <= 0);
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+}

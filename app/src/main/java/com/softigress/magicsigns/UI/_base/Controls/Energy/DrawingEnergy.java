@@ -1,0 +1,371 @@
+package com.softigress.magicsigns.UI._base.Controls.Energy;
+
+import android.animation.ObjectAnimator;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.os.SystemClock;
+
+import com.softigress.magicsigns.Activities._base.PauseInfo;
+import com.softigress.magicsigns.Game.Dna.ProgressDna.ProgressDna;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Counters.CtrlCounterInv;
+import com.softigress.magicsigns.UI._base.Controls._base.Counters.CtrlMultiplier;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Effects.Trace.DrawingTrace;
+import com.softigress.magicsigns._Base._Drawing.Bezier.DrawingBezierPath;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IMoveListener;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingEnergy extends DrawingBaseTouchable {
+
+    private EnergyType type = EnergyType.SIMPLE;
+
+    public boolean isHelpItem = false;
+    private boolean isStarted = false;
+    private boolean isCatched = false;
+    private boolean isFinished = false;
+    private final PauseInfo pauseInfo = new PauseInfo();
+
+    private float fd0, fy0;
+    private float moveK = 1f;
+    private static final long startDuration = 1000;
+    private static final long moveDuration = 15000;
+    private final long catchedDuration = 250;
+    private static final long rotateDnaDuration = 1000;
+    private static final int rotateDuration = 2000;
+    private long startTicks = 0;
+
+    private DrawingBezierPath path;
+    private boolean isShowHelp = false;
+    private DrawingBase tapHand;
+    private static final float fdHand = .25f;
+    private static final int maxHelpAlpha = 70;
+    private DrawingText tapText;
+
+    private DrawingTrace trace;
+    private static final float traceFr = .005f;
+    private static final int tracePointDuration = 2000;
+    private static final float traceFluctuation = .025f;
+
+    private int maxAlpha = 224; // 196
+    private static final int maxPaintAlpha = 64;
+    private Paint paint0, paint1;
+    private Paint tracePaint;
+
+    public DrawingEnergy(float fd, EnergyType type) {
+        super(fd);
+
+        this.fd0 = fd;
+        //pointRd = .2f * fd / pCount;
+        this.type = type;
+        switch (type) {
+            case SIMPLE:
+                paint = PaintUtils.getPaintWhite(maxAlpha);
+                tracePaint = PaintUtils.getPaintWhite(maxPaintAlpha);
+                setDefaultBitmap(R.string.bmp_spot_white);//R.drawable.glare_01);
+                break;
+            case DNA:
+                paint = PaintUtils.getPaint(maxAlpha, 128, 255, 96);
+                paint1 = PaintUtils.getPaintStroke(maxAlpha, 128, 255, 96, PaintUtils.strokeWidth2);
+                tracePaint = PaintUtils.getPaint(maxPaintAlpha, 128, 255, 96);
+                break;
+            case EXPLODE:
+                tracePaint = PaintUtils.getPaint(maxPaintAlpha, 255, 196, 196);
+                setDefaultBitmap(R.string.bmp_spot_orange);
+                break;
+            /*case LIGHTNING:
+                paint = PaintUtils.getPaintWhite(maxAlpha);
+                paint1 = PaintUtils.getPaintStrokeWhite(maxAlpha, PaintUtils.strokeWidth);
+                pPaint = PaintUtils.getPaintWhite(maxPaintAlpha);
+                break;*/
+        }
+        if (tracePaint != null)
+            trace = new DrawingTrace(traceFr, tracePointDuration, tracePaint);
+        setAlpha(maxAlpha);
+
+        setListener(new ITouchableListener() {
+            @Override public void handelOnTouch(ITouchable item) { catched(); }
+            @Override public void handelOnTouchUp(ITouchable item) { }
+        });
+        setListener(new IMoveListener() {
+            @Override public void handelOnMoveIn(ITouchable item) { catched(); }
+            @Override public void handelOnMoveOut(ITouchable item) { }
+        });
+
+        // обводка
+        paint0 = PaintUtils.getPaintStrokeWhite(maxPaintAlpha, PaintUtils.strokeWidth);
+    }
+
+    private IDrawingEnergyListener listener;
+    public void setListener(IDrawingEnergyListener l) { this.listener = l; }
+
+    //region status
+    public void start(float fx, float fy) {
+        fy0 = fy;
+        moveK = Utils.getRandomBetween(.8f, 1f);
+        setFd(0);
+        setPoint(fx, fy);
+        isStarted = true;
+        ObjectAnimator.ofFloat(this, "fd", 0, 1.2f * fd0, fd0).setDuration(startDuration).start();
+    }
+
+    public void showHelp() {
+        tapHand = new DrawingBase(fdHand, R.string.bmp_hand);
+        tapText = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_small);
+        tapText.setText(R.string.game_tap_text);
+        tapText.isPaintRect = true;
+        isShowHelp = true;
+    }
+
+    private long catchedTicks = 0;
+    private void catched() {
+        if (!isCatched) {
+            isCatched = true;
+            isShowHelp = false;
+            catchedTicks = SystemClock.elapsedRealtime();
+            if (type == EnergyType.SIMPLE)
+                path = new DrawingBezierPath(fx, fy, fx, .5f, CtrlMultiplier.mltFx, CtrlMultiplier.mltFy);
+            else if (type == EnergyType.DNA)
+                path = new DrawingBezierPath(fx, fy, fx, .5f, CurrentSettings.dnaReadyFx, ProgressDna.dnaFy);
+            else if (type == EnergyType.EXPLODE)
+                path = new DrawingBezierPath(fx, fy, fx, .5f, CtrlCounterInv.invFx, CtrlCounterInv.invFy);
+            /*if (typeId == TYPE_LIGHTNING)
+                Utils.playSoundLightning();*/
+
+            if (path != null)
+                path.start(catchedDuration);
+
+            Utils.playSound(R.raw.energy_catch02);
+            ObjectAnimator.ofFloat(this, "scale", 1f, 0f).setDuration(catchedDuration).start();
+            TaskUtils.postDelayed(catchedDuration, new Runnable() {
+                @Override
+                public void run() {
+                    ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0).setDuration(catchedDuration / 5).start();
+                    //ObjectAnimator.ofFloat(this, "scale", 1f, 0f).setDuration(catchedDuration / 5).start();
+                    if (listener != null)
+                        listener.onCatched(type);
+                    finish();
+                }
+            });
+        }
+    }
+
+    public void finish() { isFinished = true; }
+    public void pause() { pauseInfo.pause(); }
+    public void resume() {
+        if (startTicks > 0)
+            startTicks += pauseInfo.resume();
+        else
+            pauseInfo.resume();
+    }
+
+    @Override
+    public boolean isVisible() { return (isHelpItem && super.isVisible())|| (isStarted && !isFinished); }
+    public boolean isInProgress() { return isStarted && !isFinished && !isCatched; }
+    //endregion
+
+    @Override
+    public boolean inBounds(float px, float py) {
+        return  x - w  <= px && px <= x + w &&
+                y - h  <= py && py <= y + h;
+    }
+
+    public void setMaxAlpha(int a) { this.maxAlpha = a; }
+    @Override
+    public void setAlpha(int alpha) {
+        super.setAlpha(alpha);
+        int a = maxAlpha * alpha / 255;
+        int ap = maxPaintAlpha * alpha / 255;
+        if (paint != null)
+            paint.setAlpha(a);
+        if (paint1 != null)
+            paint1.setAlpha(a);
+        if (paint0 != null)
+            paint0.setAlpha(ap);
+        if (tracePaint != null)
+            tracePaint.setAlpha(ap);
+        if (trace != null)
+            trace.setAlpha(ap);
+    }
+
+    //region Draw
+    private long delta = 0;
+    public void nextFrame(long ticks) {
+        if (isStarted) {
+            if (startTicks == 0)
+                startTicks = ticks;
+            if (!pauseInfo.isPaused)
+                delta = ticks - startTicks;
+
+            if (isCatched && path != null) {
+                PointF point = path.getCurrentPoint(ticks);
+                if (point != null) {
+                    setPoint(point);
+                    long catchedDelta = ticks - catchedTicks;
+                    if (catchedDelta <= catchedDuration) {
+                        float fluctuation = traceFluctuation * catchedDelta / catchedDuration;
+                        if (trace != null)
+                            trace.addPoint(point, fluctuation);
+                    }
+                }
+            } else
+                fy = fy0 -  delta * moveK / moveDuration;
+
+            //if (type == EnergyType.SIMPLE)
+            //    setAngel((360f / rotateDuration) * (startTicks - ticks));
+
+            if (tapHand != null && isShowHelp) {
+                int ah = maxHelpAlpha * alpha / 255;
+                tapHand.setAlpha(ah);
+                tapHand.setPoint(fx + .025f, fy + .025f); // сдвиг для Hand
+                tapText.setAlpha(alpha);
+                tapText.setPoint(fx, fy - .05f); // сдвиг для подсказки
+            }
+        }
+        if (fy < -fd)
+            finish();
+
+        if (paint1 != null) {
+            //if (type == EnergyType.DNA)
+                paint1.setStrokeWidth(PaintUtils.strokeWidth2);
+            /*else if (type == EnergyType.LIGHTNING)
+                paint1.setStrokeWidth(PaintUtils.strokeWidth);*/
+        }
+        if (paint0 != null)
+            paint0.setStrokeWidth(PaintUtils.strokeWidth);
+    }
+
+    private long startDnaRotationTicks = 0;
+    /*private long startLightningRotationTicks = 0;
+    DrawingLightning lightning;*/
+
+    @Override
+    public void drawBackground(Canvas c) {
+        super.drawBackground(c);
+
+        if (isVisible()) {
+            // обводка
+            if (!isCatched && type == EnergyType.DNA)
+                c.drawCircle(x, y, .5f * h, paint0);
+
+            if (type == EnergyType.SIMPLE) {
+                c.drawCircle(x, y, .25f * h, paint);
+                //c.drawCircle(x, y, .25f * h, paint0);
+            } else if (type == EnergyType.DNA) {
+                float r = .5f * h;
+
+                long ticks = SystemClock.elapsedRealtime();
+                if (startDnaRotationTicks == 0)
+                    startDnaRotationTicks = ticks;
+
+                float rK = (float)((ticks - startDnaRotationTicks) % rotateDnaDuration) / rotateDnaDuration;
+                float angelSin = (float)Math.sin(Utils.PI2 * rK);
+                float angelCos = (float)Math.cos(Utils.PI2 * rK);
+                float x0 = x + r * angelSin;
+                float y0 = y + r * angelCos;
+                float x1 = x - r * angelSin;
+                float y1 = y - r * angelCos;
+
+                c.drawLine(x0, y0, x1, y1, paint1);
+                c.drawCircle(x0, y0, r / 8, paint);
+                c.drawCircle(x1, y1, r / 8, paint);
+
+            } /*else if (typeId == TYPE_LIGHTNING) {
+
+                long ticks = SystemClock.uptimeMillis();
+                if (startLightningRotationTicks == 0)
+                    startLightningRotationTicks = ticks;
+
+                float rK = (float) ((ticks - startLightningRotationTicks) % rotateLightningDuration) / rotateLightningDuration;
+                float angelSin = (float) Math.sin(PI2 * rK);
+                float angelCos = (float) Math.cos(PI2 * rK);
+
+                if (isCatched) {
+                    if (lightning == null) {
+                        lightning = new DrawingLightning(.05f, PaintUtils.strokeWidth / 2f, PaintUtils.strokeWidth * 2f);
+                        lightning.setPathK(x, y, angelSin, angelCos);
+                        lightning.start(1000);
+                    }
+                    lightning.drawFrame(c);
+
+                } else {
+                    float r = .5f * h;
+                    float r2 = .5f * r;
+                    float dx = (Utils.getRandom() - .5f) * r2;
+                    float dy = (Utils.getRandom() - .5f) * r2;
+
+                    float x0 = x + r * angelSin;
+                    float y0 = y + r * angelCos;
+                    float x1 = x + r2 * angelSin + dx;
+                    float y1 = y + r2 * angelCos + dy;
+                    float x2 = x - r2 * angelSin - dx;
+                    float y2 = y - r2 * angelCos - dy;
+                    float x3 = x - r * angelSin;
+                    float y3 = y - r * angelCos;
+
+                    Path p = new Path();
+                    p.moveTo(x0, y0);
+                    p.lineTo(x1, y1);
+                    //p.lineTo(x, y);
+                    p.lineTo(x2, y2);
+                    p.lineTo(x3, y3);
+
+                    c.drawPath(p, paint1);
+                    //c.drawLine(x0, y0, x1, y1, paint1);
+                    c.drawCircle(x0, y0, r / 8, paint);
+                    c.drawCircle(x3, y3, r / 8, paint);
+                }
+            }*/
+        }
+    }
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isCatched) {
+            // точки трейса
+            if (trace != null)
+                trace.drawFrame(c);
+        }
+        super.drawFrame(c);
+        if (isVisible()) {
+            if (isShowHelp) {
+                if (tapHand != null)
+                    tapHand.drawFrame(c);
+                if (tapText != null)
+                    tapText.drawFrame(c);
+            }
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        super.recycle();
+
+        if (path != null)
+            path.recycle();
+        if (tapHand != null)
+            tapHand.recycle();
+        if (tapHand != null)
+            tapHand.recycle();
+        if (trace != null)
+            trace.recycle();
+
+        path = null;
+        paint1 = null;
+        paint0 = null;
+        tracePaint = null;
+        tapHand = null;
+        tapText = null;
+        trace = null;
+    }
+}

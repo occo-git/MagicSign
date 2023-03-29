@@ -1,0 +1,109 @@
+package com.softigress.magicsigns.Game.Puncher;
+
+import android.graphics.Canvas;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawingTouchable;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+
+public class DrawingPuncher implements IDrawingTouchable {
+
+    private int x, y;
+    private boolean isEnabled = false;
+    private final DrawingRay ray;
+
+    private IDrawingPuncherListener listener;
+    //private DrawingFrameRate frameRate;
+
+    public DrawingPuncher() {
+        ray = new DrawingRay(CurrentSettings.puncherRayPointCount);
+        calc();
+        //frameRate = new DrawingFrameRate("puncher", .04f, .5f);
+    }
+
+    public void setListener(IDrawingPuncherListener l) { this.listener = l; }
+
+    //region enabled
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+        ray.reset();
+        isOnTouch = false;
+    }
+    //endregion
+
+    //region Touch
+    @Override
+    public boolean onTouch(int x, int y) {
+        setPoint(x, y);
+        if (isEnabled) {
+            isOnTouch = true;
+            ray.reset();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onTouchUp(int x, int y) {
+        if (isEnabled) {
+            if (isOnTouch) {
+                setPoint(x, y);
+                isOnTouch = false;
+                //if (ray != null) {
+                    //ray.reset();
+                    /*SignInfo info = ray.onTouchUp();
+                    if (listener != null && info != null)
+                        listener.handleOnPunch(info);*/
+                    RaySign raySign = ray.getRaySign();
+                    if (listener != null)
+                        listener.handleOnRayPunch(raySign);
+                //}
+            }
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onMoveTo(int x, int y) {
+        setPoint(x, y);
+    }
+    //endregion
+
+    private void setPoint(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    // касание
+    private boolean isOnTouch = false;
+
+    @Override
+    public void drawFrame(Canvas c) {
+        //if (frameRate != null)
+        //    frameRate.start();
+
+        if (isEnabled) {
+            //if (ray != null) {
+                if (ray.nextPoint(x, y))
+                    ray.drawFrame(c);
+            //}
+        }
+        //if (frameRate != null)
+        //    frameRate.drawFrame(c);
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        //if (ray != null)
+            ray.recycle();
+        //if (frameRate != null)
+        //    frameRate.recycle();
+    }
+}

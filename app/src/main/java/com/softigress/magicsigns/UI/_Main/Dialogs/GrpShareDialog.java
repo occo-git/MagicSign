@@ -1,0 +1,134 @@
+package com.softigress.magicsigns.UI._Main.Dialogs;
+
+import android.graphics.Color;
+
+import com.google.firebase.storage.internal.Util;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI.Rating.RatingRow.UserRatingRowInfo;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Progress.CtrlProgressBar;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserScoreInfo;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserVideoCount;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpShareDialog extends GrpDialog {
+
+    public static final int DIALOG_RESULT_OK = 0;
+    public static final int DIALOG_RESULT_RATE = 1;
+    public static final int DIALOG_RESULT_LINK = 2;
+    public static final int DIALOG_RESULT_SCREENSHOT = 3;
+
+    private static final float dxBtn = .2f;
+    private static final float dyStart = 1 / 6f;
+    private static final float dyBtn = (1f - 2.25f * dyStart) / 3f;
+    private static final float fdBtn = .1f;
+
+    private static final float dxIdea = .5f, dyIdea = .8f;
+    private static final float dxProgressBar = .3f;
+    private static final float fwProgressBar = .4f, fhProgressBar = .015f;
+
+    private final DrawingBase potion;
+    private final CtrlProgressBar ctrlProgressBar;
+    private DialogItem itemPotion;
+    private DialogItem itemProgressBar;
+
+    public GrpShareDialog() {
+        super(.8f, .62f);
+        name = "dlg_share";
+
+
+        float bx = getByDx(dxBtn);
+
+        //region rate
+        BtnBase btnRate = new BtnBase(bx, getByDy(dyStart), fdBtn, R.string.bmp_btn_rate);
+        btnRate.name = "btn_rate_game";
+        btnRate.setLabelText(R.string.dlg_Share_RateTheGame, DrawingHAlign.LEFT);
+        btnRate.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_RATE); }
+        });
+        addDlgControlTouchable(btnRate, dxBtn, dyStart);
+        //endregion
+
+        //region link
+        BtnBase btnLink = new BtnBase(bx, getByDy(dyStart + dyBtn), fdBtn, R.string.bmp_btn_link);
+        btnLink.name = "btn_share_link";
+        btnLink.setLabelText(R.string.dlg_Share_Link, DrawingHAlign.LEFT);
+        btnLink.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_LINK); }
+        });
+        addDlgControlTouchable(btnLink, dxBtn, dyStart + dyBtn);
+        //endregion
+
+        //region screenshot
+        BtnBase btnScreenshot = new BtnBase(bx, getByDy(dyStart + dyBtn * 2f), fdBtn, R.string.bmp_btn_screenshot);
+        btnScreenshot.name = "btn_share_scr";
+        btnScreenshot.setLabelText(R.string.dlg_Share_Screenshot, DrawingHAlign.LEFT);
+        btnScreenshot.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_SCREENSHOT); }
+        });
+        addDlgControlTouchable(btnScreenshot, dxBtn, dyStart + dyBtn * 2f);
+        //endregion
+
+        //region get potion progress
+        setDlgIdeaText(R.string.dlg_Share_Idea, dxIdea, dyIdea);
+
+        float dy = dyStart + dyBtn * 3.15f;
+        float dy0 = dy + dyBtn * .125f;
+        float fw = fwProgressBar * MetrixUtils.screen_K_default / MetrixUtils.screen_K;
+        ctrlProgressBar = new CtrlProgressBar(getByDx(dxProgressBar), getByDy(dy0), fw, fhProgressBar);
+        ctrlProgressBar.setRGB(255, 255, 255);
+        ctrlProgressBar.setAlign(DrawingHAlign.LEFT);
+        ctrlProgressBar.isHideOnZero = false;
+        itemProgressBar = addDlgControl(ctrlProgressBar, dxProgressBar, dy0);
+
+        potion = new DrawingBase(fdBtn, R.string.bmp_potion_00_empty);
+        itemPotion = addDlgControl(potion, dxBtn, dy);
+        //endregion
+
+        addDlgCloseButton();
+    }
+
+    public void applySettings(UserVideoCount uvc) {
+        UserScoreInfo usi = Utils.dataBaseManager.currentUserScoreInfo;
+        if (usi != null) {
+            AchievementType type = usi.firstDisabledAchievementType();
+            if (type != null) {
+                setPotionVisible(true);
+                potion.setDefaultBitmap(SignInfos.getBitmapIdByAchievementType(type));
+                potion.refreshCurrentStatus();
+                int color = SignInfos.getColorByAchievementType(type);
+                ctrlProgressBar.setRGB(Color.red(color), Color.green(color), Color.blue(color));
+                if (uvc != null) {
+                    ctrlProgressBar.setPercent(uvc.sharedPercent());
+                    if (uvc.sharedPotionEnabled()) {
+                        setDlgIdeaText(R.string.dlg_Share_Idea_Achievements, dxIdea, dyIdea);
+                        setPotionVisible(false);
+                    }
+                }
+            } else {
+                setDlgIdeaText(R.string.dlg_Share_Idea_Achievements, dxIdea, dyIdea);
+                setPotionVisible(false);
+            }
+        } else {
+            setDlgIdeaText(R.string.dlg_Share_Idea, dxIdea, dyIdea);
+            setPotionVisible(false);
+        }
+    }
+
+    private void setPotionVisible(boolean isVisible) {
+        setIdeaVisible(!isVisible);
+        itemProgressBar.setHidden(!isVisible);
+        itemPotion.setHidden(!isVisible);
+    }
+}

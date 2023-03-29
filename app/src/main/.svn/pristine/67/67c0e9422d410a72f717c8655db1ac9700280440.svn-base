@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- START xml_defaults -->
+<defaultsMap>
+
+    <entry>
+        <key>app_url</key>
+        <value>https://play.google.com/store/apps/details?id=com.softigress.magicsigns</value>
+    </entry>
+    <entry>
+        <key>app_rate_market_url</key>
+        <value>market://details?id=com.softigress.magicsigns</value>
+    </entry>
+    <entry>
+        <key>app_rate_url</key>
+        <value>https://play.google.com/store/apps/details?id=com.softigress.magicsigns</value>
+    </entry>
+    <entry>
+        <key>app_support_url</key>
+        <value>https://play.google.com/store/apps/details?id=com.softigress.magicsigns</value>
+    </entry>
+    <entry>
+        <key>app_policy_url</key>
+        <value>https://sites.google.com/view/magicsigns/privacy-policy</value>
+    </entry>
+    <entry>
+        <key>app_support_email</key>
+        <value>softigress@gmail.com</value>
+    </entry>
+
+    <!-- MP3s -->
+    <entry>
+        <key>MP3_count</key>
+        <value>6</value>
+    </entry>
+    <entry>
+        <key>MP3_0</key>
+        <value>3000;dream_flight.ogg;6084520;a561db43-6286-4233-8722-21d27ac63277</value>
+    </entry>
+    <entry>
+        <key>MP3_1</key>
+        <value>3001;origin_of_life.ogg;3477933;4977bfc7-4b75-4e5e-897f-127a68c85b4f</value>
+    </entry>
+    <entry>
+        <key>MP3_2</key>
+        <value>3002;origin_of_life_short.ogg;1978236;6bd12e57-ce39-4f89-a628-4a759dc30809</value>
+    </entry>
+    <entry>
+        <key>MP3_3</key>
+        <value>3003;transcendence.ogg;4400728;c77779b1-f992-4028-92df-31bc9dbe283d</value>
+    </entry>
+    <entry>
+        <key>MP3_4</key>
+        <value>3004;the_potion.ogg;2778836;5450ff4f-e55d-4d25-acf9-eac4a31ab467</value>
+    </entry>
+    <entry>
+        <key>MP3_5</key>
+        <value>3005;orden_short.ogg;535192;003bcdf8-c8a2-4d7e-abf0-b5ae75ff7bbc</value>
+    </entry>
+    <!-- JPGs -->
+    <entry>
+        <key>JPG_count</key>
+        <value>0</value>
+    </entry>
+    <entry>
+        <key>JPG_id_0</key>
+        <value>6000;me_img.jpg;112762;33f22fca-c1e4-4cf8-a055-3a2c5cef4f28</value>
+    </entry>
+
+</defaultsMap>
+<!-- ends xml defaults -->

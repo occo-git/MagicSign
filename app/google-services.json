@@ -1,0 +1,64 @@
+{
+  "project_info": {
+    "project_number": "190691572751",
+    "firebase_url": "https://magicsigns-979f5.firebaseio.com",
+    "project_id": "magicsigns-979f5",
+    "storage_bucket": "magicsigns-979f5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190691572751:android:dfdc31b1bd1900d3",
+        "android_client_info": {
+          "package_name": "com.softigress.magicsigns"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "190691572751-cctv1ikjuflar3jupgokgprhta2t1imv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.softigress.magicsigns",
+            "certificate_hash": "167ba6fca9a5f916a9ebf897a21766dcfab36253"
+          }
+        },
+        {
+          "client_id": "190691572751-h6j0ai6iv1vq6pfserk76dsh9l3i6mib.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.softigress.magicsigns",
+            "certificate_hash": "44a91603e59e9ff509e89e21b5529949be6c309c"
+          }
+        },
+        {
+          "client_id": "190691572751-b5q6u0mqrd5ehplfdaujjv5ja08ndeb3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJDJYwZLYEN6mDz6WAHiB5LlhtTcn6KRc"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "190691572751-b5q6u0mqrd5ehplfdaujjv5ja08ndeb3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      },
+      "admob_app_id": "ca-app-pub-1702248074145406~9991315601"
+    }
+  ],
+  "configuration_version": "1"
+}

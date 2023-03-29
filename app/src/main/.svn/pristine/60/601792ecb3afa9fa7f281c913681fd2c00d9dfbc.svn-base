@@ -1,0 +1,396 @@
+package com.softigress.magicsigns.UI._base.Controls._base.Texts;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Typeface;
+import androidx.annotation.Keep;
+
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IDialogItemControl;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingText implements IDialogItemControl {
+
+    private boolean isMultiLine = false;
+    private float multiLineInterval = TextUtils.multiline_text_interval;
+    private String text;
+    private boolean hasText = false;
+    private float fontSize = TextUtils.default_font_size;
+
+    public boolean isPaintShadow = true;
+    private float textBackStrokeWidthK = 1f;
+    protected boolean isVisible = true;
+    private boolean isEnabled = true;
+    private static final float disabledAlphaK = .3f;
+    public boolean isPaintRect = false; // с обводкой (прямоугольник с закругленными углами)
+
+    protected float fx, fy;
+    public float x;
+    protected float y;
+    protected int alpha = 255;
+    private int maxBackAlpha = 255;
+    private int maxRectAlpha = 48;
+    private DrawingHAlign halign = DrawingHAlign.CENTER; // text (horisontal) alignment
+    private DrawingVAlign valign = DrawingVAlign.CENTER;
+
+    private Paint textPaint;
+    private Paint textPaintBack;
+    private Paint rectPaint0;    // прямоугольник обводки текста контур
+    private Paint rectPaint1;    // прямоугольник обводки текста заполнение
+    private static final float rectFr = .05f; // радиус скругления обводки
+
+    //region TextPaint
+    protected DrawingText() {
+        textPaint = PaintUtils.getPaintWhite(255);
+        textPaintBack = PaintUtils.getPaintStrokeBlack(255, PaintUtils.strokeWidthTextBack);
+        textPaintBack.setDither(true);                    // set the dither to true
+        textPaintBack.setStrokeCap(Paint.Cap.ROUND);      // set the paint cap to round too
+        textPaintBack.setStrokeJoin(Paint.Join.ROUND);
+
+        rectPaint0 = PaintUtils.getPaintWhite(maxRectAlpha / 2);
+        rectPaint0.setStrokeWidth(PaintUtils.strokeWidth * 4);
+        rectPaint1 = PaintUtils.getPaintWhite(maxRectAlpha / 2);
+
+        setTypeface(TextUtils.defaultTypeface);
+        setFontSize(TextUtils.default_font_size);
+    }
+
+    public DrawingText(DrawingHAlign halign) {
+        this();
+        setTextAlign(halign);
+        setTypeface(TextUtils.defaultTypeface);
+    }
+
+    private DrawingText(DrawingHAlign halign, Typeface typeface) {
+        this(halign);
+        setTypeface(typeface);
+    }
+
+    public DrawingText(DrawingHAlign halign, float size) {
+        this(halign);
+        setFontSize(size);
+    }
+
+    public DrawingText(DrawingHAlign halign, Typeface typeface, float size) {
+        this(halign, typeface);
+        setFontSize(size);
+    }
+
+    public DrawingText(DrawingHAlign halign, Typeface typeface, boolean isDisabled) {
+        this(halign, typeface);
+        if (isDisabled)
+            disable();
+    }
+
+    public DrawingText(DrawingHAlign halign, Typeface typeface, float size, boolean isDisabled) {
+        this(halign, typeface, size);
+        if (isDisabled)
+            disable();
+    }
+    //endregion
+
+    //region props
+    public float getFx() { return fx; }
+    public float getFy() { return fy; }
+    public int getAlpha() { return alpha; }
+    @Keep
+    public void setFx(float fx) { this.fx = fx; }
+    @Keep
+    public void setFy(float fy) { this.fy = fy; }
+    @Keep
+    public void setAlpha(int a) { alpha = a; }
+
+    public void setPoint(float fx, float fy) {
+        this.fx = fx;
+        this.fy = fy;
+    }
+    //endregion
+
+    //region show hide
+    public void show() { isVisible = true; }
+    public long hide() {
+        isVisible = false;
+        return 0;
+    }
+    //endregion
+
+    //region text props
+    private String[] splitedText;
+    private String maxSingleLineLength;
+    private String maxLine;
+    private float maxWidth = 0;
+    public void setText(String t) {
+        if (t == null)
+            t = "";
+
+        isMultiLine = t.contains(TextUtils.multi_text_splitter);
+        this.text = t;
+        this.hasText = t.length() > 0;
+        maxLine = "";
+        float maxWidth = 0;
+        if (isMultiLine) {
+            splitedText = text.split(TextUtils.multi_text_splitter);
+            for (String s : splitedText) {
+                if (textPaint != null) {
+                    float sWidth = textPaint.measureText(s);
+                    if (sWidth > maxWidth) {
+                        maxWidth = sWidth;
+                        maxLine = s;
+                    }
+                }
+            }
+        } else {
+            splitedText = new String[] {};
+            maxLine = t;
+        }
+        maxSingleLineLength = "_" + (maxLine.length() > 1 ? maxLine : "_" + maxLine + "_") + "_";
+    }
+    public boolean hasText() { return hasText; }
+    public void setMaxWidth(float maxWidth) {
+        this.maxWidth = maxWidth;
+        if (!isMultiLine) { // в случае одной строки
+            if (maxWidth > 0) { // если ограничение по ширине указано
+                this.text = TextUtils.ellipsize(text, textPaint, maxWidth);
+            }
+        }
+    }
+    public float getTextWidth() { return textPaint.measureText(maxLine); }
+    public void setText(int resId) {
+        setText(Utils.getRes(resId));
+    }
+    public void setTypeface(Typeface typeface) {
+        textPaint.setTypeface(typeface);
+        textPaintBack.setTypeface(typeface);
+    }
+    public void setVerticalAlign(DrawingVAlign vAlign) { this.valign = vAlign; }
+    public void setTextAlign(DrawingHAlign halign) {
+        this.halign = halign;
+        switch (halign) {
+            case LEFT:
+                textPaint.setTextAlign(Paint.Align.LEFT);
+                textPaintBack.setTextAlign(Paint.Align.LEFT);
+                break;
+            case CENTER:
+                textPaint.setTextAlign(Paint.Align.CENTER);
+                textPaintBack.setTextAlign(Paint.Align.CENTER);
+                break;
+            case RIGHT:
+                textPaint.setTextAlign(Paint.Align.RIGHT);
+                textPaintBack.setTextAlign(Paint.Align.RIGHT);
+                break;
+        }
+    }
+    public DrawingHAlign getTextAlign() { return halign; }
+    public void setTextARGB(int a, int r, int g, int b) {
+        textPaint.setARGB(a, r, g, b);
+    }
+    public void setTextBack(float strokeWidthK, int a, int r, int g, int b) {
+        setTextBackStrokeWidthK(strokeWidthK);
+        setTextBackARGB(a, r, g, b);
+    }
+    public void setTextBackARGB(int a, int r, int g, int b) {
+        textPaintBack.setARGB(a, r, g, b);
+        maxBackAlpha = a;
+    }
+    private void setTextBackStrokeWidthK(float k) { textBackStrokeWidthK = k; }
+    public void setMultiLineInterval(float interval) { multiLineInterval = interval; }
+    @Keep
+    public void setFontSize(float size) {
+        fontSize = size;
+    }
+    public float getFontSize() { return fontSize; }
+    public void setRectARGB(int a, int r, int g, int b) {
+        //if (rectPaint0 != null)
+            rectPaint0.setARGB(a, r, g, b);
+        //if (rectPaint1 != null)
+            rectPaint1.setARGB(a, r, g, b);
+        maxRectAlpha = a;
+    }
+    //endregion
+
+    public float getCountPaintTextSizeFDx() { return TextUtils.getFontSize(fontSize) / MetrixUtils.screen_metrix_width; }
+    public float getCountPaintTextSizeFDy() { return TextUtils.getFontSize(fontSize) / MetrixUtils.screen_metrix_height; }
+
+    public void enable() {
+        this.isEnabled = true;
+        calc();
+    }
+    public void disable() {
+        this.isEnabled = false;
+        calc();
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() {
+        this.x = this.fx * MetrixUtils.screen_metrix_width;
+        this.y = this.fy * MetrixUtils.screen_metrix_height;
+
+        if (textPaint != null && textPaintBack != null && rectPaint0 != null && rectPaint1 != null) {
+            float a255 = alpha / 255f;
+            if (isEnabled) {
+                textPaint.setAlpha(alpha);
+                textPaintBack.setAlpha((int) (maxBackAlpha * a255));
+            } else {
+                textPaint.setAlpha((int) (alpha * disabledAlphaK));
+                textPaintBack.setAlpha((int) (maxBackAlpha * a255 * disabledAlphaK));
+            }
+            int aa = isPaintRect ? (int) (maxRectAlpha * a255 / 2f) : 0;
+            rectPaint0.setAlpha(aa);
+            rectPaint1.setAlpha(aa);
+
+            textPaint.setTextSize(TextUtils.getFontSize(fontSize));
+            textPaintBack.setTextSize(TextUtils.getFontSize(fontSize));
+            textPaintBack.setStrokeWidth(PaintUtils.strokeWidthTextBack * textBackStrokeWidthK);
+        }
+    }
+
+    public boolean contains(float px, float py) {
+        RectF rect = getRect();
+        return rect != null ? rect.contains(px, py) : false;
+    }
+
+    private final Rect bounds = new Rect();
+    protected RectF rect;
+    private RectF getRect() {
+        calc();
+        if (textPaint != null) {
+            if (maxSingleLineLength != null)
+                textPaint.getTextBounds(maxSingleLineLength, 0, maxSingleLineLength.length(), bounds);
+            int w = bounds.width();
+            float x0 = x;
+            float x1 = x;
+            if (halign == DrawingHAlign.LEFT)
+                x1 += w;
+            else if (halign == DrawingHAlign.CENTER) {
+                x0 -= w / 2;
+                x1 += w / 2;
+            } else if (halign == DrawingHAlign.RIGHT)
+                x0 -= w;
+
+            float y0 = y;
+            float y1 = y;
+            float th = textPaint.getTextSize();
+            if (isMultiLine) {
+                float ty = multiLineInterval * th;
+                float h = ty * (splitedText.length + 1);
+                if (valign == DrawingVAlign.TOP) {
+                    y0 -= ty;
+                    y1 += (h - ty);
+                } else if (valign == DrawingVAlign.CENTER) {
+                    y0 -= h / 2;
+                    y1 += h / 2;
+                } else { // bottom
+                    y0 -= (h - ty);
+                    y1 += ty;
+                }
+            } else {
+                float dy = th / 4f;
+                float ty = multiLineInterval * th;
+                if (valign == DrawingVAlign.TOP) {
+                    y0 -= (ty - dy);
+                    y1 += (ty + dy);
+                } else if (valign == DrawingVAlign.CENTER) {
+                    y0 -= ty;
+                    y1 += ty;
+                } else { // bottom
+                    y0 -= (ty + dy);
+                    y1 += (ty - dy);
+                }
+            }
+            if (rect == null)
+                rect = new RectF(x0, y0, x1, y1);
+            else {
+                rect.left = x0;
+                rect.top = y0;
+                rect.right = x1;
+                rect.bottom = y1;
+            }
+            return rect;
+        } else
+            return null;
+    }
+
+    protected void drawBackground(Canvas c) { }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isVisible) {
+            if (getRect() != null && hasText) {
+                float shadowOffset = MetrixUtils.screen_metrix_height * TextUtils.textShadowOffset;
+                drawBackground(c);
+                //region draw rect
+                if (isPaintRect && rect != null) {
+                    float rfr = rectFr * MetrixUtils.screen_metrix_width;
+                    c.drawRoundRect(rect, rfr, rfr, rectPaint0); // заполнение0
+                    c.drawRoundRect(rect, rfr, rfr, rectPaint1); // заполнение1
+                }
+                //endregion
+                //region draw text
+                if (isMultiLine) {
+                    float th = textPaint.getTextSize();
+                    float ty = multiLineInterval * th;
+                    float dy = 0;
+                    if (splitedText != null) {
+                        int len = splitedText.length;
+                        if (len > 1) {
+                            if (valign == DrawingVAlign.TOP)
+                                dy = 0;
+                            else if (valign == DrawingVAlign.CENTER)
+                                dy = -(ty * (len - 1)) / 2;
+                            else // bottom
+                                dy = -(ty * (len - 1));
+                        }
+                        for (String t : splitedText) {
+                            if (t != null) {
+                                if (isPaintShadow)
+                                    c.drawText(t, x - shadowOffset, y + dy + shadowOffset, textPaintBack);
+                                c.drawText(t, x, y + dy, textPaint);
+                                y += ty;
+                            }
+                        }
+                    }
+                    //c.drawLine(x, y, x, y + dy, textPaint);
+                } else {
+                    float dy = 0;
+                    if (valign == DrawingVAlign.TOP)
+                        dy = textPaint.getTextSize() / 2f;
+                    else if (valign == DrawingVAlign.CENTER)
+                        dy = textPaint.getTextSize() / 4f;
+
+                    if (text != null) {
+                        if (isPaintShadow)
+                            c.drawText(text, x - shadowOffset, y + dy + shadowOffset, textPaintBack);
+                        c.drawText(text, x, y + dy, textPaint);
+                    }
+                    //c.drawLine(x, y - dy, x, y + dy, textPaint);
+                }
+                //endregion
+            }
+            //c.drawLine(x, y, x + 100, y + 100, PaintUtils.getPaintStrokeWhite(255, PaintUtils.getStrokeWidth()));
+        }
+    }
+
+    public void recycle() {
+        if (splitedText != null)
+            for (String t : splitedText)
+                t = null;
+        splitedText = null;
+
+        textPaint = null;
+        textPaintBack = null;
+        rectPaint0 = null;
+        rectPaint1 = null;
+    }
+    //endregion
+}
+

@@ -1,0 +1,265 @@
+<resources>
+    <string name="app_name">Magic Signs</string>
+    <string name="app_send_subject">Check out "Magic Signs"</string>
+    <string name="game_title" translatable="false">magic/signs</string>
+    <string name="app_id" translatable="false">190691572751</string>
+    <string name="admob_app_id" translatable="false">ca-app-pub-1702248074145406~9991315601</string>
+    <string name="facebook_app_id" translatable="false">1831488480503649</string>
+    <string name="vkontakte_app_id" translatable="false">6023091</string>
+
+    <!-- ID реального баннера AdMob. -->
+    <string name="banner_ad_unit_id" translatable="false">ca-app-pub-1702248074145406/5594025157</string>
+    <!-- ID реального межстраничного объявления AdMob. -->
+    <string name="page_ad_unit_id" translatable="false">ca-app-pub-1702248074145406/7113870829</string>
+    <!-- ID реального видео с вознаграждением AdMob. -->
+    <string name="rewarded_video_ad_unit_id" translatable="false">ca-app-pub-1702248074145406/3838090356</string>
+    <!-- ID реального видео без вознаграждения AdMob. -->
+    <string name="no_rewarded_video_ad_unit_id" translatable="false">ca-app-pub-1702248074145406/9611782205</string>
+
+    <string name="prepare_for_ad">Сommercial break …</string>
+    <string name="game_loading">… loading ...</string>
+    <string name="game_bad_data">BAD DATA</string>
+
+    <!-- Главный экран -->
+    <string name="main_comment_score_empty">Draw sings for protection/and get more stars</string>
+
+    <!-- Игра -->
+    <string name="game_wave_index">Wave</string>
+    <string name="game_wave_ready">Get ready!</string>
+    <string name="game_record_break">Record break!</string>
+    <string name="game_tap_text">Pick it up!</string>
+
+    <!-- Рейтинг -->
+    <string name="rating_caption">Rating</string>
+    <string name="rating_comment">Sign in/to see the rating table</string>
+
+    <!-- Лаборатория -->
+    <string name="lab_caption">Formula</string>
+    <string name="lab_comment">Sign in/to make lab/experiments</string>
+    <string name="lab_final_comment">Congratulations!/You invented/an antiviral agent!/Earth is safe</string>
+    <string name="lab_potion_for_video">Elixir for video</string>
+
+    <!-- Диалоги -->
+    <string name="dlg_Age_Exit">Press again to exit</string>
+
+    <string name="dlg_Menu_Options">options</string>
+    <string name="dlg_Menu_Continue">continue</string>
+    <string name="dlg_Menu_Intro">intro</string>
+    <string name="dlg_Menu_Reset">reset</string>
+    <string name="dlg_Menu_Exit">exit</string>
+
+    <string name="dlg_Reset_ResetTheGame">Reset/the game?</string>
+    <string name="dlg_Exit_ExitTheGame">Exit/the game?</string>
+    <string name="dlg_Exit_Title">Exit?</string>
+    <string name="dlg_Exit_IdeaText">On exit the game/current progress will/not be saved</string>
+    <string name="dlg_Pause_Title">Pause</string>
+    <string name="dlg_Pause_IdeaText">Continue the game</string>
+    <string name="dlg_Age_IdeaText">Please enter your age</string>
+    <string name="dlg_Exit">exit</string>
+
+    <string name="dlg_Sound">sound</string>
+    <string name="dlg_Music">music</string>
+    <string name="dlg_Vibr">vibration</string>
+    <string name="dlg_Play">play</string>
+    <string name="dlg_Yes">yes</string>
+    <string name="dlg_No">no</string>
+    <string name="dlg_Ok">OK</string>
+    <string name="dlg_Cancel">Cancel</string>
+
+    <string name="dlg_Share_Title">Share</string>
+    <string name="dlg_ShareScreenshot">share screenshot</string>
+    <string name="dlg_Share_Screenshot">share/screenshot</string>
+    <string name="dlg_Share_Link">share/link</string>
+    <string name="dlg_Share_RateTheGame">rate/the game</string>
+    <string name="dlg_Share_Rate">rate</string>
+    <string name="dlg_Share_No_PlayMarket">Could not open Play market. Try again later.</string>
+    <string name="dlg_Share_No_Url">Could not open Url. Try again later.</string>
+    <string name="dlg_Share_Idea">Share with your friends/and get an elixir</string>
+    <string name="dlg_Share_Idea_Achievements">Share achievements/with your friends</string>
+
+    <string name="dlg_Rate">Rate the game</string>
+    <string name="dlg_Rate_IdeaText">Thank you for your/real support!</string>
+    <string name="dlg_Rate_ChooseProgramm">Choose an e-mail program:</string>
+    <string name="dlg_Rate_Message">Comment:</string>
+    <string name="dlg_Rate_Send">Send</string>
+    <string name="dlg_Rate_Later">Later</string>
+    <string name="dlg_Rate_NoEmailClient">Unfortunately, There are no email clients installed.</string>
+
+    <string name="dlg_Login_SingIn_with_Firebase">New account</string>
+    <string name="dlg_Login_SingIn_with_Google">Sign in with Google</string>
+    <string name="dlg_Login_SingIn_with_Facebook">Sign in with Facebook</string>
+    <string name="dlg_Login_SingIn_with_Twitter">Sign in with Twitter</string>
+    <string name="dlg_Login_SingIn_Policy">Privacy Policy</string>
+    <string name="dlg_Login_Firebase_Title">Create new account</string>
+    <string name="dlg_Login_Firebase_Message">Name (6 – 50 symbols):</string>
+    <string name="dlg_Login_Firebase_RepeatMessage">Please enter your name (6 – 50 symbols)</string>
+    <string name="dlg_Login_SignIn">sign in</string>
+    <string name="dlg_LogingIn">processing</string>
+    <string name="dlg_Login_Message">Sign in/to save results</string>
+    <string name="dlg_Loged_Message">See rating table/for results</string>
+    <string name="dlg_Login_CredetialAlreadyInUse">This account is already associated with another user.</string>
+    <string name="dlg_Login_NetworkError">A network error has occurred.</string>
+
+    <string name="dlg_Help_of">|</string>
+    <string name="dlg_Help_contetns">Help</string>
+    <string name="dlg_Help_100_game_title">About the Game</string>
+    <string name="dlg_Help_100_game_text"> Draw sings for protection and get/more stars to be the best!/Hold back all 32 waves of/viruses to win!</string>
+    <string name="dlg_Help_101_stars_title">Stars</string>
+    <string name="dlg_Help_101_stars_text"> Remove viruses floating over/to protect our planet and get more stars./The stronger protection, more stars you get!/Get bonus stars for combo, sequences/and strikes.</string>
+    <string name="dlg_Help_102_signs_title">Viruses</string>
+    <string name="dlg_Help_102_signs_text"> Viruses are dangerous. Don\'t let/them go through your protection!/To remove a virus, you have to/draw (without breaks) the sign that is/inside it.</string>
+    <string name="dlg_Help_103_waves_title">Waves</string>
+    <string name="dlg_Help_103_waves_text"> Viruses roll with waves./The further, the more harder/viruses to remove./Hold back all 32 waves to win!</string>
+    <string name="dlg_Help_104_protection_title">Membrane</string>
+    <string name="dlg_Help_104_protection_text"> The Membrane helps you/protect against different viruses./If they reach the membrane,/it takes the brunt.</string>
+    <string name="dlg_Help_105_multiplier_title">Protection level</string>
+    <string name="dlg_Help_105_multiplier_text"> The higher protection level is harder for/viruses to break through./Higher protection level gives more/stars for removed viruses./You have to pick up/viruses\' energy to increase the/protection level.</string>
+    <string name="dlg_Help_106_energy_title">Energy</string>
+    <string name="dlg_Help_106_energy_text"> Energy is important, it makes/protection stronger! Pick up energy/that falls out of eliminated viruses.</string>
+    <string name="dlg_Help_107_dna_title">DNA</string>
+    <string name="dlg_Help_107_dna_text"> The elimination of any virus/fills one white DNA segment./Filled DNA creates DNA-bomb that/can explode viruses!</string>
+    <string name="dlg_Help_108_dna_element_title">DNA-segment</string>
+    <string name="dlg_Help_108_dna_element_text"> Collect green DNA-segments that/fall out of viruses./DNA-segments help to fill DNA/more quicker to create DNA-bomb!</string>
+    <string name="dlg_Help_109_dna_bomb_title">Bomb</string>
+    <string name="dlg_Help_109_dna_bomb_text"> You can explode viruses with it!/Tap the Bomb to use it./Filled DNA creates one Bomb./Bomb can also be picked up after/a virus has been eliminated.</string>
+
+    <string name="dlg_Help_201_formula_title">About the Formula</string>
+    <string name="dlg_Help_201_formula_text"> Discover the secret formula!/It is necessary to place Markers/on all Elixirs correctly,/so the equality is fulfilled.</string>
+    <string name="dlg_Help_202_bottle_title">Empty bottle</string>
+    <string name="dlg_Help_202_bottle_text"> Collect Elixirs to fill all empty bottles./So you can unravel the sfecret!</string>
+    <string name="dlg_Help_203_potion_title">Elixirs</string>
+    <string name="dlg_Help_203_potion_text"> Elixir can be obtained for/50 eliminated viruses of each type./The collection of all 10 elixirs/will help to discover/the secret formula!</string>
+    <string name="dlg_Help_204_marker_title">Markers</string>
+    <string name="dlg_Help_204_marker_text"> Each type of Elixir has its own Marker./Get Elixirs of all 10 types./Think about how to arrange all Markers/correctly.</string>
+
+    <string name="dlg_Result_Fail">result</string>
+    <string name="dlg_Result_Good">Victory!</string>
+    <string name="dlg_Result_Repeat">start again</string>
+
+    <string name="dlg_NoConnection_Message">no connection ...</string>
+    <string name="dlg_NoConnection_Idea">Please check/network settings/and try again</string>
+
+    <string name="dlg_Potion_Video_View">Watch/1 video</string>
+    <string name="dlg_Potion_Available">available</string>
+
+    <!-- Бонусы -->
+    <string name="bonus_combo_title">combo</string>
+    <string name="bonus_sequence_title">sequence</string>
+    <string name="bonus_strike_title">strike</string>
+    <string name="bonus_guess_title">right guess</string>
+    <string name="bonus_lightning_title">thunderbolt</string>
+
+    <!-- Достижения -->
+    <string name="ach_potion_title">elixir</string>
+
+    <!-- Сообщения -->
+    <string name="message_drop_interest_01">Hello</string>
+    <string name="message_drop_interest_02">Let\'s start!</string>
+    <string name="message_drop_interest_03">How are you?</string>
+    <string name="message_drop_interest_04">Are you ready?</string>
+    <string name="message_drop_interest_05">It\'s up to you!</string>
+    <string name="message_drop_interest_06">Save LIFE/on Earth!</string>
+
+    <string name="message_drop_sleep_01">... zzz</string>
+    <string name="message_drop_sleep_02">... wake me up</string>
+    <string name="message_drop_sleep_03">... check connection</string>
+    <!-- FunnyDrop.MES_INTEREST -->
+    <string name="message_game_drop_interest_01">Ready to help!</string>
+    <string name="message_game_drop_interest_02">Watch it!</string>
+    <string name="message_game_drop_interest_03">Do you want/an advice?</string>
+    <string name="message_game_drop_interest_04">Draw sings/for protection!</string>
+    <string name="message_game_drop_interest_05">Collect energy!</string>
+    <string name="message_game_drop_interest_06">A green segment/is for DNA</string>
+    <string name="message_game_drop_interest_07">An orange element/is the Bomb</string>
+    <string name="message_game_drop_interest_08">You can do it!</string>
+    <string name="message_game_drop_interest_09">You should focus!</string>
+    <!-- FunnyDrop.MES_SURPRISE -->
+    <string name="message_game_drop_surprise_01">Ouch!</string>
+    <string name="message_game_drop_surprise_02">Do not pass!</string>
+    <string name="message_game_drop_surprise_03">Protect us!</string>
+    <string name="message_game_drop_surprise_04">Have to focus!</string>
+    <string name="message_game_drop_surprise_05">Be careful!</string>
+    <!-- FunnyDrop.MES_JOKE -->
+    <string name="message_game_drop_joke_01">Plus bomb!</string>
+    <string name="message_game_drop_joke_02">Explosive power!</string>
+    <string name="message_game_drop_joke_03">Ready!</string>
+    <string name="message_game_drop_joke_04">Yes!</string>
+    <!-- FunnyDrop.MES_LAUGH -->
+    <string name="message_game_drop_laugh_01">Ha-ha-ha!</string>
+    <string name="message_game_drop_laugh_02">Good!</string>
+    <string name="message_game_drop_laugh_03">Super!</string>
+    <string name="message_game_drop_laugh_04">Excellent!</string>
+    <!-- FunnyDrop.MES_HAPPY -->
+    <string name="message_game_drop_happy_01">Keep it!</string>
+    <string name="message_game_drop_happy_02">Continue!</string>
+    <string name="message_game_drop_happy_03">Much better!</string>
+    <string name="message_game_drop_happy_04">Worthy!</string>
+    <!-- FunnyDrop.MES_PUNCHED -->
+    <string name="message_game_drop_punched_01">It will work/next time!</string>
+    <string name="message_game_drop_punched_02">Once more?</string>
+    <string name="message_game_drop_punched_03">Try again?</string>
+    <!-- FunnyDrop.MES_PRO -->
+    <string name="message_game_drop_pro_01">Super!</string>
+    <string name="message_game_drop_pro_02">Professional!</string>
+    <string name="message_game_drop_pro_03">Awesome!</string>
+    <string name="message_game_drop_pro_04">The highest class!</string>
+    <!-- FunnyDrop.MES_BOMB_0 -->
+    <string name="message_game_drop_bomb_01">No result!</string>
+    <string name="message_game_drop_bomb_02">Wasted!</string>
+    <string name="message_game_drop_bomb_03">Miss!</string>
+    <!-- FunnyDrop.MES_BOMB_1 -->
+    <string name="message_game_drop_bomb_11">Only one</string>
+    <string name="message_game_drop_bomb_12">Explode more!</string>
+    <string name="message_game_drop_bomb_13">Be cool!</string>
+    <!-- FunnyDrop.MES_BOMB_2 -->
+    <string name="message_game_drop_bomb_21">Good!</string>
+    <string name="message_game_drop_bomb_22">A couple!</string>
+    <string name="message_game_drop_bomb_23">Easy!</string>
+    <!-- FunnyDrop.MES_BOMB_3_ -->
+    <string name="message_game_drop_bomb_31">Smash!</string>
+    <string name="message_game_drop_bomb_32">Great!</string>
+    <string name="message_game_drop_bomb_33">Perfect!</string>
+
+    <string name="message_game_multiplier_01">This is the/Protection level</string>
+    <string name="message_game_multiplier_02">Collect the Energy/for protection</string>
+    <string name="message_game_multiplier_03">Stronger protection -/more stars!</string>
+
+    <string name="message_game_dna_01">Fill DNA/to get the Bomb</string>
+    <string name="message_game_dna_02">A green segment/is for DNA</string>
+    <string name="message_game_dna_03">This is DNA</string>
+
+    <string name="message_game_dna_bomb_01">This is the Bomb</string>
+    <string name="message_game_dna_bomb_02">Fill DNA/to get the Bomb</string>
+    <string name="message_game_dna_bomb_03">Explodes everything!</string>
+    <string name="message_game_dna_bomb_04">An orange element/gives the Bomb</string>
+
+    <string name="message_result_orden_01">The deserved reward!</string>
+    <string name="message_result_orden_02">Glory to the winner!</string>
+    <string name="message_result_orden_03">You\'re so cool!</string>
+    <string name="message_result_orden_04">The goal is achieved!</string>
+
+    <!-- Intro -->
+    <string name="intro_skip">skip</string>
+    <string name="intro_frame1_txt1">The Earth/2 billion years ago</string>
+    <string name="intro_frame2_txt1">LIFE struggles with/various difficulties</string>
+    <string name="intro_frame2_txt2">Global warming</string>
+    <string name="intro_frame3_txt2">Ice age</string>
+    <string name="intro_frame5_txt1">One day</string>
+    <string name="intro_frame6_txt1">a comet/passing by the Earth</string>
+    <string name="intro_frame7_txt1">brought</string>
+    <string name="intro_frame7_txt2">an alien/VIRUS</string>
+    <string name="intro_frame8_txt1">Who can protect the Earth?</string>
+    <string name="intro_frame8_txt2">Who is going/to be a Hero?</string>>
+    <string name="intro_frame9_msg1">Hi! I am Nummi/The immune cell</string>
+    <string name="intro_frame9_msg2">I will help you,/I know the magic method/to eliminate viruses!</string>
+    <string name="intro_frame10_msg1">If you draw the sign/correctly/it will break down/the DNA of a virus!</string>
+    <string name="intro_frame10_msg_good1">Perfect!</string>
+    <string name="intro_frame10_msg_good2">Super!</string>
+    <string name="intro_frame10_msg_good3">Excellent!</string>
+    <string name="intro_frame10_msg_again1">It\'s close</string>
+    <string name="intro_frame10_msg_again2">You can do it</string>
+    <string name="intro_frame10_msg_again3">Try again</string>
+    <string name="intro_frame11_txt1">Become our HERO!</string>
+    <string name="intro_frame11_txt2">And with your help,/we will save/LIFE on Earth!</string>
+
+</resources>

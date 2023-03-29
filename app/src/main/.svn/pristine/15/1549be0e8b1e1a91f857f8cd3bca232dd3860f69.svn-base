@@ -1,0 +1,451 @@
+package com.softigress.magicsigns._system.Utils;
+
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.content.Context;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.widget.Toast;
+
+import com.crashlytics.android.Crashlytics;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns._Base.IRecycle;
+import com.softigress.magicsigns._system.Audios;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.Authentication.AuthManager;
+import com.softigress.magicsigns._system.FireBase.DataBase.DataBaseManager;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.RemoteConfigManager;
+import com.softigress.magicsigns._system.FireBase.Storage.DownloadQueue.DownloadQueue;
+import com.softigress.magicsigns._system.FireBase.Storage.StorageManager;
+import com.softigress.magicsigns._system.MusicPlayer;
+import com.softigress.magicsigns._system.Settings.SettingsManager;
+
+import java.lang.reflect.Array;
+import java.util.Calendar;
+import java.util.Random;
+
+public abstract class Utils {
+    public static String packageName;
+    public static Context context; // !!!
+    public static Resources resources;
+    public static Audios mAudios; // !!!
+    public static MusicPlayer musicPlayer; // !!!
+    public static Vibrator vibrator;
+    public static AnalyticsManager analyticsManager;
+    public static AuthManager authManager; // !!!
+    public static DownloadQueue downloadQueue;
+    public static StorageManager storageManager; // !!!
+    public static DataBaseManager dataBaseManager;
+    public static RemoteConfigManager remoteConfigManager; // !!!
+    public static AssetManager assetManager;
+    public static BitmapManager bitmapManager;
+    public static SettingsManager settingsManager;
+    private static final Random random = new Random();
+
+    public static final float PI2 = (float) (Math.PI * 2f);
+    public static final float PI_2 = (float) (Math.PI / 2f);
+    public static final float PI_180 = (float)(180f / Math.PI);
+
+    //region Toast
+    public static void Toast(int messageId) {
+        if (context != null)
+            Toast.makeText(context, getRes(messageId), Toast.LENGTH_SHORT).show();
+    }
+    public static void Toast(String message) {
+        if (context != null)
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+    }
+    public static void ToastError(String str, Throwable t) {
+        if (context != null)
+            Toast.makeText(context, str + " error: " + t.toString(), Toast.LENGTH_LONG).show();
+    }
+    //endregion
+
+    //region Analytics
+    public static void LogEvent(String event, String str) {
+        if (analyticsManager != null)
+            analyticsManager.logEvent(event, str);
+    }
+    public static void SetUserProperty(String name, Boolean val) {
+        if (analyticsManager != null)
+            analyticsManager.setUserProperty(name, val);
+    }
+    public static void SetUserProperty(String name, String val) {
+        if (analyticsManager != null)
+            analyticsManager.setUserProperty(name, val);
+    }
+    public static void SetUserProperty(String name, Object obj) {
+        if (analyticsManager != null)
+            analyticsManager.setUserProperty(name, obj.toString());
+    }
+    //endregion
+
+    public static void CrashReport(String str, Throwable t) {
+        Crashlytics.logException(new Exception(str, t));
+        //FirebaseCrash.report(new Exception(str, t)); // old
+        Utils.ToastError(str, t);
+        throw new RuntimeException(str, t);
+    }
+
+    public static String getRes(int id) {
+        return resources.getString(id);
+    }
+    public static int getStringResId(String val) {
+        return resources.getIdentifier(val, "string", packageName);
+    }
+
+    public static String getEllipsizedString(String str, int letters) {
+        if (str != null)
+            return str.length() > letters ? str.substring(0, letters) + "..." : str;
+        else
+            return "";
+    }
+
+    public static Bitmap getBitmap(int bitmapId) {
+        return Utils.bitmapManager.getLoadedBitmap(bitmapId);
+    }
+
+    public static Bitmap getBitmap(int bitmapId, BitmapManager bitmapManager) {
+        if (bitmapManager == null)
+            return Utils.bitmapManager.getLoadedBitmap(bitmapId);
+        else
+            return bitmapManager.getLoadedBitmap(bitmapId);
+    }
+
+    public static long getTime() { return Calendar.getInstance().getTimeInMillis(); }
+
+    //region Music
+    public static void applyMusicVolume(float vol) {
+        if (musicPlayer != null)
+            musicPlayer.setVolume(vol);
+    }
+    public static void pauseMusic() {
+        if (musicPlayer != null)
+            musicPlayer.pause();
+    }
+    public static void resumeMusic() {
+        if (musicPlayer != null)
+            musicPlayer.resume();
+    }
+    public static void stopMusic() {
+        if (musicPlayer != null)
+            musicPlayer.stop();
+    }
+    public static void playMusicDefault() {
+        int musicId = remoteConfigManager.getDefaultMp3ID(); // default music id
+        playMusic(musicId);
+    }
+    public static void playMusic(int musicId) {
+        if (musicPlayer != null)
+            musicPlayer.play(musicId);
+    }
+    public static void playMusicFile(int fileId, boolean isForce) {
+        if (musicPlayer != null)
+            musicPlayer.playFile(fileId, isForce);
+    }
+    //endregion
+    //region Play
+    public static void applySoundVolume(float vol) {
+        if (mAudios != null)
+            mAudios.setVolume(vol);
+    }
+
+    public static void applySoundVolume(boolean updown) {
+        if (mAudios != null)
+            mAudios.setVolume(updown);
+    }
+
+    public static void playSound(int audioId) {
+        if (isSound())
+            if (mAudios != null)
+                mAudios.playSound(audioId);
+    }
+
+    public static void playSound(final int audioId, long delay) {
+        TaskUtils.postDelayed(delay,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        Utils.playSound(audioId);
+                    }
+                });
+    }
+    public static void playSound(final int audioId, final long delay, ObjectAnimator anim) {
+        if (anim != null)
+            anim.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animation) { playSound(audioId, delay); }
+                @Override
+                public void onAnimationEnd(Animator animation) {}
+                @Override
+                public void onAnimationCancel(Animator animation) {}
+                @Override
+                public void onAnimationRepeat(Animator animation) {}
+            });
+    }
+    public static void playSoundClick() { playSound(R.raw.ui_item_click09); }
+    public static void playSoundPlop() {
+        playSound(R.raw.punch01);
+        /*switch (getRandom(7)) {
+            case 0: playSound(R.raw.plop01); break;
+            case 1: playSound(R.raw.plop02); break;
+            case 2: playSound(R.raw.plop03); break;
+            case 3: playSound(R.raw.plop04); break;
+            case 4: playSound(R.raw.plop05); break;
+            case 5: playSound(R.raw.plop06); break;
+            case 6: playSound(R.raw.plop07); break;
+            //case 7: playSound(R.raw.plop08); break;
+        }*/
+    }
+    public static void playSoundLightning() {
+        switch (getRandom(3)) {
+            case 0: playSound(R.raw.lightning01); break;
+            case 1: playSound(R.raw.lightning02); break;
+            case 2: playSound(R.raw.lightning03); break;
+        }
+    }
+    //endregion
+    //region Vibrate
+    public static void vibrate(long time) {
+        if (vibrator != null && isVibr())
+            vibrator.vibrate(time);
+    }
+    public static void vibrateWave() {
+        vibrate(new long[] {
+                   100, 1, 99, 1, 98, 1, 97, 1, 96, 1, 95, 1, 94, 1, 93, 1, 92, 1, 91,
+                2,  90, 2, 89, 2, 88, 2, 87, 2, 86, 2, 85, 2, 84, 2, 83, 2, 82, 2, 81,
+                3,  70, 3, 69, 3, 68, 3, 67, 3, 66, 3, 65, 3, 64, 3, 63, 3, 62, 3, 61,
+                4,  60, 4, 59, 4, 58, 4, 57, 4, 56, 4, 55, 4, 54, 4, 53, 4, 52, 4, 51,
+                5,  50, 5, 49, 5, 48, 5, 47, 5, 46, 5, 45, 5, 44, 5, 43, 5, 42, 5, 41,
+                6,  40, 6, 39, 6, 38, 6, 37, 6, 36, 6, 35, 6, 34, 6, 33, 6, 32, 6, 31,
+                6,  30, 6, 29, 6, 28, 6, 27, 6, 26, 6, 25, 6, 24, 6, 23, 6, 22, 6, 21,
+                //5,  41, 5, 42, 5, 43, 5, 44, 5, 45, 5, 46, 5, 47, 5, 48, 5, 49, 5, 50,
+                //4,  51, 4, 52, 4, 53, 4, 54, 4, 55, 4, 56, 4, 57, 4, 58, 4, 59, 4, 60,
+                //3,  61, 3, 62, 3, 63, 3, 64, 3, 65, 3, 66, 3, 67, 3, 68, 3, 69, 3, 70,
+                //2,  71, 2, 72, 2, 73, 2, 74, 2, 75, 2, 76, 2, 77, 2, 78, 2, 79, 2, 80,
+                //1,  81, 1, 82, 1, 83, 1, 84, 1, 85, 1, 86, 1, 87, 1, 88, 1, 89, 1
+        }, -1);
+    }
+    public static void vibrate(long[] pattern, int count) {
+        if (vibrator != null && isVibr())
+            vibrator.vibrate(pattern, count);
+    }
+    //endregion
+
+    //region Settings
+    //region load / save / refresh
+    public static boolean loadSettings() {
+        boolean res = false;
+        if (settingsManager != null) {
+            res = settingsManager.load();
+            if (res) {
+                applySoundVolume(getSoundVolume());
+                applyMusicVolume(getMusicVolume());
+            }
+        }
+        return res;
+    }
+    public static void saveSettings() {
+        if (settingsManager != null)
+            settingsManager.save();
+    }
+    public static void resetSettings() {
+        if (settingsManager != null) {
+            settingsManager.reset();
+            settingsManager.save();
+        }
+        Utils.dataBaseManager.resetScore(); // обнуляем счет в БД
+    }
+    //endregion
+    //region user
+    public static String getUserName() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.getUserName();
+        return null;
+    }
+    public static void setUserName(String name) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.setUserName(name);
+    }
+    //endregion
+    //region provider
+    public static Integer getProviderHash() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.getProviderHash();
+        return null;
+    }
+    public static void setProviderHash(int hash) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.setProviderHash(hash);
+    }
+    //endregion
+    //region music
+    public static boolean isMusic() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.isMusic();
+        return false;
+    }
+    public static void musicOnOff(boolean onoff) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.musicOnOff(onoff);
+    }
+    public static float getMusicVolume() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.getMusicVolume();
+        return 0;
+    }
+    public static void setMusicVolume(float val) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.setMusicVolume(val);
+    }
+    //endregion
+    //region sound
+    public static boolean isSound() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.isSound();
+        return false;
+    }
+    public static void soundOnOff(boolean onoff) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.soundOnOff(onoff);
+    }
+    public static float getSoundVolume() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.getSoundVolume();
+        return 0;
+    }
+    public static void setSoundVolume(float val) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.setSoundVolume(val);
+    }
+    //endregion
+    //region vibr
+    public static boolean isVibr() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.isVibr();
+        return false;
+    }
+    public static void vibrOnOff(boolean onoff) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.vibrOnOff(onoff);
+    }
+    //endregion
+    //region story
+    public static boolean isStory() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.isStory();
+        return false;
+    }
+    public static void storyOnOff(boolean onoff) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.storyOnOff(onoff);
+    }
+    //endregion
+    //region age
+    public static boolean isUserAdult() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.isAdult();
+        return false;
+    }
+    public static Integer getUserAge() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.getAge();
+        return 0;
+    }
+    public static boolean isUserAge() {
+        return getUserAge() > 0;
+    }
+    public static void setUserAge(Integer val) {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            settingsManager.userSettings.setAge(val);
+    }
+    //endregion
+    //region time
+    /*public static boolean containsTime() {
+        if (settingsManager != null && settingsManager.userSettings != null)
+            return settingsManager.userSettings.containsTime();
+        return false;
+    }*/
+    //endregion
+    //endregion
+
+    //region Random
+    public static int getRandom(int maxInt) { return random.nextInt(maxInt); }
+    public static float getRandom() { return random.nextFloat(); }
+    public static float getRandomBetween(float x1, float x2) { return x1 + (x2 - x1) * random.nextFloat(); }
+    public static boolean getRandomBoolean() { return random.nextBoolean(); }
+    public static boolean getRandomBoolean(float probability) { return probability > 0 && random.nextFloat() < probability; }
+    public static int getRandomMathSign() { return random.nextBoolean() ? 1 : -1; }
+    public static int getRandomFluctuation(int ticks) {
+        return random.nextInt(2 * ticks) - ticks;
+    }
+    public static Object getRandomElement(Object[] array) { return array != null && array.length > 0 ? array[getRandom(array.length)] : null; }
+    public static String getRandomRes(int[] ids) { return Utils.getRes((ids != null && ids.length > 0) ? ids[Utils.getRandom(ids.length)] : 0); }
+    //endregion
+
+    //region Array
+    public static boolean inArray(int id, int[] ids) {
+        for (int item : ids)
+            if (item == id)
+                return true;
+        return false;
+    }
+
+    public static <T> boolean inArray(T id, T[] ids) {
+        for (T item : ids)
+            if (item == id)
+                return true;
+        return false;
+    }
+
+    public static void recycleArray(Object arr) {
+        if (arr != null) {
+            int l = Array.getLength(arr);
+            if (l > 0) {
+                for (int i = 0; i < l; i++) {
+                    Object a = Array.get(arr, i);
+                    if (a != null) {
+                        IRecycle aa = (IRecycle) a;
+                        //if (aa != null)
+                            aa.recycle();
+                    }
+                }
+            }
+            arr = null;
+        }
+    }
+    //endregion
+
+    public static void recycle() {
+        if (musicPlayer != null)
+            musicPlayer.recycle();
+        if (mAudios != null)
+            mAudios.recycle();
+        if (vibrator != null) {
+            if (vibrator.hasVibrator()) {
+                vibrator.cancel(); // error
+            }
+            vibrator = null;
+        }
+        if (analyticsManager != null)
+            analyticsManager.recycle();
+        if (authManager != null)
+            authManager.recycle();
+        if (downloadQueue != null)
+            downloadQueue.recycle();
+        if (storageManager != null)
+            storageManager.recycle();
+        if (dataBaseManager != null)
+            dataBaseManager.recycle();
+        if (remoteConfigManager != null)
+            remoteConfigManager.recycle();
+        if (bitmapManager != null)
+            bitmapManager.recycle();
+        if (settingsManager != null)
+            settingsManager.recycle();
+    }
+}

@@ -1,0 +1,100 @@
+package com.softigress.magicsigns._Base._Drawing._base;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import androidx.annotation.Keep;
+
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingSimple implements IDrawing {
+
+    protected float fr, fx, fy;
+    public float r, x, y;
+    protected float scale = 1f;
+    protected int alpha = 255;
+    private float angel = 0;
+    private float angelSin = 0f;
+    private float angelCos = 1f;
+    protected Paint paint;
+    protected Paint paint1;
+
+    public float getFr() { return this.fr; }
+    public float getFx() { return this.fx; }
+    public float getFy() { return this.fy; }
+    public float getScale() { return scale; }
+    public int getAlpha() { return alpha; }
+
+    @Keep
+    public void setFr(float fr) { this.fr = fr; }
+    @Keep
+    public void setFx(float fx) { this.fx = fx; }
+    @Keep
+    public void setFy(float fy) { this.fy = fy; }
+    @Keep
+    public void setScale(float scale) { this.scale = scale; }
+    @Keep
+    public void setAlpha(int a) {
+        this.alpha = a;
+        this.paint.setAlpha(a);
+        this.paint1.setAlpha(a);
+    }
+    public void setColor(int color) {
+        this.paint.setColor(color);
+        this.paint1.setColor(color);
+    }
+    public void setColor(int a, int r, int g, int b) {
+        this.paint.setARGB(a, r, g, b);
+        this.paint1.setARGB(a, r, g, b);
+    }
+    @Keep
+    public void setAngel(float angel) {
+        if (angel > 360 || angel < -360)
+            angel = angel % 360;
+        this.angel = angel;
+    }
+    @Keep
+    public void setAngelRadians(float angelRadians) {
+        setAngel(Utils.PI_180 * angelRadians);
+        angelCos = (float)Math.cos(angelRadians);
+        angelSin = (float)Math.sin(angelRadians);
+    }
+
+    protected DrawingSimple(float fr) {
+        this.fr = fr;
+        this.paint = PaintUtils.getPaintWhite(255);
+        this.paint1 = PaintUtils.getPaintStrokeWhite(255, PaintUtils.strokeWidth2);
+    }
+
+    public void setPoint(float fx, float fy) {
+        this.fx = fx;
+        this.fy = fy;
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() {
+        r = scale * MetrixUtils.screen_metrix_height * fr;
+        x = MetrixUtils.screen_metrix_width * fx;
+        y = MetrixUtils.screen_metrix_height * fy;
+        if (paint1 != null)
+            paint1.setStrokeWidth(PaintUtils.strokeWidth2);
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        calc();
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        paint = null;
+        paint1 = null;
+    }
+}

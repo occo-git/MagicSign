@@ -1,0 +1,385 @@
+package com.softigress.magicsigns.UI._base.Groups.Windows;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import androidx.annotation.Keep;
+
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns._Base._Drawing.DrawingGroup;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+
+public class GrpWindow extends DrawingGroup {
+
+    private final float maxFx, maxFy, maxFw, maxFh;
+    private float fx, fy, fw, fh;
+    private float x, y, w, h;
+
+    private static final int backMaxAlpha = 196;
+    private int backAlpha = 0;
+    private final Paint paintBack;
+
+    protected int alpha;
+    private static final int maxAlpha = 255;
+    private static final int maxAlpha0 = 255;
+    private final Paint paintWindow0;
+    private final Paint paintWindow1;
+
+    protected GrpWindow(float fw, float fh) {
+        float ffw = fw * MetrixUtils.screen_K_default / MetrixUtils.screen_K;
+        this.maxFw = ffw;
+        this.maxFh = fh;
+        this.maxFx = (1f - ffw) / 2f;
+        this.maxFy = (1f - fh) / 3f;
+
+        showDuration = CurrentSettings.windowShowDuration;
+        hideDuration = CurrentSettings.windowHideDuration;
+
+        paintBack = PaintUtils.getPaintBlack(backAlpha);
+        paintWindow0 = PaintUtils.getPaintStroke(maxAlpha0, 32,32,32,2 * PaintUtils.strokeWidth);//getPaintStrokeWhite(maxAlpha0, 4 * PaintUtils.strokeWidth);
+        paintWindow1 = PaintUtils.getPaint(maxAlpha, 12, 12, 12);
+        setAlpha(maxAlpha);
+    }
+
+    @Keep
+    public void setFx(float fx) { this.fx = fx; }
+    public float getFx() { return this.fx; }
+    @Keep
+    public void setFy(float fy) { this.fy = fy; }
+    public float getFy() { return this.fy; }
+    public void setPoint(float fx, float fy) { this.fx = fx; this.fy = fy; }
+    @Keep
+    public void setFw(float fw) { this.fw = fw; }
+    public float getFw() { return this.fw; }
+    public float getW() { return w; }
+    @Keep
+    public void setFh(float fh) { this.fh = fh; }
+    public float getFh() { return this.fh; }
+    public void setSize(float fw, float fh) { this.fw = fw; this.fh = fh; }
+    @Keep
+    public void setAlpha(int a) {
+        this.alpha = a;
+        if (paintWindow0 != null)
+            paintWindow0.setAlpha((int)(maxAlpha0 * a / (float)maxAlpha));
+        if (paintWindow1 != null)
+            paintWindow1.setAlpha(a); // / 4
+    }
+    public int getAlpha() { return this.alpha; }
+    @Keep
+    public void setBackAlpha(int a) {
+        this.backAlpha = a;
+        if (paintBack != null)
+            paintBack.setAlpha(a);
+    }
+
+    public boolean inBounds(float px, float py) { return px > x && px < x + w && py > y && py < y + h; }
+
+    //region show hide
+    public long show(WindowMoveStyle windowMoveStyle) {
+        super.show();
+        moveWindow(windowMoveStyle, showDuration);
+        return showDuration;
+    }
+
+    public long hide(WindowMoveStyle windowMoveStyle) {
+        moveWindow(windowMoveStyle, hideDuration);
+        return super.hide();
+    }
+
+    private void prepareWindow(WindowMoveStyle windowMoveStyle) {
+        switch (windowMoveStyle)
+        {
+            case SIZEON: setSize(0f, 0f); break;
+            default: setSize(maxFw, maxFh); break;
+        }
+        float k = .4f;
+        float k0 = 1 - k;
+        float k1 = 1 + k;
+        switch (windowMoveStyle) {
+            //region show
+            case SIZEON:
+                setPoint(.5f, .5f);
+                setAlpha(0);
+                setBackAlpha(0);
+                break;
+            case LEFT_CENTER:
+                setPoint(-.1f - maxFw, maxFy);
+                setAlpha(maxAlpha);
+                setBackAlpha(0);
+                break;
+            case RIGHT_CENTER:
+                setPoint(1.1f + maxFw, maxFy);
+                setAlpha(maxAlpha);
+                setBackAlpha(0);
+                break;
+            case DOWN_CENTER:
+                setPoint(maxFx, 1.1f + maxFh);
+                setAlpha(maxAlpha);
+                setBackAlpha(0);
+                break;
+            case UP_CENTER:
+                setPoint(maxFx, -.1f - maxFh);
+                setAlpha(maxAlpha);
+                setBackAlpha(0);
+                break;
+            case ALPHA_ON:
+                setPoint(maxFx,   maxFy * k1);
+                setAlpha(0);
+                setBackAlpha(0);
+            //endregion
+            //region hide
+            case SIZEOFF:
+            case CENTER_LEFT:
+            case CENTER_RIGHT:
+            case CENTER_DOWN:
+            case CENTER_UP:
+            case ALPHA_OFF:
+                setPoint(maxFx,  maxFy);
+                setAlpha(maxAlpha);
+                setBackAlpha(maxAlpha);
+                break;
+            //endregion
+        }
+    }
+
+    private void moveWindow(WindowMoveStyle windowMoveStyle, long duration) {
+        float k = .4f;
+        float k0 = 1 - k;
+        float k1 = 1 + k;
+        prepareWindow(windowMoveStyle);
+        switch (windowMoveStyle) {
+            //region show
+            case SIZEON:
+                new AnimUtil()
+                        .add(this, "fw", 0, maxFw * k1, maxFw)
+                        .add(this, "fh", 0, maxFh * k1, maxFh)
+                        .add(this, "fx", .5f, maxFx * k0, maxFx)
+                        .add(this, "fy", .5f, maxFy * k0, maxFy)
+                        .add(this, "alpha", 0, maxAlpha)
+                        .add(this, "backAlpha", 0, backMaxAlpha)
+                        .startAD(duration);
+                /*ObjectAnimator aW1 = ObjectAnimator.ofFloat(this, "fw", 0, maxFw * k1, maxFw);
+                ObjectAnimator aH1 = ObjectAnimator.ofFloat(this, "fh", 0, maxFh * k1, maxFh);
+                ObjectAnimator aX1 = ObjectAnimator.ofFloat(this, "fx", .5f, maxFx * k0, maxFx);
+                ObjectAnimator aY1 = ObjectAnimator.ofFloat(this, "fy", .5f, maxFy * k0, maxFy);
+                ObjectAnimator aA1 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha);
+                ObjectAnimator aBA1 = ObjectAnimator.ofInt(this, "backAlpha", 0, backMaxAlpha);
+                AnimatorSet set1 = new AnimatorSet().setDuration(duration);
+                set1.setInterpolator(new AccelerateDecelerateInterpolator());
+                set1.playTogether(aW1, aH1, aA1, aX1, aY1, aBA1);
+                set1.start();*/
+                break;
+            case LEFT_CENTER:
+                new AnimUtil()
+                        .add(this, "fx", -.1f - maxFw, maxFx * k1, maxFx)
+                        .add(this, "backAlpha", 0, backMaxAlpha)
+                        //.add(this, "alpha", 0, maxAlpha)
+                        .startAD(duration);
+                /*ObjectAnimator aX3 = ObjectAnimator.ofFloat(this, "fx", -.1f - maxFw, maxFx * k1, maxFx);
+                ObjectAnimator aBA3 = ObjectAnimator.ofInt(this, "backAlpha", 0, backMaxAlpha);
+                //ObjectAnimator aA3 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha);
+                AnimatorSet set3 = new AnimatorSet().setDuration(duration);
+                set3.setInterpolator(new AccelerateDecelerateInterpolator());
+                set3.playTogether(aX3, aBA3);
+                set3.start();*/
+                break;
+            case RIGHT_CENTER:
+                new AnimUtil()
+                        .add(this, "fx", 1.1f + maxFw, maxFx * k0, maxFx)
+                        .add(this, "backAlpha", 0, backMaxAlpha)
+                        //.add(this, "alpha", 0, maxAlpha)
+                        .startAD(duration);
+                /*ObjectAnimator aX4 = ObjectAnimator.ofFloat(this, "fx", 1.1f + maxFw, maxFx * k0, maxFx);
+                ObjectAnimator aBA4 = ObjectAnimator.ofInt(this, "backAlpha", 0, backMaxAlpha);
+                //ObjectAnimator aA4 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha);
+                AnimatorSet set4 = new AnimatorSet().setDuration(duration);
+                set4.setInterpolator(new AccelerateDecelerateInterpolator());
+                set4.playTogether(aX4, aBA4);
+                set4.start();*/
+                break;
+            case DOWN_CENTER:
+                new AnimUtil()
+                        .add(this, "fx", 1.1f + maxFw, maxFx * k0, maxFx)
+                        .add(this, "backAlpha", 0, backMaxAlpha)
+                        //.add(this, "alpha", 0, maxAlpha)
+                        .startAD(duration);
+                /*ObjectAnimator aY5 = ObjectAnimator.ofFloat(this, "fy", 1.1f + maxFh, maxFy * k0, maxFy);
+                ObjectAnimator aBA5 = ObjectAnimator.ofInt(this, "backAlpha", 0, backMaxAlpha);
+                //ObjectAnimator aA5 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha);
+                AnimatorSet set5 = new AnimatorSet().setDuration(duration);
+                set5.setInterpolator(new AccelerateDecelerateInterpolator());
+                set5.playTogether(aY5, aBA5);
+                set5.start();*/
+                break;
+            case UP_CENTER:
+                new AnimUtil()
+                        .add(this, "fy", -.1f - maxFh, maxFy * k1, maxFy)
+                        .add(this, "backAlpha", 0, backMaxAlpha)
+                        //.add(this, "alpha", 0, maxAlpha)
+                        .startAD(duration);
+                /*ObjectAnimator aY6 = ObjectAnimator.ofFloat(this, "fy", -.1f - maxFh, maxFy * k1, maxFy);
+                ObjectAnimator aBA6 = ObjectAnimator.ofInt(this, "backAlpha", 0, backMaxAlpha);
+                //ObjectAnimator aA6 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha);
+                AnimatorSet set6 = new AnimatorSet().setDuration(duration);
+                set6.setInterpolator(new AccelerateDecelerateInterpolator());
+                set6.playTogether(aY6, aBA6);
+                set6.start();*/
+                break;
+            case ALPHA_ON:
+                new AnimUtil()
+                        .add(this, "fy", maxFy * k1, maxFy *  1.025f, maxFy)
+                        .add(this, "backAlpha", 0, backMaxAlpha)
+                        .add(this, "alpha", 0, maxAlpha)
+                        .startAD(duration);
+                /*ObjectAnimator aY7 = ObjectAnimator.ofFloat(this, "fy", maxFy * k1, maxFy *  1.025f, maxFy);
+                ObjectAnimator aBA7 = ObjectAnimator.ofInt(this, "backAlpha", 0, backMaxAlpha);
+                ObjectAnimator aA7 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha);
+                AnimatorSet set7 = new AnimatorSet().setDuration(duration);
+                set7.setInterpolator(new AccelerateDecelerateInterpolator());
+                set7.playTogether(aY7, aBA7, aA7);
+                set7.start();*/
+                break;
+            //endregion
+            //region hide
+            case SIZEOFF:
+                new AnimUtil()
+                        .add(this, "fw", maxFw, maxFw * k1, 0)
+                        .add(this, "fh", maxFh, maxFh * k1, 0)
+                        .add(this, "fx", maxFx, maxFx  * k0, .5f)
+                        .add(this, "fy", maxFy, maxFy * k0, .5f)
+                        .add(this, "alpha", maxAlpha, 0)
+                        .add(this, "backAlpha", backMaxAlpha, 0)
+                        .startAD(duration);
+                /*ObjectAnimator aW2 = ObjectAnimator.ofFloat(this, "fw", maxFw, maxFw * k1, 0);
+                ObjectAnimator aH2 = ObjectAnimator.ofFloat(this, "fh", maxFh, maxFh * k1, 0);
+                ObjectAnimator aX2 = ObjectAnimator.ofFloat(this, "fx", maxFx, maxFx  * k0, .5f);
+                ObjectAnimator aY2 = ObjectAnimator.ofFloat(this, "fy", maxFy, maxFy * k0, .5f);
+                ObjectAnimator aA2 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0);
+                ObjectAnimator aBA2 = ObjectAnimator.ofInt(this, "backAlpha", backMaxAlpha, 0);
+                AnimatorSet set2 = new AnimatorSet().setDuration(duration);
+                set2.setInterpolator(new AccelerateDecelerateInterpolator());
+                set2.playTogether(aW2, aH2, aA2, aX2, aY2, aBA2);
+                set2.start();*/
+                break;
+            case CENTER_LEFT:
+                new AnimUtil()
+                        .add(this, "fx", maxFx, maxFx * k1, -.1f - maxFw)
+                        .add(this, "backAlpha", backMaxAlpha, 0)
+                        .add(this, "alpha", maxAlpha, 0)
+                        .startAD(duration);
+                /*ObjectAnimator aX30 = ObjectAnimator.ofFloat(this, "fx", maxFx, maxFx * k1, -.1f - maxFw);
+                ObjectAnimator aBA30 = ObjectAnimator.ofInt(this, "backAlpha", backMaxAlpha, 0);
+                //ObjectAnimator aA30 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0);
+                AnimatorSet set30 = new AnimatorSet().setDuration(duration);
+                set30.setInterpolator(new AccelerateDecelerateInterpolator());
+                set30.playTogether(aX30, aBA30);
+                set30.start();*/
+                break;
+            case CENTER_RIGHT:
+                new AnimUtil()
+                        .add(this, "fx", maxFx, maxFx * k0, 1.1f + maxFw)
+                        .add(this, "backAlpha", backMaxAlpha, 0)
+                        //.add(this, "alpha", maxAlpha, 0)
+                        .startAD(duration);
+                /*ObjectAnimator aX40 = ObjectAnimator.ofFloat(this, "fx", maxFx, maxFx * k0, 1.1f + maxFw);
+                ObjectAnimator aBA40 = ObjectAnimator.ofInt(this, "backAlpha", backMaxAlpha, 0);
+                //ObjectAnimator aA40 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0);
+                AnimatorSet set40 = new AnimatorSet().setDuration(duration);
+                set40.setInterpolator(new AccelerateDecelerateInterpolator());
+                set40.playTogether(aX40, aBA40);
+                set40.start();*/
+                break;
+            case CENTER_DOWN:
+                new AnimUtil()
+                        .add(this, "fy", maxFy, maxFy * k0, 1.1f + maxFh)
+                        .add(this, "backAlpha", backMaxAlpha, 0)
+                        //.add(this, "alpha", maxAlpha, 0)
+                        .startAD(duration);
+                /*ObjectAnimator aY50 = ObjectAnimator.ofFloat(this, "fy", maxFy, maxFy * k0, 1.1f + maxFh);
+                ObjectAnimator aBA50 = ObjectAnimator.ofInt(this, "backAlpha", backMaxAlpha, 0);
+                //ObjectAnimator aA50 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0);
+                AnimatorSet set50 = new AnimatorSet().setDuration(duration);
+                set50.setInterpolator(new AccelerateDecelerateInterpolator());
+                set50.playTogether(aY50, aBA50);
+                set50.start();*/
+                break;
+            case CENTER_UP:
+                new AnimUtil()
+                        .add(this, "fy", maxFy, maxFy * k1, -.1f - maxFh)
+                        .add(this, "backAlpha", backMaxAlpha, 0)
+                        //.add(this, "alpha", maxAlpha, 0)
+                        .startAD(duration);
+                /*ObjectAnimator aY60 = ObjectAnimator.ofFloat(this, "fy", maxFy, maxFy * k1, -.1f - maxFh);
+                ObjectAnimator aBA60 = ObjectAnimator.ofInt(this, "backAlpha", backMaxAlpha, 0);
+                //ObjectAnimator aA60 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0));
+                AnimatorSet set60 = new AnimatorSet().setDuration(duration);
+                set60.setInterpolator(new AccelerateDecelerateInterpolator());
+                set60.playTogether(aY60, aBA60);
+                set60.start();*/
+                break;
+            case ALPHA_OFF:
+                new AnimUtil()
+                        .add(this, "fy", maxFy, maxFy * 1.025f, maxFy * k1)
+                        .add(this, "backAlpha", backMaxAlpha, 0)
+                        .add(this, "alpha", maxAlpha, 0)
+                        .startAD(duration);
+                /*ObjectAnimator aY70 = ObjectAnimator.ofFloat(this, "fy", maxFy, maxFy * 1.025f, maxFy * k1);
+                ObjectAnimator aBA70 = ObjectAnimator.ofInt(this, "backAlpha", backMaxAlpha, 0);
+                ObjectAnimator aA70 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0);
+                AnimatorSet set70 = new AnimatorSet().setDuration(duration);
+                set70.setInterpolator(new AccelerateDecelerateInterpolator());
+                set70.playTogether(aY70, aBA70, aA70);
+                set70.start();*/
+                break;
+            //endregion
+        }
+    }
+    //endregion
+
+    protected float getByDx(float dx) { return fx + dx * fw; }
+    protected float getByDy(float dy) { return fy + dy * fh; }
+    protected void setPointByDxDy(DialogItem item) {
+        if (item != null) {
+            if (item.control != null)
+                item.control.setPoint(getByDx(item.getDx()), getByDy(item.getDy()));
+            if (item.controlTouchable != null)
+                item.controlTouchable.setPoint(getByDx(item.getDx()), getByDy(item.getDy()));
+        }
+    }
+
+    @Override
+    public void calc() {
+        this.w = fw * MetrixUtils.screen_metrix_width;
+        this.h = fh * MetrixUtils.screen_metrix_height;
+        this.x = fx * MetrixUtils.screen_metrix_width;
+        this.y = fy * MetrixUtils.screen_metrix_height;
+        if (paintWindow0 != null)
+            paintWindow0.setStrokeWidth(2 * PaintUtils.strokeWidth);
+    }
+
+    private RectF rect = new RectF();
+    private void drawBackGround(Canvas c) {
+        if (paintBack != null)
+            c.drawPaint(paintBack);
+        float r = w / 10f;
+        rect.left = x;
+        rect.top = y;
+        rect.right = x + w;
+        rect.bottom = y + h;
+        c.drawRoundRect(rect, r, r, paintWindow1); // заполнение
+        c.drawRoundRect(rect, r, r, paintWindow0); // контур
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        calc();
+        drawBackGround(c);
+        super.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() { }
+}

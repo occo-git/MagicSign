@@ -1,0 +1,359 @@
+package com.softigress.magicsigns.UI._base.Groups.Dialogs;
+
+import android.graphics.Canvas;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageText;
+import com.softigress.magicsigns.UI._base.Groups.Windows.GrpWindow;
+import com.softigress.magicsigns.UI._base.Groups.Windows.WindowMoveStyle;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpDialog extends GrpWindow {
+
+    public String name;
+    private static final float btnFd = .1f;
+    private static final float btnCloseFd = .038f;
+
+    private boolean isVisible = false;
+    private boolean isOnShowDialog = false;
+    private boolean isOnHideDialog = false;
+    protected boolean isUserCanHide = true;
+
+    private BtnBase btnOk;
+    private DialogItem itemOk;
+    private DrawingText txtMessage;
+    private MessageText txtIdea;
+    private DialogItem itemIdea;
+    private DrawingBase drawing;
+
+    private float dxOk, dxCancel;
+    private float dyOk, dyCancel;
+    //private float dxCaption = .5f;
+    //private float dyCaption = 0f;
+
+    private ArrayRecyclableSimple<DialogItem> items = new ArrayRecyclableSimple<>(DialogItem.class);
+    private DialogItem[] dialogItems;
+
+    private static final WindowMoveStyle showStyleId = WindowMoveStyle.ALPHA_ON;
+    private static final WindowMoveStyle hideStyleId = WindowMoveStyle.ALPHA_OFF;
+
+    //region 0 buttons
+    protected GrpDialog(float fw, float fh) {
+        super(fw, fh);
+
+        //addCloseButton();
+        this.setFy(-fh * 2f);
+        calc();
+    }
+    //endregion
+
+    //region 1 button
+    protected GrpDialog(float fw, float fh, int okBitmapId, float dxOk, float dyOk) {
+        super(fw, fh);
+
+        this.dxOk = dxOk;
+        this.dyOk = dyOk;
+
+        btnOk = new BtnBase(getByDx(dxOk), getByDy(dyOk), btnFd, okBitmapId);
+        btnOk.name = "btn_ok_dialog";
+        btnOk.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnOk();
+            }
+        });
+        itemOk = addDlgControlTouchable(btnOk, dxOk, dyOk);
+
+        this.setFy(-fh * 2f);
+        calc();
+    }
+    public GrpDialog(float fw, float fh, int okBitmapId) {
+        this(fw, fh, okBitmapId, .8f, .85f);
+    }
+    //endregion
+
+    //region 2 buttons
+    public GrpDialog(float fw, float fh, int okBitmapId, int cancelBitmapId) {
+        this(fw, fh, okBitmapId, 0, cancelBitmapId, 0, .62f);
+    }
+
+    public GrpDialog(float fw, float fh, int okBitmapId, int okLabelId, int cancelBitmapId, int cancelLabelId, float dyBtns) {
+        super(fw, fh);
+
+        dxOk = .25f;
+        dyOk = dyBtns;
+        dxCancel = .75f;
+        dyCancel = dyBtns;
+
+        BtnBase btnCancel = new BtnBase(getByDx(dxCancel), getByDy(dyCancel), btnFd, cancelBitmapId);
+        btnCancel.name = "btn_cancel_dialog";
+        btnCancel.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnCancel();
+            }
+        });
+        addDlgControlTouchable(btnCancel, dxCancel, dyCancel);
+        btnCancel.setLabelText(cancelLabelId);
+
+        btnOk = new BtnBase(dxOk, dyOk, btnFd, okBitmapId);
+        btnOk.name = "btn_ok_dialog";
+        btnOk.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnOk();
+            }
+        });
+        itemOk = addDlgControlTouchable(btnOk, dxOk, dyOk);
+        btnOk.setLabelText(okLabelId);
+
+        this.setFy(-fh * 2f);
+        calc();
+    }
+    //endregion
+
+    //region controls
+    protected DialogItem addDlgRect(float dx, float dy, float dw, float dh) {
+        return addDlgItem(new DialogItem(dx, dy, dw, dh));
+    }
+    protected DialogItem addDlgControl(IDialogItemControl c, float dx, float dy) {
+        return addDlgItem(new DialogItem(c, dx, dy));
+    }
+    protected DialogItem addDlgControlTouchable(IDialogItemControlTouchable c, float dx, float dy) {
+        return addDlgItem(new DialogItem(c, dx, dy));
+    }
+    private DialogItem addDlgItem(DialogItem item) {
+        item.hide();
+        setPointByDxDy(item);
+        items.add(item);
+        dialogItems = items.getItems();
+        return item;
+    }
+
+    public void setDlgMessageText(int stringId, float dx, float dy) {
+        if (txtMessage == null) {
+            txtMessage = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_big);
+            txtMessage.setTextBack(4f, 64, 0, 0, 0);
+            addDlgControl(txtMessage, dx, dy);
+        }
+        if (txtMessage != null)
+            txtMessage.setText(stringId);
+    }
+
+    public void setDlgIdeaText(int stringId, float dx, float dy) {
+        if (txtIdea == null) {
+            txtIdea = new MessageText(DrawingHAlign.CENTER);
+            txtIdea.setVerticalAlign(DrawingVAlign.TOP);
+            txtIdea.setFontSize(TextUtils.dialog_text_small);
+            txtIdea.setTextBack(4f, 64, 0, 0, 0);
+            txtIdea.isPaintRect = true;
+            txtIdea.isIdea = true;
+            itemIdea = addDlgControl(txtIdea, dx, dy);
+        }
+        if (txtIdea != null)
+            txtIdea.setText(stringId);
+    }
+
+    public void setDlgDrawing(int bitmapId, float dx, float dy, float fd) {
+        if (drawing == null) {
+            drawing = new DrawingBase(fd, bitmapId);
+            addDlgControl(drawing, dx, dy);
+        }
+        if (drawing != null)
+            drawing.setDefaultBitmap(bitmapId);
+    }
+
+    public void addDlgCloseButton() {
+        BtnBase btnClose = new BtnBase(1f, 0f, btnCloseFd, R.drawable.btn_close);
+        btnClose.name = "btn_close_dialog";
+        btnClose.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnCancel();
+            }
+        });
+        btnClose.hide();
+        addDlgControlTouchable(btnClose, 1f, 0f);
+    }
+
+    protected void setIdeaVisible(boolean isVisible) {
+        if(itemIdea != null)
+            itemIdea.setHidden(!isVisible);
+    }
+
+    protected void setOkVisible(boolean isVisible) {
+        if (itemOk != null)
+            itemOk.setHidden(!isVisible);
+    }
+
+    protected void setOkEnabled(boolean isEnabled) {
+        if (btnOk != null) {
+            if (isEnabled)
+                btnOk.enable();
+            else
+                btnOk.disable();
+        }
+    }
+    //endregion
+
+    //region listeners
+    protected IGrpDialogListener listener;
+    public void setListener(IGrpDialogListener l) { this.listener = l; }
+
+    private IGrpDialogHideListener hideListener;
+    public void setListener(IGrpDialogHideListener l) { this.hideListener = l; }
+
+    private IGrpDialogResultListener resultListener;
+    public void setListener(IGrpDialogResultListener l) { this.resultListener = l; }
+
+    protected void onResult(int result) {
+        if (resultListener != null)
+            resultListener.handleOnResult(result);
+    }
+    //endregion
+
+    //region show hide
+    @Override
+    public void show() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_DIALOG_SHOW, name);
+        // скроем элементы, чтобы не мигали при отображении диалога
+        if (dialogItems != null)
+            for (DialogItem item : dialogItems)
+                item.setAlpha(0);
+
+        isOnShowDialog = true;
+        isVisible = true;
+
+        TaskUtils.postDelayed(super.show(showStyleId), // show GrpWindow
+                new Runnable() { @Override public void run() { isOnShowDialog = false; } });
+        controlsShowHide(true);
+        Utils.playSound(R.raw.ui_dialog_show02);
+    }
+
+    @Override
+    public long hide() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_DIALOG_HIDE, name);
+        isOnHideDialog = true;
+        long hideDuration = super.hide(hideStyleId); // hide GrpWindow
+        TaskUtils.postDelayed(hideDuration, new Runnable() {
+            @Override
+            public void run() {
+                controlsShowHide(false);
+                isOnHideDialog = false;
+                isVisible = false;
+            }
+        });
+        Utils.playSound(R.raw.ui_dialog_hide02);
+
+        if (hideListener != null)
+            hideListener.handleOnHide();
+
+        return hideDuration;
+    }
+
+    // пользователь может закрыть диалог
+    public boolean isUserCanHide() { return isUserCanHide; }
+    // диалог в процессе открытия или зактрытия
+    public boolean isOnShowHide() { return isOnShowDialog || isOnHideDialog; }
+
+    private void controlsShowHide(boolean isShowHide) {
+        // сохраняем настройки
+        if (!isShowHide)
+            saveSettings();
+
+        if (dialogItems != null) {
+            if (isShowHide)
+                for (DialogItem item : dialogItems)
+                    item.show();
+            else
+                for (DialogItem item : dialogItems)
+                    item.hide();
+        }
+
+        // загружаем настройки
+        if (isShowHide)
+            loadSettings();
+    }
+
+    protected void loadSettings() { }
+
+    protected void saveSettings() { }
+    //endregion
+
+    //region Touch items
+    public boolean onTouchItems(int x, int y) {
+        boolean isOnTouch = false;
+        if (!isOnShowHide())
+            if (dialogItems != null)
+                for (DialogItem item : dialogItems)
+                    if (item.controlTouchable != null)
+                        if (item.controlTouchable.onTouch(x, y))
+                            isOnTouch = true;
+        return isOnTouch;
+    }
+    public boolean onTouchUpItems(int x, int y) {
+        boolean isOnTouchUp = false;
+        if (!isOnShowHide())
+            if (dialogItems != null)
+                for (DialogItem item : dialogItems)
+                    if (item.controlTouchable != null)
+                        if (item.controlTouchable.onTouchUp(x, y))
+                            isOnTouchUp = true;
+        return isOnTouchUp;
+    }
+    @Override
+    public void onMoveTo(int x, int y) {
+        super.onMoveTo(x, y);
+        if (!isOnShowHide())
+            if (dialogItems != null)
+                for (DialogItem item : dialogItems)
+                    if (item.controlTouchable != null)
+                        item.controlTouchable.onMoveTo(x, y);
+    }
+    //endregion
+
+    //region Draw
+    @Override
+    public void calc() {
+        super.calc();
+        if (dialogItems != null)
+            for (DialogItem item : dialogItems) {
+                setPointByDxDy(item);
+                item.setAlpha(alpha);
+            }
+    }
+
+    @Override
+    public void drawItems(Canvas c) {
+        super.drawItems(c);
+        if (isVisible)
+            if (dialogItems != null)
+                for (DialogItem item : dialogItems)
+                    item.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+
+        if (items != null)
+            items.recycle();
+        items = null;
+    }
+    //endregion
+}

@@ -1,0 +1,173 @@
+package com.softigress.magicsigns.UI._base.Controls._base.Buttons;
+import android.animation.ObjectAnimator;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingTextTouchable;
+import com.softigress.magicsigns.UI._base.Effects.Circles.CirclesBase;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class BtnBase extends DrawingButton {
+
+    public static final int circlesDuration = 500;
+
+    private DrawingText txtLabel;
+    private float labelAlignK = 1f;
+    private DrawingHAlign hAlign;
+    private CirclesBase circles;
+
+    public BtnBase(float fx, float fy, float fd, Bitmap bitmap) {
+        super(fx, fy, fd, bitmap);
+        initBtnBase();
+    }
+
+    public BtnBase(float fx, float fy, float fd, int enabledBitmapId) {
+        super(fx, fy, fd, enabledBitmapId);
+        initBtnBase();
+    }
+
+    public BtnBase(float fx, float fy, float fd, int enabledBitmapId, int pressedBitmapId, int disabledBitmapId) {
+        super(fx, fy, fd, enabledBitmapId, pressedBitmapId, disabledBitmapId);
+        initBtnBase();
+    }
+
+    private void initBtnBase() {
+        ObjectAnimator anim = ObjectAnimator.ofFloat(this, "scale", 1f, 0.9f, 1f).setDuration(clickDuration);
+        anim.setInterpolator(new AccelerateDecelerateInterpolator());
+        applyClickAnimator(anim);
+
+        circles = new CirclesBase(.5f * fd, .65f * fd, circlesDuration);
+    }
+
+    public void setLabelText(int stringId) { setLabelTextSized(Utils.getRes(stringId), TextUtils.dialog_button_text); }
+    public void setLabelText(String text) { this.setLabelTextSized(text, TextUtils.dialog_button_text); }
+    public void setLabelText(int stringId, DrawingHAlign halign) { this.setLabelTextSized(stringId, TextUtils.dialog_button_text, halign); }
+    public void setLabelTextSized(int stringId, int size, DrawingHAlign halign) { this.setLabelTextSized(Utils.getRes(stringId), size, halign); }
+    private void setLabelTextSized(String text, int size) { this.setLabelTextSized(text, size, DrawingHAlign.CENTER); }
+    private void setLabelTextSized(String text, int size, DrawingHAlign halign) {
+        if (text != null && !text.equals("")) {
+            txtLabel = new DrawingTextTouchable(halign, size);
+            txtLabel.setTextBack(4f, 64, 0, 0, 0);
+            txtLabel.setMultiLineInterval(.9f);
+            txtLabel.setText(text);
+            //txtLabel.isPaintRect = true;
+            setLabelAlign(halign);
+        }
+    }
+    public void setLabelAlign(DrawingHAlign halign) {
+        this.hAlign = halign;
+        if (txtLabel != null) {
+            if (hAlign == DrawingHAlign.CENTER) {
+                txtLabel.setTextAlign(DrawingHAlign.CENTER);
+                txtLabel.setVerticalAlign(DrawingVAlign.TOP);
+            } else if (hAlign == DrawingHAlign.LEFT) {
+                txtLabel.setTextAlign(DrawingHAlign.LEFT);
+                txtLabel.setVerticalAlign(DrawingVAlign.CENTER);
+            } else if (hAlign == DrawingHAlign.RIGHT) {
+                txtLabel.setTextAlign(DrawingHAlign.RIGHT);
+                txtLabel.setVerticalAlign(DrawingVAlign.CENTER);
+            }
+        }
+    }
+    public void setLabelAlignK(float k) { labelAlignK = k; }
+    public void setLabelTextBackARGB(int a, int r, int g, int b) { txtLabel.setTextBackARGB(a, r, g, b); }
+
+    @Override
+    public boolean inBounds(float px, float py) {
+        return super.inBounds(px, py) || (txtLabel != null && txtLabel.contains(px, py));
+    }
+
+    @Override
+    protected void onButtonClick() {
+        super.onButtonClick();
+        if (circles != null)
+            circles.start();
+    }
+
+    @Override
+    public void disable() {
+        super.disable();
+        if (txtLabel != null)
+            txtLabel.disable();
+    }
+    @Override
+    public void enable() {
+        super.enable();
+        if (txtLabel != null)
+            txtLabel.enable();
+    }
+    /*@Override
+    public boolean inBounds(float px, float py) {
+        if (txtLabel != null)
+            return super.inBounds(px, py) || txtLabel.getRect().contains(px, py);
+        else
+            return super.inBounds(px, py);
+    }*/
+
+    @Override
+    public void show() {
+        super.show();
+        if (circles != null)
+            circles.reset();
+    }
+
+    @Override
+    public long hide() {
+        long duration = super.hide();
+        if (circles != null)
+            circles.finish();
+        return duration;
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+        if (txtLabel != null) {
+            txtLabel.setAlpha(this.alpha);
+            if (hAlign == DrawingHAlign.CENTER)
+                txtLabel.setPoint(this.fx, this.fy + .75f * labelAlignK * this.fh);
+            else if (hAlign == DrawingHAlign.LEFT)
+                txtLabel.setPoint(this.fx + .75f * labelAlignK * this.fw / MetrixUtils.screen_K, this.fy);
+            else if (hAlign == DrawingHAlign.RIGHT)
+                txtLabel.setPoint(this.fx - .75f * labelAlignK * this.fw / MetrixUtils.screen_K, this.fy);
+            txtLabel.calc();
+        }
+        if (circles != null)
+            circles.setPoint(fx, fy);
+    }
+
+    @Override
+    public void drawBackground(Canvas c) {
+        super.drawBackground(c);
+        if (isVisible()) {
+            if (circles != null)
+                circles.drawFrame(c);
+        }
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+        if (txtLabel != null && isVisible()) {
+            txtLabel.drawFrame(c);
+            //c.drawRect(txtLabel.getRect(), PaintUtils.getPaintStroke(255, 255, 0, 0, PaintUtils.strokeWidth));
+        }
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (txtLabel != null)
+            txtLabel.recycle();
+        if (circles != null)
+            circles.recycle();
+
+        txtLabel = null;
+        circles = null;
+    }
+}

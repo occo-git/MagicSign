@@ -1,0 +1,193 @@
+package com.softigress.magicsigns.Activities.MainActivity;
+
+import com.crashlytics.android.Crashlytics;
+import com.softigress.magicsigns.Activities._base.ActivityGroupBase;
+import com.softigress.magicsigns.Game.GrpGame;
+import com.softigress.magicsigns.Story.GrpIntro;
+import com.softigress.magicsigns.UI.Lab.GrpLab;
+import com.softigress.magicsigns.UI.Rating.GrpRating;
+import com.softigress.magicsigns.UI._Main.Dialogs.Login.IGetNameListener;
+import com.softigress.magicsigns.UI._Main.GrpAgeMenu;
+import com.softigress.magicsigns.UI._Main.GrpLoadGameMenu;
+import com.softigress.magicsigns.UI._Main.GrpMainMenu;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+class MainActivityGroups {
+
+    private ActivityGroupType activityGroupType = ActivityGroupType.NONE;
+
+    private final GrpLoadGameMenu grpLoadGameMenu;
+    private GrpAgeMenu grpAge;
+    private GrpIntro grpIntro;
+    private GrpMainMenu grpMainMenu;
+    private GrpRating grpRating;
+    private GrpLab grpLab;
+    private GrpGame grpGame;
+    private ActivityGroupBase currentGoup;
+
+    private final MainActivity mainActivity;
+
+    public MainActivityGroups(MainActivity activity) {
+        this.mainActivity = activity;
+
+        grpLoadGameMenu = new GrpLoadGameMenu();
+        setStatus(ActivityGroupType.LOAD, grpLoadGameMenu);
+    }
+
+    //region load
+    public void load() {
+        int step = 0;
+        try {
+            step = 1;
+            grpAge = new GrpAgeMenu();
+            step = 2;
+            grpIntro = new GrpIntro();
+            step = 3;
+            grpMainMenu = new GrpMainMenu();
+            step = 4;
+            grpRating = new GrpRating();
+            step = 5;
+            grpLab = new GrpLab();
+            step = 6;
+            grpGame = new GrpGame();
+            step = 7;
+            MainActivityUtils.setMainListener(new IMainListener() {
+                @Override public void handleOnInitAd() { onInitAd(); }
+                @Override public void handleOnShowIntro() { onShowIntro(); }
+                @Override public void handleOnShowMain() { onShowMain(); }
+                @Override public void handleOnShowRating() { onShowRating(); }
+                @Override public void handleOnShowLab() { onShowLab(); }
+                @Override public void handleOnStartGame() { onStartGame(); }
+                @Override public void handleOnPause(GrpDialog dlg) { onPause(dlg); }
+                @Override public void handleOnResume() { onResume(); }
+                @Override public void handleOnResetGame() { mainActivity.onResetGame(); onShowMain(); }
+                @Override public void handleOnExitGame() { mainActivity.onExitGame(); }
+                @Override public void handleConnectionOff() { mainActivity.onConnectionOff(); }
+                @Override public void handleConnectionOn() { mainActivity.onConnectionOn(); }
+                @Override public void handleConnection(boolean isOnOff) { mainActivity.onConnection(isOnOff); }
+                @Override public void handleAuthChanged() { mainActivity.onAuthChanged(); }
+                @Override public void handleShareScreenshot() { mainActivity.onShareScreenshot(); }
+                @Override public void handleShareLink() { mainActivity.onShareLink(); }
+                @Override public void handleRateGame(int stars) { mainActivity.onRateGame(stars); }
+                @Override public void handleBrowseUrl(String url) { mainActivity.onBrowseUrl(url); }
+                @Override public void handleGetName(IGetNameListener getNameListener) { mainActivity.onGetName(getNameListener); }
+                @Override public void handleStartLoadMusic(int musicId) { startLoadMusic(musicId); }
+                @Override public void handleSetLoadMusicProgress(FileInfo fileInfo, float progress) { setLoadMusicProgress(fileInfo, progress); }
+                @Override public void handleShowInterstitialAd() { mainActivity.showInterstitialAd(); }
+                @Override public void handleShowVideoAd(AchievementType type) { mainActivity.showVideoAd(type); }
+            });
+        } catch (Throwable t) {
+            Utils.CrashReport("MainaActivityGroups.load [" + step + "]", t);
+        }
+
+        TaskUtils.postDelayed(100, new Runnable() {
+            @Override public void run() {
+                if (Utils.isUserAge()) {
+                    // инициализируем рекламу
+                    onInitAd();
+                    if (Utils.isStory())
+                        onShowIntro(); // отображаем заставку
+                    else
+                        onShowMain();
+                } else
+                    onShowAge();
+            }
+        });
+    }
+
+    public void setLoadGameProgress(float progress, String text) {
+        if (grpLoadGameMenu != null)
+            grpLoadGameMenu.setProgress(progress, text);
+    }
+    private void startLoadMusic(int musicId) {
+        if (grpMainMenu != null)
+            grpMainMenu.startLoadMusic(musicId);
+        if (grpGame != null)
+            grpGame.startLoadMusic(musicId);
+    }
+    private void setLoadMusicProgress(FileInfo fileInfo, float progress) {
+        if (grpMainMenu != null)
+            grpMainMenu.setMusicProgress(fileInfo, progress);
+        if (grpGame != null)
+            grpGame.setMusicProgress(fileInfo, progress);
+    }
+
+    private void onInitAd() { mainActivity.initAd(); }
+    //endregion
+
+    //region pause / resume
+    private void onPause(GrpDialog dlg) {
+        if (currentGoup != null)
+            currentGoup.onPauseGroup(dlg);
+    }
+    private void onResume() {
+        if (currentGoup != null)
+            currentGoup.onResumeGroup();
+    }
+    //endregion
+
+    //region status
+    private void onShowAge() { setStatus(ActivityGroupType.AGE, grpAge); }
+    private void onShowIntro() { setStatus(ActivityGroupType.INTRO, grpIntro); }
+    private void onShowMain() { setStatus(ActivityGroupType.MAIN, grpMainMenu); }
+    private void onShowLab() { setStatus(ActivityGroupType.LAB, grpLab);}
+    private void onShowRating() { setStatus(ActivityGroupType.RATING, grpRating);}
+    private void onStartGame() { setStatus(ActivityGroupType.GAME, grpGame); }
+
+    private boolean isOnAge() { return activityGroupType == ActivityGroupType.AGE && grpAge != null; }
+    private boolean isOnIntro() { return activityGroupType == ActivityGroupType.INTRO && grpIntro != null; }
+    private boolean isOnMain() { return activityGroupType == ActivityGroupType.MAIN && grpMainMenu != null; }
+    private boolean isOnGame() { return activityGroupType == ActivityGroupType.GAME && grpGame != null; }
+    private boolean isOnRating() { return activityGroupType == ActivityGroupType.RATING && grpRating != null; }
+    private boolean isOnLab() { return activityGroupType == ActivityGroupType.LAB && grpLab != null; }
+
+    private void setStatus(final ActivityGroupType activityGroupType, final ActivityGroupBase group) {
+        try {
+            this.activityGroupType = activityGroupType;
+            this.currentGoup = group;
+
+            long delayTicks = mainActivity.hideCurrentGroup();
+            if (delayTicks > 0) {
+                TaskUtils.postDelayed(delayTicks, new Runnable() {
+                    public void run() {
+                        mainActivity.setCurrentGroup(group);
+                    }
+                });
+            } else
+                mainActivity.setCurrentGroup(group);
+
+        } catch (Throwable t) {
+            Utils.CrashReport("MainActivityGroups.setStatus", t);
+        }
+    }
+    //endregion
+
+    public void recycle() {
+        if (grpLoadGameMenu != null)
+            grpLoadGameMenu.recycle();
+        if (grpAge != null)
+            grpAge.recycle();
+        if (grpIntro != null)
+            grpIntro.recycle();
+        if (grpMainMenu != null)
+            grpMainMenu.recycle();
+        if (grpRating != null)
+            grpRating.recycle();
+        if (grpLab != null)
+            grpLab.recycle();
+        if (grpGame != null)
+            grpGame.recycle();
+
+        //grpLoadGameMenu = null;
+        grpAge = null;
+        grpIntro = null;
+        grpMainMenu = null;
+        grpRating = null;
+        grpLab = null;
+        grpGame = null;
+    }
+}

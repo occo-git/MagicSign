@@ -1,0 +1,173 @@
+package com.softigress.magicsigns.UI._base.Controls._base.Counters;
+
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.graphics.Canvas;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+
+public class CtrlCounterBase extends DrawingBaseTouchable {
+
+    float locationFx = 0.05f;
+    float locationFy = 0.05f;
+    int maxAlpha = 150;
+
+    private static final boolean isShowHide = false; // show on count > 0 and hide on count <= 0
+    static final long showDuration = 1000;
+    static final long hideDuration = 1000;
+    private static final long addItemDuration = 500;
+    private static final long minusItemDuration = 250;
+    long addItemDelay = 1000;
+
+    private Integer itemsCount = 0;
+    private DrawingText txtCount;
+
+    private DrawingText txtMinusCount;
+
+    CtrlCounterBase(float fx, float fy, float fd, int bitmapId) {
+        super(fx, fy, fd);
+
+        locationFx = fx;
+        locationFy = fy;
+        //setPoint(locationFx - 2f, locationFy - .2f);
+
+        setDefaultBitmap(bitmapId);
+
+        txtMinusCount = new DrawingText(DrawingHAlign.LEFT);
+        txtMinusCount.setFontSize(TextUtils.controls_count / 2f);
+        txtMinusCount.setAlpha(0);
+
+        txtCount = new DrawingText(DrawingHAlign.LEFT);
+        txtCount.setVerticalAlign(DrawingVAlign.CENTER);
+        txtCount.setFontSize(TextUtils.controls_count);
+    }
+
+    private ICtrlCounterListener listener;
+    public void setListener(ICtrlCounterListener l) { this.listener = l; }
+
+    protected void setMaxAlpha(int a) {
+        maxAlpha = a;
+        setAlpha(a);
+    }
+
+    protected void setTextAlign(DrawingHAlign halign) {
+        if (txtCount != null) {
+            txtCount = new DrawingText(halign);
+            txtCount.setFontSize(TextUtils.controls_count);
+        }
+    }
+
+    protected void setTextARGB(int a, int r, int g, int b) {
+        if (txtCount != null)
+            txtCount.setTextARGB(a, r, g, b);
+        if (txtMinusCount != null)
+            txtMinusCount.setTextARGB(a, r, g, b);
+    }
+
+    protected void setCountFontSize(float size) {
+        txtMinusCount.setFontSize(size / 2f);
+        txtCount.setFontSize(size);
+    }
+
+    //region itemsCount
+    public void countUp(final int count) {
+
+        if (isShowHide && itemsCount + count > 0) {
+            // skip playing animation
+        }
+        else {
+            Animator a = ObjectAnimator.ofFloat(this, "scale", 1f, 1.2f, 1f).setDuration(addItemDuration);
+            a.setStartDelay(addItemDelay);
+            a.start();
+        }
+
+        TaskUtils.postDelayed(
+                addItemDelay,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        setCount(itemsCount + count);
+                    }
+                });
+    }
+    public void countDown(final Integer count) {
+        setCount(itemsCount - count);
+
+        if (isShowHide && itemsCount <= 0) {
+            // skip playing animation
+        }
+        else
+            ObjectAnimator.ofFloat(this, "scale", 1f, .8f, 1f).setDuration(minusItemDuration).start();
+
+        long minusItemDuration2 = minusItemDuration * 4;
+        float fxM = this.fx + .5f * this.fd;
+        float fyM = this.fy - .5f * this.fd;
+        txtMinusCount.setPoint(fxM, fyM);
+        txtMinusCount.setText("- " + count.toString());
+
+        new AnimUtil()
+                .add(txtMinusCount, "alpha", 0, 128, 255, 255, 0)
+                .add(txtMinusCount, "fx", fxM, fxM + .5f * this.fd)
+                //.add(txtMinusCount, "fy", fyM, fyM - .5f * itemFd)
+                .start(minusItemDuration2);
+    }
+    private void setCount(Integer count) {
+        int prevCount = itemsCount;
+        itemsCount = count;
+        if (txtCount != null)
+            txtCount.setText(itemsCount.toString());
+        if (listener != null)
+            listener.handleOnCountSet();
+        this.calc();
+        onCountChanged(prevCount, count);
+    }
+    private void onCountChanged(int prevCount, int newCount) {
+        if (isShowHide) {
+            if (prevCount <= 0 && newCount > 0)
+                show();
+            if (newCount <= 0 && prevCount > 0) {
+                TaskUtils.postDelayed(minusItemDuration, new Runnable() {
+                    @Override
+                    public void run() { hide(); }
+                });
+            }
+        }
+    }
+    //endregion
+
+    public int getCount() { return itemsCount; }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+        if (txtCount != null) {
+            if (txtCount.getTextAlign() == DrawingHAlign.LEFT)
+                txtCount.setPoint(this.fx + 1.5f * this.fd, this.fy);
+            else
+                txtCount.setPoint(this.fx - 1.5f * this.fd, this.fy);
+            txtCount.setAlpha(this.alpha);
+        }
+        if (txtCount != null && itemsCount > 0)
+            txtCount.drawFrame(c);
+        if (txtMinusCount != null)
+            txtMinusCount.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+
+        if (txtCount != null)
+            txtCount.recycle();
+        if (txtMinusCount != null)
+            txtMinusCount.recycle();
+
+        txtCount = null;
+        txtMinusCount = null;
+    }
+}

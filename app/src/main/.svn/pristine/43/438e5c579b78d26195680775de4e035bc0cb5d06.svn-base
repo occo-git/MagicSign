@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<!--85-->
+	<string name="bmp_aim_ok" translatable="false">bmp_aim_ok</string>
+	<string name="bmp_logo_facebook" translatable="false">bmp_logo_facebook</string>
+	<string name="bmp_logo_google" translatable="false">bmp_logo_google</string>
+	<string name="bmp_bonus_combo" translatable="false">bmp_bonus_combo</string>
+	<string name="bmp_bonus_guess" translatable="false">bmp_bonus_guess</string>
+	<string name="bmp_bonus_lightning" translatable="false">bmp_bonus_lightning</string>
+	<string name="bmp_bonus_sequence" translatable="false">bmp_bonus_sequence</string>
+	<string name="bmp_bonus_strike" translatable="false">bmp_bonus_strike</string>
+	<string name="bmp_glare_01" translatable="false">bmp_glare_01</string>
+	<string name="bmp_rating" translatable="false">bmp_rating</string>
+	<string name="bmp_star" translatable="false">bmp_star</string>
+	<string name="bmp_star_gold" translatable="false">bmp_star_gold</string>
+	<string name="bmp_star_off" translatable="false">bmp_star_off</string>
+	<string name="bmp_wave" translatable="false">bmp_wave</string>
+  
+  	<!--100-->
+	<string name="bmp_btn_checked" translatable="false">bmp_btn_checked</string>
+	<string name="bmp_btn_empty" translatable="false">bmp_btn_empty</string>
+	<string name="bmp_btn_exit" translatable="false">bmp_btn_exit</string>
+	<string name="bmp_btn_link" translatable="false">bmp_btn_link</string>
+	<string name="bmp_btn_logged_out" translatable="false">bmp_btn_logged_out</string>
+	<string name="bmp_btn_menu" translatable="false">bmp_btn_menu</string>
+	<string name="bmp_btn_ok" translatable="false">bmp_btn_ok</string>
+	<string name="bmp_btn_options" translatable="false">bmp_btn_options</string>
+	<string name="bmp_btn_play" translatable="false">bmp_btn_play</string>
+	<string name="bmp_btn_potion" translatable="false">bmp_btn_potion</string>
+	<string name="bmp_btn_rate" translatable="false">bmp_btn_rate</string>
+	<string name="bmp_btn_rating" translatable="false">bmp_btn_rating</string>
+	<string name="bmp_btn_repeat" translatable="false">bmp_btn_repeat</string>
+	<string name="bmp_btn_repeat_disabled" translatable="false">bmp_btn_repeat_disabled</string>
+	<string name="bmp_btn_screenshot" translatable="false">bmp_btn_screenshot</string>
+	<string name="bmp_btn_share" translatable="false">bmp_btn_share</string>
+	<string name="bmp_btn_unchecked" translatable="false">bmp_btn_unchecked</string>
+	<string name="bmp_crown_01_gold_s" translatable="false">bmp_crown_01_gold_s</string>
+	<string name="bmp_crown_02_silver_s" translatable="false">bmp_crown_02_silver_s</string>
+	<string name="bmp_crown_03_bronze_s" translatable="false">bmp_crown_03_bronze_s</string>
+	<string name="bmp_halo_green_out" translatable="false">bmp_halo_green_out</string>
+	<string name="bmp_halo_orange_in" translatable="false">bmp_halo_orange_in</string>
+	<string name="bmp_halo_white_in" translatable="false">bmp_halo_white_in</string>
+	<string name="bmp_halo_white_out" translatable="false">bmp_halo_white_out</string>
+	<string name="bmp_item_idea" translatable="false">bmp_item_idea</string>
+	<string name="bmp_logo_firebase" translatable="false">bmp_logo_firebase</string>
+	<string name="bmp_photo_mask" translatable="false">bmp_photo_mask</string>
+	<string name="bmp_spot_black" translatable="false">bmp_spot_black</string>
+	<string name="bmp_spot_black_spiral" translatable="false">bmp_spot_black_spiral</string>
+	<string name="bmp_spot_orange" translatable="false">bmp_spot_orange</string>
+	<string name="bmp_spot_white" translatable="false">bmp_spot_white</string>
+	<string name="bmp_video" translatable="false">bmp_video</string>
+
+  	<!--200-->
+	<string name="bmp_crown_01_gold" translatable="false">bmp_crown_01_gold</string>
+	<string name="bmp_crown_02_silver" translatable="false">bmp_crown_02_silver</string>
+	<string name="bmp_crown_03_bronze" translatable="false">bmp_crown_03_bronze</string>
+	<string name="bmp_drop_100_wait" translatable="false">bmp_drop_100_wait</string>
+	<string name="bmp_drop_101_wait_blink" translatable="false">bmp_drop_101_wait_blink</string>
+	<string name="bmp_drop_10_simple" translatable="false">bmp_drop_10_simple</string>
+	<string name="bmp_drop_11_simple_blink" translatable="false">bmp_drop_11_simple_blink</string>
+	<string name="bmp_drop_20_interest" translatable="false">bmp_drop_20_interest</string>
+	<string name="bmp_drop_21_interest_blink" translatable="false">bmp_drop_21_interest_blink</string>
+	<string name="bmp_drop_30_surprise" translatable="false">bmp_drop_30_surprise</string>
+	<string name="bmp_drop_40_joke" translatable="false">bmp_drop_40_joke</string>
+	<string name="bmp_drop_50_laugh" translatable="false">bmp_drop_50_laugh</string>
+	<string name="bmp_drop_60_happy" translatable="false">bmp_drop_60_happy</string>
+	<string name="bmp_drop_61_happy_blink" translatable="false">bmp_drop_61_happy_blink</string>
+	<string name="bmp_drop_70_punched" translatable="false">bmp_drop_70_punched</string>
+	<string name="bmp_drop_80_pro" translatable="false">bmp_drop_80_pro</string>
+	<string name="bmp_drop_90_sleep" translatable="false">bmp_drop_90_sleep</string>
+	<string name="bmp_hand" translatable="false">bmp_hand</string>
+	<string name="bmp_potion_00_empty" translatable="false">bmp_potion_00_empty</string>
+	<string name="bmp_potion_01_simple" translatable="false">bmp_potion_01_simple</string>
+	<string name="bmp_potion_01_simple_group" translatable="false">bmp_potion_01_simple_group</string>
+	<string name="bmp_potion_02_normal" translatable="false">bmp_potion_02_normal</string>
+	<string name="bmp_potion_02_normal_group" translatable="false">bmp_potion_02_normal_group</string>
+	<string name="bmp_potion_03_hard" translatable="false">bmp_potion_03_hard</string>
+	<string name="bmp_potion_03_hard_group" translatable="false">bmp_potion_03_hard_group</string>
+	<string name="bmp_potion_04_insane" translatable="false">bmp_potion_04_insane</string>
+	<string name="bmp_potion_04_insane_group" translatable="false">bmp_potion_04_insane_group</string>
+	<string name="bmp_potion_05_crazy" translatable="false">bmp_potion_05_crazy</string>
+	<string name="bmp_potion_05_crazy_group" translatable="false">bmp_potion_05_crazy_group</string>
+	<string name="bmp_potion_10_final" translatable="false">bmp_potion_10_final</string>
+</resources>

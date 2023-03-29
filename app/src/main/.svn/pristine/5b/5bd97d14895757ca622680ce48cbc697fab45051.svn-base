@@ -1,0 +1,66 @@
+package com.softigress.magicsigns.Game.Cells.Membrane;
+
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.softigress.magicsigns.Game.Cells._base.DrawingCell;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+
+public class MembraneActivator extends DrawingCell {
+
+    public boolean isOnAction = false;
+
+    public MembraneActivator(float fr, int podCount) {
+        super(fr, podCount, fr / 150f, fr / 100f);
+
+        setPoint(Membrane.cx, Membrane.cy);
+        setAngelsDegrees(Membrane.degreesStart, Membrane.degreesEnd);
+        setPodDuration(Membrane.podDuration);
+        setWaves(Membrane.membraneWavesCount);
+        isStarted = true;
+    }
+
+    public void activate(float maxFr, int duration) {
+        if (!isOnAction) {
+            isOnAction = true;
+            setFr(maxFr * .95f);
+            // активация
+            new AnimUtil()
+                    .add(this, "fr", maxFr * .8f, maxFr, maxFr)
+                    .add(paint, "alpha", 0, 128, 0)
+                    .startAD(duration);
+
+            /*ObjectAnimator aAR = ObjectAnimator.ofFloat(this, "fr", maxFr * .8f, maxFr, maxFr).setDuration(duration);
+            ObjectAnimator aA1 = ObjectAnimator.ofInt(paint, "alpha", 0, 128, 0).setDuration(duration);
+            AnimatorSet set = new AnimatorSet();
+            set.setInterpolator(new AccelerateDecelerateInterpolator());
+            set.playTogether(aA1, aAR);
+            set.start();*/
+
+            TaskUtils.postDelayed(duration, new Runnable() { @Override public void run() { isOnAction = false; } });
+        }
+    }
+
+    public void deactivate(float maxFr, int duration) {
+        if (!isOnAction) {
+            isOnAction = true;
+            setFr(maxFr);
+            // деактивация
+            new AnimUtil()
+                    .add(this, "fr", maxFr, maxFr * .9f)
+                    .add(paint, "alpha", 128, 0)
+                    .startAD(duration / 2);
+
+            /*ObjectAnimator aAR = ObjectAnimator.ofFloat(this, "fr", maxFr, maxFr * .9f).setDuration(duration / 2);
+            ObjectAnimator aA1 = ObjectAnimator.ofInt(paint, "alpha", 128, 0).setDuration(duration / 2);
+            AnimatorSet set = new AnimatorSet();
+            set.setInterpolator(new AccelerateDecelerateInterpolator());
+            set.playTogether(aA1, aAR);
+            set.start();*/
+
+            TaskUtils.postDelayed(duration, new Runnable() { @Override public void run() { isOnAction = false; } });
+        }
+    }
+}

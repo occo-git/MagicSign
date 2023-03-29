@@ -1,0 +1,96 @@
+package com.softigress.magicsigns._system.FireBase.DataBase;
+
+import com.google.firebase.database.Exclude;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+
+import java.sql.Struct;
+
+public class UserVideoCount {
+
+    public int potion01;
+    public int potion02;
+    public int potion03;
+    public int potion04;
+    public int potion05;
+    public int groupPotion01;
+    public int groupPotion02;
+    public int groupPotion03;
+    public int groupPotion04;
+    public int groupPotion05;
+    public int sharedLinks; // количество отправленных ссылок
+    public int sharedScreenshots; // количество отправленных скриншотов
+
+    public UserVideoCount() { }
+
+    //regions Achievements
+    public Integer getVideoCountByAchievementType(AchievementType type) {
+        switch (type) {
+            case SIMPLE_01:         return potion01;
+            case NORMAL_02:         return potion02;
+            case HARD_03:           return potion03;
+            case INSANE_04:         return potion04;
+            case CRAZY_05:          return potion05;
+            case SIMPLE_01_GROUP:   return groupPotion01;
+            case NORMAL_02_GROUP:   return groupPotion02;
+            case HARD_03_GROUP:     return groupPotion03;
+            case INSANE_04_GROUP:   return groupPotion04;
+            case CRAZY_05_GROUP:    return groupPotion05;
+            default:                return 0;
+        }
+    }
+
+    public void increaseVideoCountByAchievementType(AchievementType type, int amount) {
+        switch (type) {
+            case SIMPLE_01:         potion01 += amount; break;
+            case NORMAL_02:         potion02 += amount; break;
+            case HARD_03:           potion03 += amount; break;
+            case INSANE_04:         potion04 += amount; break;
+            case CRAZY_05:          potion05 += amount; break;
+            case SIMPLE_01_GROUP:   groupPotion01 += amount; break;
+            case NORMAL_02_GROUP:   groupPotion02 += amount; break;
+            case HARD_03_GROUP:     groupPotion03 += amount; break;
+            case INSANE_04_GROUP:   groupPotion04 += amount; break;
+            case CRAZY_05_GROUP:    groupPotion05 += amount; break;
+            default:
+        }
+    }
+
+    public boolean isPotionEnabled(AchievementType type) {
+        // определим по количеству оставшихся для просмотра видео доступность potion
+        return SignInfos.getVideoCountByAchievementType(type) - getVideoCountByAchievementType(type) <= 0;
+    }
+    //endregion
+
+    //region Share
+    public int getSharedLinks() { return sharedLinks; }
+    public boolean increaseSharedLinks() {
+        if (getSharedLinks() < CurrentSettings.potionsShareLinksCount) {
+            sharedLinks++;
+            return true;
+        } else
+            return false;
+    }
+
+    public int getSharedScreenshots() { return sharedScreenshots; }
+    public boolean increaseSharedScreenshots() {
+        if (getSharedScreenshots() < CurrentSettings.potionsShareScreenshotsCount) {
+            sharedScreenshots++;
+            return true;
+        } else
+            return false;
+    }
+
+    public boolean sharedPotionEnabled() {
+        // проверяем доступность potion на основе количества отправленных ссылок и скриншотов
+        return getSharedLinks() >= CurrentSettings.potionsShareLinksCount && getSharedScreenshots() >= CurrentSettings.potionsShareScreenshotsCount;
+    }
+
+    public float sharedPercent() {
+        return (float)(getSharedLinks() + getSharedScreenshots()) / (CurrentSettings.potionsShareLinksCount + CurrentSettings.potionsShareScreenshotsCount);
+    }
+    //endregion
+
+    public void recycle() { }
+}

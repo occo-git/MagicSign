@@ -1,0 +1,68 @@
+package com.softigress.magicsigns.UI._Main.Dialogs;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDropOnExit;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+
+public class GrpPauseMenuDialog extends GrpDialog {
+
+    public final static int DIALOG_RESULT_OPTIONS = 1;
+    public final static int DIALOG_RESULT_EXIT = 3;
+    public final static int DIALOG_RESULT_PLAY = 4;
+
+    private static final float dxDrop =   .50f, dyDrop =     .485f;
+    private static final float dyStart =  1f / 6f;
+    private static final float dxBtn =    .2f;
+    private static final float dyBtn =    (1 - 2f * dyStart) / 3f;
+    private static final float fdBtn =    .1f;
+
+    private final DialogItem itemDrop;
+    private final FunnyDropOnExit drop;
+
+    public GrpPauseMenuDialog() {
+        super(.8f, .62f);//), R.string.bmp_btn_ok, .8f, .85f);
+        name = "dlg_resume_game";
+        setDlgMessageText(R.string.dlg_Pause_Title, .5f, .1f);
+        //setDlgIdeaText(R.string.dlg_Pause_IdeaText, .5f, .625f);
+        //setDlgDrawing(R.drawable.star, .8f, .68f, .1666f);
+
+        drop = new FunnyDropOnExit();
+        itemDrop = addDlgControlTouchable(drop, dxDrop, dyDrop);
+
+        float bx = getByDx(dxBtn);
+
+        //region options
+        BtnBase btnOptions = new BtnBase(bx, getByDy(dyStart + dyBtn * 2f), fdBtn, R.string.bmp_btn_options);
+        btnOptions.name = "btn_menu_options";
+        btnOptions.setLabelText(R.string.dlg_Menu_Options, DrawingHAlign.LEFT);
+        btnOptions.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_OPTIONS); }
+        });
+        addDlgControlTouchable(btnOptions, dxBtn, dyStart + dyBtn * 2f);
+        //endregion
+
+        //region exit
+        BtnBase btnExit = new BtnBase(bx, getByDy(dyStart + dyBtn * 3f), fdBtn, R.string.bmp_btn_exit);
+        btnExit.name = "btn_menu_exit";
+        btnExit.setLabelText(R.string.dlg_Exit, DrawingHAlign.LEFT);
+        btnExit.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_EXIT); }
+        });
+        addDlgControlTouchable(btnExit, dxBtn, dyStart + dyBtn  * 3f);
+        //endregion
+
+        addDlgCloseButton();
+    }
+
+    @Override
+    public void show() {
+        super.show();
+
+        itemDrop.setDxDyPoint(dxDrop, dyDrop);
+        drop.doMotion();
+    }
+}

@@ -1,0 +1,178 @@
+package com.softigress.magicsigns.Game.Cells.Membrane;
+
+import android.graphics.Canvas;
+import com.softigress.magicsigns.Game.Cells._base.DrawingCell;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Counters.CtrlMultiplier;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing.DrawingGroup;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class Membrane extends DrawingGroup {
+
+    public static final float membraneFr = 1f;
+    public static final float cx = .5f;
+    public static final float cy = .705f + membraneFr;
+    public static final int podCount = 30;
+    public static final int podDuration = 3000;
+    public static final int degreesStart = 65;
+    public static final int degreesEnd = 115;
+    public static final int membraneWavesCount = 1;
+
+    private final MembraneCore core;
+    private final CtrlMultiplier ctrlMultiplier;
+    private boolean isFinished;
+
+    //private DrawingFrameRate frameRate;
+
+    public Membrane() {
+        super();
+
+        core = new MembraneCore();
+        core.setChargeFullAmount(CurrentSettings.coverCellChargeFullAmount);
+        addDrawing(core);
+
+        ctrlMultiplier = new CtrlMultiplier();
+        ctrlMultiplier.setListener(new ITouchableListener() {
+            @Override
+            public void handelOnTouch(ITouchable item) {
+                if (listener != null)
+                    listener.handleOnMultiplierTouch();
+            }
+            @Override
+            public void handelOnTouchUp(ITouchable item) { }
+        });
+        addDrawingTouchable(ctrlMultiplier);
+
+        /*BtnBase btnCharge = new BtnBase(.4f, .15f, .1f, R.string.bmp_btn_checked);
+        btnCharge.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable item) { chargeCurrentCover(5); } });
+        addDrawingTouchable(btnCharge);
+
+        BtnBase btnBreak = new BtnBase(.6f, .15f, .1f, R.string.bmp_btn_unchecked);
+        btnBreak.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable item) { breakMembrane(); } });
+        addDrawingTouchable(btnBreak);*/
+
+        //frameRate = new DrawingFrameRate("membrane", .04f, .1f);
+    }
+
+    private IMembraneListener listener;
+    public void setListener(IMembraneListener l) { listener = l; }
+
+    @Override
+    public void show() {
+        super.show();
+
+        isFinished = false;
+        Utils.playSound(R.raw.activate10);
+        setMultiplier(2);
+    }
+
+    @Override
+    public long hide() {
+        long duration = super.hide();
+        setMultiplier(0);
+        return duration;
+    }
+
+    public boolean checkCollision(DrawingCell cell) {
+        if (CurrentSettings.scoreMultiplier > 1) {
+            if (core.isActive) {
+                float dX = core.x - cell.x;
+                float dY = core.y - cell.y;
+                float dR = core.r + cell.r;
+                if (Math.sqrt(dX * dX + dY * dY) <= dR) { // collide
+                    Utils.playSound(R.raw.miss00);
+                    Utils.vibrate(20);
+                    setMultiplier(CurrentSettings.scoreMultiplier - 1);
+                    return true;
+                }
+            }
+        }
+        else { // no core
+            if (cell.getFy() > 1f) { // if cell is out of screen
+                if (!isFinished) {
+                    isFinished = true;
+                    core.chargerReset();
+                    // finish game
+                    if (listener != null)
+                        listener.handleOnFinish();
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+
+    private int currentChargeAmount = 0;
+    private int coverChargeAmount = CurrentSettings.coverCellChargeFullAmount;
+    public void chargeCurrentCover(int amount) {
+        currentChargeAmount += amount;
+        float percent = (float) currentChargeAmount / coverChargeAmount;
+        if (!core.isCharged())
+            core.charge(amount);
+        if (percent < 1f && CurrentSettings.scoreMultiplier < CurrentSettings.scoreMultiplierMax) {
+            if (ctrlMultiplier != null) {
+                ctrlMultiplier.setPercent(percent);
+                Utils.playSound(R.raw.energy_pick16);
+                ctrlMultiplier.startChargeAnim();
+            }
+        }
+        if (percent >= 1f) {
+            if (CurrentSettings.scoreMultiplier < CurrentSettings.scoreMultiplierMax) {
+                Utils.playSound(R.raw.activate10);
+                setMultiplier(CurrentSettings.scoreMultiplier + 1);
+                //core.startCirclesDown();
+            }
+        }
+    }
+
+    public void breakMembrane() { setMultiplier(CurrentSettings.scoreMultiplier - 1); }
+
+    private void setMultiplier(final int multiplier) {
+        if (ctrlMultiplier != null)
+            ctrlMultiplier.setMultiplier(multiplier);
+
+        int delay = 0;
+        if (CurrentSettings.scoreMultiplier > 1 && CurrentSettings.scoreMultiplier > multiplier) {
+            if (multiplier > 1)
+                core.deactivate();
+            else
+                core.disable();
+        } else if (multiplier >= 2)
+            delay = core.activate();
+        else
+            core.chargerReset();
+
+        core.podFrAnim(membraneFr / 150f * (1 + .1f * multiplier), delay);
+
+        CurrentSettings.scoreMultiplier = multiplier;
+        currentChargeAmount = 0;
+        coverChargeAmount = CurrentSettings.coverCellChargeFullAmount * multiplier;
+        if (listener != null)
+            listener.handleOnMultiplierSet(multiplier);
+    }
+
+    /*@Override
+    public void drawFrame(Canvas c) {
+        if (frameRate != null)
+            frameRate.start();
+
+        super.drawFrame(c);
+
+        if (frameRate != null)
+            frameRate.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+
+        if (frameRate != null)
+            frameRate.recycle();
+
+        listener = null;
+    }*/
+}

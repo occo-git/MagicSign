@@ -1,0 +1,371 @@
+package com.softigress.magicsigns.Game.Signs.SSequence;
+
+import android.graphics.Canvas;
+import android.os.SystemClock;
+import com.softigress.magicsigns.Activities._base.PauseInfo;
+import com.softigress.magicsigns.Game.Cells.Membrane.Membrane;
+import com.softigress.magicsigns.Game.Puncher.RaySign;
+import com.softigress.magicsigns.Game.Signs._base.DrawingSignCell;
+import com.softigress.magicsigns.Game.Signs._base.IDrawingSignListener;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Lightning.LightningCollection;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfo;
+import com.softigress.magicsigns._system.Settings.Infos.SignStrength;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class SWave implements IDrawing, ITouchable {
+
+    private static final float idFx = .5f, idFy = .32f, waveFd = .083f, starFd = .075f;
+
+    private final Integer id;
+    private final SignStrength[] strengths;
+    private final float groupsPercent;
+    private final float collapsedPercent;
+    private final float lightningPercent;
+
+    int stepsCount = 0;
+    private final ArrayRecyclableSimple<SStep> sSteps = new ArrayRecyclableSimple<>(SStep.class);
+    private final SStep[] sStepItems;
+    private SStep currentStep;
+
+    private final DrawingBase wave;
+    private final DrawingBase back1, back2;
+    private final DrawingText txtId;
+    private final DrawingText txtReady;
+    private static final long idDuration = 5000;
+    private static final int idMaxAlpha = 255;
+    private boolean isIdVisible = true;
+
+    public boolean isStarted = false;
+    private long startTicks = 0;
+    private final long duration; // общая продолжительность SWave
+    public boolean isFinished = false;
+    private final PauseInfo pauseInfo = new PauseInfo();
+
+    private boolean isOnFinish = false;
+    private int finishAlpha = 255;
+    void setFinishAlpha(int a) {
+        isOnFinish = true;
+        finishAlpha = a;
+    }
+
+    SWave(int id,                    // 1 - номер волны
+                 int stepsCount,            // 2 - количество шагов
+                 int maxSignsCount,         // 3 - максимально количество signs в шаге
+                 float minSpeedK,           // 4 - минимальная скорость
+                 float maxSpeedK,           // 5 - максимальная скорость
+                 float groupsPercent,       // 6 - процент группировок (groups)
+                 float collapsedPercent,    // 7 - процент сжатых (collapsed)
+                 float lightningPercent,    // 8 - процент молний (lightning)
+                 SignStrength[] strengths)  // 9 - типы signs
+    {
+        this.id = id;
+        wave = new DrawingBase(waveFd, R.string.bmp_wave);
+        wave.setPoint(idFx, idFy + .15f);
+        wave.setAlpha(0);
+
+        txtId = new DrawingText(DrawingHAlign.CENTER, TextUtils.controls_game_wave_id);
+        txtId.setVerticalAlign(DrawingVAlign.CENTER);
+        txtId.setPoint(idFx, idFy);
+        txtId.setText(Utils.getRes(R.string.game_wave_index) + " " + id);
+        txtId.setTextBack(8f, 32, 255, 255, 255);
+        txtId.setAlpha(0);
+        txtReady = new DrawingText(DrawingHAlign.CENTER, TextUtils.controls_game_wave_ready);
+        txtReady.setVerticalAlign(DrawingVAlign.CENTER);
+        txtReady.setPoint(idFx, idFy + .075f);
+        txtReady.setText(R.string.game_wave_ready);
+        txtReady.setTextBack(6f, 16, 255, 255, 255);
+        txtReady.setAlpha(0);
+
+        back1 = new DrawingBase(starFd, R.string.bmp_star);
+        back1.setPoint(idFx, idFy);
+        back1.setAlpha(0);
+        back2 = new DrawingBase(starFd, R.string.bmp_star);
+        back2.setPoint(idFx, idFy);
+        back2.setAlpha(0);
+
+        this.strengths = strengths;
+        this.groupsPercent = groupsPercent;
+        this.collapsedPercent = collapsedPercent;
+        this.lightningPercent = lightningPercent;
+
+        this.duration = stepsCount * CurrentSettings.singStartStepDelta;
+        float deltaSpeedK = (maxSpeedK - minSpeedK) / stepsCount;
+        float deltaCount = (float)maxSignsCount / stepsCount;
+        for (int i = 0; i < stepsCount; i++) // с каждым шагом наращиваем скорость от minSpeedK до maxSpeedK и количество signs
+            addStep(i + 1, maxSpeedK - i * deltaSpeedK, (int)(i * deltaCount) + 1);
+
+        sStepItems = sSteps.getItems();
+    }
+
+    public void setListener(IDrawingSignListener l) {
+        //if (sStepItems != null)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.setListener(l);
+    }
+
+    private void addStep(int id, float speedK, int signsCount) {
+        SignStrength strength = getRandomStrength();
+        boolean isGroups = Utils.getRandomBoolean(groupsPercent);
+        boolean isCollapsed = Utils.getRandomBoolean(collapsedPercent);
+        boolean isLightning = Utils.getRandomBoolean(lightningPercent);
+        SStep step = new SStep(id, speedK, signsCount, strength, isGroups, isCollapsed, isLightning);
+        sSteps.add(step);
+        stepsCount++;
+    }
+
+    private SignStrength getRandomStrength() {
+        if (strengths != null && strengths.length > 0)
+            return strengths[Utils.getRandom(strengths.length)];
+        return SignStrength.SIMPLE;
+    }
+
+    //region start / pause / resume
+    public void start() {
+        isStarted = true;
+        Utils.playSound(R.raw.wave01);
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_WAVE, id.toString());
+    }
+
+    public void pause() {
+        pauseInfo.pause();
+        if (sStepItems != null)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.pause();
+    }
+    public void resume() {
+        if (sStepItems != null)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.resume();
+        if (startTicks > 0)
+            startTicks += pauseInfo.resume();
+        else
+            pauseInfo.resume();
+    }
+    //endregion
+
+    SignInfo getHelpSign() {
+        if (isStarted && !isFinished) {
+            float fy = 0;
+            DrawingSignCell sign = null;
+            for (SStep s : sStepItems) {
+                if (s != null) {
+                    DrawingSignCell sign1 = s.getHelpSignCell();
+                    if (sign1 != null) {
+                        float fy1 = sign1.getFy();
+                        if (fy1 >= fy) {
+                            fy = fy1;
+                            sign = sign1;
+                        }
+                    }
+                }
+            }
+            return sign != null ? sign.getCurrentSignInfo() : null;
+        }
+        return null;
+    }
+
+    int getPunched(RaySign raySign) {
+        int punched = 0;
+        //if (sStepItems != null
+        if ( isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    punched += s.getPunched(raySign);
+        return punched;
+    }
+
+    public int explode() {
+        int exploded = 0;
+        //if (sSteps != null
+        if (isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    exploded += s.explode();
+        return exploded;
+    }
+
+    void checkCollision(Membrane membrane) {
+        //if (sSteps != null
+        if (isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.checkCollision(membrane);
+    }
+    void checkLightningHit(LightningCollection lightnings) {
+        if (sStepItems != null && isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.checkLightningHit(lightnings);
+    }
+
+    //region Touch
+    public boolean onTouch(int x, int y) {
+        //if (sStepItems != null
+        if (isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.onTouch(x, y);
+        return true;
+    }
+
+    public boolean onTouchUp(int x, int y) {
+        //if (sStepItems != null
+        if (isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.onTouchUp(x, y);
+        return false;
+    }
+
+    public void onMoveTo(int x, int y) {
+        //if (sStepItems != null
+        if (isStarted && !isFinished)
+            for (SStep s : sStepItems)
+                if (s != null)
+                    s.onMoveTo(x, y);
+    }
+    //endregion
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    private long delta = 0;
+    private void nextFrame() {
+        long ticks = SystemClock.elapsedRealtime();
+        if (startTicks == 0)
+            startTicks = ticks;
+        if (!pauseInfo.isPaused) {
+            delta = ticks - startTicks;
+            // id
+            isIdVisible = delta < idDuration;
+            if (isIdVisible) {
+                if (!isIdAnimStarted)
+                    idAnimStart();
+            }
+            // steps
+            int stepN = (int) delta / CurrentSettings.singStartStepDelta; // определяем какой SStep должен стартовать
+            if (stepN >= 0 && stepN < sStepItems.length) {
+                SStep step = sStepItems[stepN];
+                if (step != null && !step.isStarted) {
+                    step.start();
+                    currentStep = step;
+                }
+            }
+        }
+    }
+
+    private boolean isIdAnimStarted = false;
+    private void idAnimStart() {
+        isIdAnimStarted = true;
+
+        new AnimUtil()
+                .add(back1, "Alpha", 0, 32, 64, 0)
+                .add(back1, "Fx", idFx, idFx + .5f)
+                .add(back2, "Alpha", 0, 32, 64, 0)
+                .add(back2, "Fx", idFx, idFx - .5f)
+                .add(txtId, "Alpha", 0, idMaxAlpha, idMaxAlpha, 0)
+                .add(txtReady, "Alpha", 0, idMaxAlpha, idMaxAlpha, 0)
+                .add(wave, "Alpha", 0, idMaxAlpha, idMaxAlpha, 0)
+                .startAD(idDuration);
+
+        /*Animator aB1A = ObjectAnimator.ofInt(back1, "Alpha", 0, 32, 64, 0).setDuration(idDuration);
+        Animator aB1X = ObjectAnimator.ofFloat(back1, "Fx", idFx, idFx + .5f).setDuration(idDuration);
+        Animator aB2A = ObjectAnimator.ofInt(back2, "Alpha", 0, 32, 64, 0).setDuration(idDuration);
+        Animator aB2X = ObjectAnimator.ofFloat(back2, "Fx", idFx, idFx - .5f).setDuration(idDuration);
+        Animator aIA = ObjectAnimator.ofInt(txtId, "Alpha", 0, idMaxAlpha, idMaxAlpha, 0).setDuration(idDuration);
+        Animator aRA = ObjectAnimator.ofInt(txtReady, "Alpha", 0, idMaxAlpha, idMaxAlpha, 0).setDuration(idDuration);
+        Animator aWA = ObjectAnimator.ofInt(wave, "Alpha", 0, idMaxAlpha, idMaxAlpha, 0).setDuration(idDuration);
+        AnimatorSet set = new AnimatorSet();
+        set.setInterpolator(new AccelerateDecelerateInterpolator());
+        set.setDuration(idDuration);
+        set.playTogether(aB1A, aB1X, aB2A, aB2X, aIA, aRA, aWA);
+        set.start();*/
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        //if (sSteps != null
+        if (isStarted && !isFinished) {
+            nextFrame();
+
+            // id
+            if (isIdVisible) {
+                if (back1 != null)
+                    back1.drawFrame(c);
+                if (back2 != null)
+                    back2.drawFrame(c);
+                if (txtId != null)
+                    txtId.drawFrame(c);
+                if (txtReady != null)
+                    txtReady.drawFrame(c);
+                if (wave != null)
+                    wave.drawFrame(c);
+            }
+
+            // TEST
+            //TextUtils.WriteSizedTextLeft(c, 10, 20, "SWave=[" + id + "]: duration=" + duration, TextUtils.getDefaultFontSize());
+            //int y0 = 40;
+            //int i = 0;
+            //if (s.isStarted && !s.isFinished)
+            //    TextUtils.WriteSizedTextLeft(c, 20, y0 + i * 20, "SStep[" + i +"]: duration=" + s.duration + ", speedK=" + s.speedK, TextUtils.getDefaultFontSize());
+            //i++;
+
+            if (pauseInfo.isPaused) {
+                for (SStep s : sStepItems)
+                    if (s != null) {
+                        if (isOnFinish)
+                            s.setFinishAlpha(finishAlpha);
+                        s.drawFrame(c);
+                    }
+            } else {
+                boolean finished = true;
+                for (SStep s : sStepItems) {
+                    //if (s != null) {
+                        finished &= s.isFinished;
+                        if (isOnFinish)
+                            s.setFinishAlpha(finishAlpha);
+                        s.drawFrame(c);
+                    //}
+                }
+                isFinished = finished;
+            }
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (wave != null)
+            wave.recycle();
+        if (txtId != null)
+            txtId.recycle();
+        if (txtReady != null)
+            txtReady.recycle();
+        if (back1 != null)
+            back1.recycle();
+        if (back2 != null)
+            back2.recycle();
+
+        //if (sSteps != null)
+            sSteps.recycle();
+    }
+}

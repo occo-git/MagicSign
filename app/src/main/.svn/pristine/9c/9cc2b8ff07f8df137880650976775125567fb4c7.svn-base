@@ -1,0 +1,462 @@
+package com.softigress.magicsigns._system.FireBase.DataBase;
+
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.Transaction;
+import com.google.firebase.database.ValueEventListener;
+import com.softigress.magicsigns.UI.Rating.RatingRow.ScoreInfo;
+import com.softigress.magicsigns.UI.Rating.RatingRow.UserRatingRowInfo;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.util.Map;
+
+public class DataBaseManager {
+
+    private static final String DB_USER_SCORE_INFOS = "UserScoreInfos";
+    private static final String DB_USER_SCORE_INFOS_TO_DELETE = "UserScoreInfosToDelete";
+    private static final String DB_USER_SCORES = "UserScores";
+    private static final String DB_USER_POTION_VIDEOS = "UserVideoCounts";
+
+    public static final String DB_USER_SCORE_INFO_PROVIDER = "provider";
+    public static final String DB_USER_SCORE_INFO_NAME = "name";
+    public static final String DB_USER_SCORE_INFO_SCORE = "score";
+    public static final String DB_USER_SCORE_INFO_WAVES = "waves";
+    public static final String DB_USER_SCORE_INFO_GAMES = "games";
+    public static final String DB_USER_SCORE_INFO_DNAS = "dnas";
+    public static final String DB_USER_SCORE_INFO_POTION_FINAL = "potionFinal";
+
+    private DatabaseReference fbDataBaseRef;
+    private DatabaseReference userScoreInfosRef;
+    private DatabaseReference userScoreInfosToDeleteRef;
+    private DatabaseReference userScoresRef;
+    private DatabaseReference userPotionVideosRef;
+
+    private Query ratingQuery;
+    private ValueEventListener ratingListener;
+    private Query ratingTopQuery;
+    private ValueEventListener ratingTopListener;
+    private ValueEventListener userRatingListener;
+    private ValueEventListener userVideoCountsListener;
+
+    public UserScoreInfo currentUserScoreInfo = null;
+
+    public DataBaseManager() { }
+
+    private IDataBaseManagerListener listener;
+    public void setListener(IDataBaseManagerListener l) { this.listener = l; }
+
+    //region References
+    private DatabaseReference getDbRef() {
+        if (fbDataBaseRef == null) {
+            FirebaseDatabase fireBase = FirebaseDatabase.getInstance();
+            //if (fireBase != null)
+                fbDataBaseRef = fireBase.getReference();
+        }
+        return fbDataBaseRef;
+    }
+
+    private DatabaseReference getScoreInfosRef() {
+        if (userScoreInfosRef == null) {
+            DatabaseReference dbRef = getDbRef();
+            if (dbRef != null)
+                userScoreInfosRef = dbRef.child(DB_USER_SCORE_INFOS);
+        }
+        return userScoreInfosRef;
+    }
+
+    private DatabaseReference getScoreInfosToDeleteRef() {
+        if (userScoreInfosToDeleteRef == null) {
+            DatabaseReference dbRef = getDbRef();
+            if (dbRef != null)
+                userScoreInfosToDeleteRef = dbRef.child(DB_USER_SCORE_INFOS_TO_DELETE);
+        }
+        return userScoreInfosToDeleteRef;
+    }
+
+    private DatabaseReference getScoresRef() {
+        if (userScoresRef == null) {
+            DatabaseReference dbRef = getDbRef();
+            if (dbRef != null)
+                userScoresRef = dbRef.child(DB_USER_SCORES);
+        }
+        return userScoresRef;
+    }
+
+    private DatabaseReference getPotionVideosRef() {
+        if (userPotionVideosRef == null) {
+            DatabaseReference dbRef = getDbRef();
+            if (dbRef != null)
+                userPotionVideosRef = dbRef.child(DB_USER_POTION_VIDEOS);
+        }
+        return userPotionVideosRef;
+    }
+    //endregion
+
+    //region User References
+    private DatabaseReference getUserScoreInfoRef(String uid) {
+        DatabaseReference ref = getScoreInfosRef();
+        if (uid != null && ref != null)
+            return ref.child(uid);
+        return null;
+    }
+
+    private DatabaseReference getUserScoreRef(String uid) {
+        DatabaseReference ref = getScoresRef();
+        if (uid != null && ref != null)
+            return ref.child(uid);
+        return null;
+    }
+
+    private DatabaseReference getUserPotionVideosRef(String uid) {
+        DatabaseReference ref = getPotionVideosRef();
+        if (uid != null && ref != null)
+            return ref.child(uid);
+        return null;
+    }
+    //endregion
+
+    //region get info
+    public void getUserScoreInfo(final IUserScoreInfoListener l) {
+        String uid = Utils.authManager.getUserId();
+        final DatabaseReference userRef = getUserScoreInfoRef(uid);
+        if (userRef != null)
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snap) {
+                    UserScoreInfo info = snap.getValue(UserScoreInfo.class);
+                    if (info != null && l != null)
+                        l.handle(info);
+                }
+                @Override public void onCancelled(DatabaseError databaseError) { }
+            });
+    }
+
+    public void getUserVideoCounts(final IUserVideoCountsListener l) {
+        String uid = Utils.authManager.getUserId();
+        final DatabaseReference videosRef = getUserPotionVideosRef(uid);
+        if (videosRef != null)
+            videosRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snap) {
+                    UserVideoCount uvc = snap.getValue(UserVideoCount.class);
+                    if (uvc == null)
+                        uvc = new UserVideoCount();
+                    if (l != null)
+                        l.handle(uvc);
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            });
+    }
+    //endregion
+
+    //region save info
+    public void saveUserScoreInfo(final UserScoreInfo usi) {
+        currentUserScoreInfo = usi;
+        String uid = Utils.authManager.getUserId();
+        final DatabaseReference userRef = getUserScoreInfoRef(uid);
+        final DatabaseReference userScoreRef = getUserScoreRef(uid);
+        if (userRef != null && userScoreRef != null) {
+            userRef.runTransaction(new Transaction.Handler() {
+                @NonNull
+                @Override
+                public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+                    userRef.setValue(usi); // update user info
+                    userScoreRef.setValue(usi.score); // update user score
+                    return Transaction.success(mutableData);
+                }
+                @Override
+                public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
+                    pushDb();
+                }
+            });
+        }
+    }
+
+    public void updateUserValues(String uid, Map<String, Object> vals) {
+        DatabaseReference userRef = getUserScoreInfoRef(uid);
+        if (userRef != null && vals != null) {
+            userRef.updateChildren(vals).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override public void onComplete(@NonNull Task<Void> task) { pushDb(); }
+            });
+        }
+    }
+
+    public void updateReadyDnaPods(int readyDnaPodsCount) {
+        if (currentUserScoreInfo != null) {
+            currentUserScoreInfo.dnas = readyDnaPodsCount;
+            saveUserScoreInfo(currentUserScoreInfo); // сохраняем в БД количество готовых элементов DNA
+        }
+    }
+
+    public void updatePotionFinal(boolean potionFinal) {
+        if (currentUserScoreInfo != null) {
+            currentUserScoreInfo.setPotionFinal(potionFinal);
+            saveUserScoreInfo(currentUserScoreInfo); // сохраняем в БД признак наличия Лекарства от всех болезней
+        }
+    }
+
+    public void updatePotionEnabled(AchievementType type, boolean enabled) {
+        if (currentUserScoreInfo != null) {
+            currentUserScoreInfo.setPotionEnabled(type, enabled);
+            saveUserScoreInfo(currentUserScoreInfo); // сохраняем в БД признак того, что эликсир получен
+        }
+    }
+
+    public void resetScore() {
+        if (currentUserScoreInfo != null) {
+            currentUserScoreInfo.reset();
+            saveUserScoreInfo(currentUserScoreInfo);
+        }
+        // reset video count
+        UserVideoCount uvc = new UserVideoCount();
+        saveVideoCounts(uvc);
+    }
+
+    public void saveVideoCounts(UserVideoCount uvc) {
+        String uid = Utils.authManager.getUserId();
+        final DatabaseReference videosRef = getUserPotionVideosRef(uid);
+
+        final UserVideoCount setUVC = uvc;
+        if (videosRef != null)
+            // update user video counts
+            videosRef.setValue(setUVC).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override public void onComplete(@NonNull Task<Void> task) { pushDb(); }
+            });
+    }
+
+    private void pushDb() {
+        DatabaseReference dbRef = getDbRef();
+        if (dbRef != null)
+            dbRef.push(); // для обновления данных в интерфейсе
+
+        /*DatabaseReference scoreInfosRef = getScoreInfosRef();
+        if (scoreInfosRef != null)
+            scoreInfosRef.push();
+        DatabaseReference scoresRef = getScoresRef();
+        if (scoresRef != null)
+            scoresRef.push();*/
+    }
+    //endregion
+
+    //region Rating listeners
+    public void setRatingListenerOn() {
+
+        //region краткая информация (только score) всех пользователей для определения рейтинга текущего пользователя
+        if (ratingListener == null) {
+            final DatabaseReference scoresRef = getScoresRef();
+            if (scoresRef != null) {
+                if (ratingQuery == null)
+                    ratingQuery = scoresRef.orderByValue();
+                ratingListener = new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String uid = Utils.authManager.getUserId();
+                        ScoreInfo userScore = null;
+
+                        // установим последний индекс равным числу пользователей
+                        int index = (int)dataSnapshot.getChildrenCount();
+                        // получим информацию по всем пользователям
+                        ArrayRecyclable<ScoreInfo> scores = new ArrayRecyclable<>();
+                        for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                            if (snap != null) {
+                                ScoreInfo score = new ScoreInfo(index--, snap.getKey(), snap.getValue(Integer.class));
+                                if (score.id.equals(uid)) // найдем счет текущего пользователея
+                                    userScore = score;
+                                scores.add(score);
+                            }
+                        }
+                        if (listener != null)
+                            listener.onRatingChanged(userScore, scores);
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                };
+                if (ratingListener != null)
+                    ratingQuery.addValueEventListener(ratingListener);
+            }
+        }
+        // /endregion
+
+        //region информация о первых 10 пользователях
+        if (ratingTopListener == null) {
+            final DatabaseReference scoreInfosRef = getScoreInfosRef();
+            if (scoreInfosRef != null) {
+                if (ratingTopQuery == null)
+                    ratingTopQuery = scoreInfosRef.orderByChild(DB_USER_SCORE_INFO_SCORE).limitToLast(CurrentSettings.rateRowsCount);
+                ratingTopListener = new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        // установим последний индекс равным числу пользователей
+                        int index = (int)dataSnapshot.getChildrenCount();
+                        ArrayRecyclable<UserRatingRowInfo> topRowInfos = new ArrayRecyclable<>();
+                        // получим информацию по всем пользователям
+                        for (DataSnapshot snap : dataSnapshot.getChildren()) {
+                            UserRatingRowInfo rowInfo = getUserRatingRowInfo(snap);
+                            rowInfo.index = index; // индекс в рейтинге
+                            topRowInfos.add(0, rowInfo);
+                            index--;
+                        }
+
+                        if (listener != null)
+                            listener.onTopUserInfosChanged(topRowInfos);
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                };
+                if (ratingTopListener != null)
+                    ratingTopQuery.addValueEventListener(ratingTopListener);
+            }
+        }
+        //endregion
+    }
+
+    private UserRatingRowInfo getUserRatingRowInfo(DataSnapshot snap) {
+        UserScoreInfo info = snap.getValue(UserScoreInfo.class);
+        return new UserRatingRowInfo(snap.getKey(), info);
+    }
+
+    public void setRatingListenerOff() {
+        if (ratingQuery != null && ratingListener != null) {
+            ratingQuery.removeEventListener(ratingListener);
+            ratingListener = null;
+        }
+        if (ratingTopQuery != null && ratingTopListener != null) {
+            ratingTopQuery.removeEventListener(ratingTopListener);
+            ratingTopListener = null;
+        }
+    }
+    //endregion
+
+    //region UserScoreInfo listener
+    public void setUserListenerOn() {
+        final String uid = Utils.authManager.getUserId();
+        // информация текущего пользователя (без индекса в рейтинге)
+        if (userRatingListener == null) {
+            DatabaseReference userRef = getUserScoreInfoRef(uid);
+            if (userRef != null) {
+                userRatingListener = new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snap) {
+                        UserRatingRowInfo rowInfo = getUserRatingRowInfo(snap);
+                        if (listener != null)
+                            listener.onCurrentUserInfoChanged(rowInfo);
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                };
+                if (userRatingListener != null)
+                    userRef.addValueEventListener(userRatingListener);
+            }
+        }
+    }
+    public void setUserListenerOff() { setUserListenerOff(Utils.authManager.getUserId()); }
+    public void setUserListenerOff(String uid) {
+        DatabaseReference userRef = getUserScoreInfoRef(uid);
+        if (userRef != null && userRatingListener != null) {
+            userRef.removeEventListener(userRatingListener);
+            userRatingListener = null;
+        }
+    }
+    //endregion
+
+    //region UserVideoCounts listener
+    public void setUserVideoCountsListenerOn() {
+        final String uid = Utils.authManager.getUserId();
+        // информация о просмотренных видео текущего пользователя
+        if (userVideoCountsListener == null) {
+            DatabaseReference userRef = getUserPotionVideosRef(uid);
+            if (userRef != null) {
+                userVideoCountsListener = new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snap) {
+                        UserVideoCount uvc = snap.getValue(UserVideoCount.class);
+                        if (listener != null)
+                            listener.onCurrentUserVideoCountsChanged(uvc);
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+                };
+                if (userVideoCountsListener != null)
+                    userRef.addValueEventListener(userVideoCountsListener);
+            }
+        }
+    }
+    public void setUserVideoCountsListenerOff() { setUserVideoCountsListenerOff(Utils.authManager.getUserId()); }
+    public void setUserVideoCountsListenerOff(String uid) {
+        DatabaseReference userRef = getUserPotionVideosRef(uid);
+        if (userRef != null && userVideoCountsListener != null) {
+            userRef.removeEventListener(userVideoCountsListener);
+            userVideoCountsListener = null;
+        }
+    }
+    //endregion
+
+    private ValueEventListener valueEventListener = null;
+    public void copyUserScoreInfo(final String oldUserId, final String newUserId) {
+
+        final DatabaseReference oldScoreRef = getUserScoreRef(oldUserId);
+        final DatabaseReference oldUserRef = getUserScoreInfoRef(oldUserId);
+
+        if (oldUserRef != null) {
+            // получим info старого firebase аккаунта
+            valueEventListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    final UserScoreInfo oldInfo = dataSnapshot.getValue(UserScoreInfo.class);
+                    if (oldInfo != null) {
+                        oldUserRef.runTransaction(new Transaction.Handler() {
+                            @NonNull
+                            @Override
+                            public Transaction.Result doTransaction(@NonNull MutableData mutableData) {
+
+                                // create copy
+                                UserScoreInfo newInfo = new UserScoreInfo(oldInfo);
+                                newInfo.provider = Utils.authManager.getCurrentProviderName(); // название нового провайдера
+                                newInfo.name = Utils.authManager.getUserName(); // имя пользователя в рамках нового провайдера
+                                newInfo.firebaseId = oldUserId; // сылка на предыдущий аккаунт firebase, при логине в google, facebook и т.д.
+
+                                // save new
+                                saveUserScoreInfo(newInfo);
+                                // remove old listener
+                                if (valueEventListener != null)
+                                    oldUserRef.removeEventListener(valueEventListener);
+
+                                // сохраняем ссылку для удаления старого firebase аккаунта (oldUserId -> newUserId)
+                                DatabaseReference deleteRef = getScoreInfosToDeleteRef();
+                                if (deleteRef != null) {
+                                    deleteRef.child(oldUserId).push();
+                                    deleteRef.child(oldUserId).setValue(newUserId).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                            @Override public void onComplete(@NonNull Task<Void> task) {
+                                                oldUserRef.removeValue(); // удаляем старый firebase аккаунт
+                                                if (oldScoreRef != null)
+                                                    oldScoreRef.removeValue(); // удаляем старый score
+                                            }
+                                        });
+                                }
+
+                                return Transaction.success(mutableData);
+                            }
+                            @Override public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) { }
+                        });
+                    }
+                }
+                @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            };
+            oldUserRef.addListenerForSingleValueEvent(valueEventListener);
+        }
+    }
+
+    public void recycle() {
+        setRatingListenerOff();
+        setUserListenerOff();
+        setUserVideoCountsListenerOff();
+    }
+}

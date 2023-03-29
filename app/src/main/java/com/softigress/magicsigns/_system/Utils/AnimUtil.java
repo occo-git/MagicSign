@@ -1,0 +1,196 @@
+package com.softigress.magicsigns._system.Utils;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.TimeInterpolator;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+
+import com.softigress.magicsigns._Base.IRecycle;
+
+import java.util.ArrayList;
+
+public class AnimUtil implements IRecycle {
+
+    private ArrayList<Animator> animators = new ArrayList<>();
+    private Animator animator;
+
+    public AnimUtil() { }
+
+    //region Anim Set
+    public AnimUtil add(Object target, String propertyName, float... values) {
+        if (target != null)
+            animators.add(ObjectAnimator.ofFloat(target, propertyName, values));
+        return this;
+    }
+
+    public AnimUtil add(Object target, String propertyName, int... values) {
+        if (target != null)
+            animators.add(ObjectAnimator.ofInt(target, propertyName, values));
+        return this;
+    }
+
+    public AnimUtil addWithDuration(long duration, Object target, String propertyName, float... values) {
+        if (target != null) {
+            Animator a = ObjectAnimator.ofFloat(target, propertyName, values);
+            a.setDuration(duration);
+            animators.add(a);
+        }
+        return this;
+    }
+
+    public AnimUtil addWithDuration(long duration, Object target, String propertyName, int... values) {
+        if (target != null) {
+            Animator a = ObjectAnimator.ofInt(target, propertyName, values);
+            a.setDuration(duration);
+            animators.add(a);
+        }
+        return this;
+    }
+    //endregion
+
+    //region Anim
+    public AnimUtil(Object target, String propertyName, float... values) {
+        animator = ObjectAnimator.ofFloat(target, propertyName, values);
+    }
+    public AnimUtil(Object target, String propertyName, int... values) {
+        animator = ObjectAnimator.ofInt(target, propertyName, values);
+    }
+    //endregion
+
+    //region Anim start
+    public Animator startSimple(long duration, long startDelay) {
+        return privateStartSimple(duration, startDelay, null);
+    }
+    public Animator startSimpleAD(long duration, long startDelay) {
+        return privateStartSimple(duration, startDelay, new AccelerateDecelerateInterpolator());
+    }
+    public Animator startSimple(long duration) {
+        return privateStartSimple(duration, 0, null);
+    }
+    public Animator startSimpleAD(long duration) {
+        return privateStartSimple(duration, 0, new AccelerateDecelerateInterpolator());
+    }
+    private Animator privateStartSimple(long duration, long startDelay, TimeInterpolator interpolator) {
+        if (animator != null) {
+            animator.setDuration(duration);
+            if (startDelay > 0)
+                animator.setStartDelay(startDelay);
+            if (interpolator != null)
+                animator.setInterpolator(interpolator);
+            animator.start();
+        }
+        return animator;
+    }
+    //endregion
+
+    //region Anim set start
+    public AnimatorSet start(long duration, long startDelay) {
+        return privateStart(duration, startDelay, null);
+    }
+    public AnimatorSet startA(long duration, long startDelay) {
+        return privateStart(duration, startDelay, new AccelerateInterpolator());
+    }
+    public AnimatorSet startD(long duration, long startDelay) {
+        return privateStart(duration, startDelay, new DecelerateInterpolator());
+    }
+    public AnimatorSet startAD(long duration, long startDelay) {
+        return privateStart(duration, startDelay, new AccelerateDecelerateInterpolator());
+    }
+
+    public AnimatorSet start(long duration) {
+        return privateStart(duration, 0, null);
+    }
+
+    public AnimatorSet startA(long duration) {
+        return privateStart(duration, 0, new AccelerateInterpolator());
+    }
+
+    public AnimatorSet startD(long duration) {
+        return privateStart(duration, 0, new DecelerateInterpolator());
+    }
+
+    public AnimatorSet startAD(long duration) {
+        return privateStart(duration, 0, new AccelerateDecelerateInterpolator());
+    }
+
+    public AnimatorSet getAnimatorSet(long duration) {
+        AnimatorSet set = new AnimatorSet();
+        if (animators != null && animators.size() > 0) {
+            set.playTogether(animators);
+            if (duration > 0)
+                set.setDuration(duration);
+            //set.start();
+        }
+        return set;
+    }
+
+    private AnimatorSet privateStart(long duration, long startDelay, TimeInterpolator interpolator) {
+        AnimatorSet set = new AnimatorSet();
+        if (animators != null && animators.size() > 0) {
+            set.playTogether(animators);
+            if (duration > 0)
+                set.setDuration(duration);
+            if (startDelay > 0)
+                set.setStartDelay(startDelay);
+            if (interpolator != null)
+                set.setInterpolator(interpolator);
+            set.start();
+        }
+        return set;
+    }
+    //endregion
+
+    //region Anims list start
+    public AnimatorSet start(ArrayList<Animator> anims) {
+        return privateStart(anims, null);
+    }
+    public AnimatorSet startA(ArrayList<Animator> anims) {
+        return privateStart(anims, new AccelerateInterpolator());
+    }
+
+    public AnimatorSet startD(ArrayList<Animator> anims) {
+        return privateStart(anims, new DecelerateInterpolator());
+    }
+
+    public AnimatorSet startAD(ArrayList<Animator> anims) {
+        return privateStart(anims, new AccelerateDecelerateInterpolator());
+    }
+
+    private AnimatorSet privateStart(ArrayList<Animator> anims, TimeInterpolator interpolator) {
+        AnimatorSet set = new AnimatorSet();
+        if (anims != null && anims.size() > 0) {
+            set.playTogether(anims);
+            /*if (duration > 0)
+                set.setDuration(duration);
+            if (startDelay > 0)
+                set.setStartDelay(startDelay);*/
+            if (interpolator != null)
+                set.setInterpolator(interpolator);
+            set.start();
+        }
+        return set;
+    }
+    //endregion
+
+    //region stop
+    public void stop() {
+        stop(animator);
+        for(Animator a: animators)
+            stop(a);
+    }
+
+    private void stop(Animator a) {
+        if (a != null) {
+            a.removeAllListeners();
+            a.cancel();
+        }
+    }
+    //endregion
+
+    public void recycle() {
+
+    }
+}

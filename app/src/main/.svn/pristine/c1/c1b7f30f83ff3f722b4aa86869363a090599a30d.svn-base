@@ -1,0 +1,224 @@
+package com.softigress.magicsigns._Base._Drawing;
+
+import android.graphics.Canvas;
+
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawingTouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Tasks.Repeaters.RunnableRepeaters;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingGroup implements IDrawing, ITouchable {
+
+    protected long showDuration = CurrentSettings.grpShowDuration;
+    protected long hideDuration = CurrentSettings.grpHideDuration;
+    private boolean isRepeatersActive = false;
+
+    private ArrayRecyclableSimple<DrawingGroup> groups = new ArrayRecyclableSimple<>(DrawingGroup.class);
+    private DrawingGroup[] groupItems;
+    private ArrayRecyclableSimple<IDrawing> drawings = new ArrayRecyclableSimple<>(IDrawing.class);
+    private IDrawing[] drawingItems;
+    private ArrayRecyclableSimple<IDrawingTouchable> drawingTouchables = new ArrayRecyclableSimple<>(IDrawingTouchable.class);
+    private IDrawingTouchable[] drawingTouchableItems;
+
+    //private ArrayRecyclable<DrawingGroup> groups = new ArrayRecyclable<>();
+    //private ArrayRecyclable<IDrawing> drawings = new ArrayRecyclable<>();
+    //private ArrayRecyclable<IDrawingTouchable> drawingTouchables = new ArrayRecyclable<>();
+    private RunnableRepeaters repeaters;
+
+    protected DrawingGroup() { }
+
+    protected void addDrawingGroup(DrawingGroup group) {
+        groups.add(group);
+        groupItems = groups.getItems();
+    }
+    protected void addDrawing(IDrawing item) {
+        drawings.add(item);
+        drawingItems = drawings.getItems();
+    }
+    protected void addDrawingTouchable(IDrawingTouchable item) {
+        drawingTouchables.add(item);
+        drawingTouchableItems = drawingTouchables.getItems();
+    }
+    protected void addRepeater(long duration, Runnable run) {
+        if (repeaters == null)
+            repeaters = new RunnableRepeaters();
+        repeaters.addRepeater(duration, run);
+    }
+
+    //region show-hide-back
+    public void show() {
+        isRepeatersActive = true;
+    }
+    public long hide() {
+        isRepeatersActive = false;
+        return hideDuration;
+    }
+    //endregion
+
+    //region Touch
+    public boolean onTouch(int x, int y) {
+        boolean isOnTouch = false;
+        if (groupItems != null)
+            for (DrawingGroup g : groupItems)
+                if (g != null)
+                    if (g.onTouch(x, y))
+                        isOnTouch = true;
+        if (drawingTouchableItems != null)
+            for (ITouchable item : drawingTouchableItems)
+                if (item != null)
+                    if (item.onTouch(x, y))
+                        isOnTouch = true;
+        return isOnTouch;
+    }
+    public boolean onTouchUp(int x, int y) {
+        boolean isOnTouchUp = false;
+        if (groupItems != null)
+            for (DrawingGroup g : groupItems)
+                if (g != null)
+                    if (g.onTouchUp(x, y))
+                        isOnTouchUp = true;
+        if (drawingTouchableItems != null)
+            for (ITouchable item : drawingTouchableItems)
+                if (item != null)
+                    if (item.onTouchUp(x, y))
+                        isOnTouchUp = true;
+        return isOnTouchUp;
+    }
+    public void onMoveTo(int x, int y) {
+        if (groupItems != null)
+            for (DrawingGroup g : groupItems)
+                if (g != null)
+                    g.onMoveTo(x, y);
+        if (drawingTouchableItems != null)
+            for (ITouchable item : drawingTouchableItems)
+                if (item != null)
+                    item.onMoveTo(x, y);
+    }
+    //endregion
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public synchronized void calc() {
+        int step = 0;
+        try {
+            step = 1;
+            if (groupItems != null)
+                for (IDrawing g : groupItems)
+                    if (g != null)
+                        g.calc();
+            step = 2;
+            if (drawingItems != null)
+                for (IDrawing item : drawingItems)
+                    if (item != null)
+                        item.calc();
+            step = 3;
+            if (drawingTouchableItems != null)
+                for (IDrawing item : drawingTouchableItems)
+                    if (item != null)
+                        item.calc();
+        }
+        catch (Throwable t) {
+            String str = "DrawingGroup.calc [step=" + step + "] [" + toString() + "]";
+            Utils.CrashReport(str, t);
+            throw t;
+        }
+    }
+
+    @Override
+    public synchronized void drawFrame(Canvas c) {
+        Integer step = 0;
+        try {
+            step = 1;
+            if (isRepeatersActive && repeaters != null)
+                repeaters.nextStep();
+            step = 2;
+            if (groupItems != null)
+                for (IDrawing gi : groupItems)
+                    if (gi != null)
+                        gi.drawFrame(c);
+            step = 3;
+            drawItems(c);
+            step = 4;
+        }
+        catch (Throwable t) {
+            String str = "DrawingGroup.drawFrame [step=" + step + "] [" + toString() + "]";
+            Utils.CrashReport(str, t);
+            throw t;
+        }
+    }
+
+    protected void drawItems(Canvas c) {
+        Integer step = 0;
+        IDrawing i = null;
+        try {
+            step = 1;
+            //synchronized (drawings) {
+            if (drawingItems != null)
+                for (IDrawing item : drawingItems) {
+                    i = item;
+                    if (item != null && item.getLayer() == 0)
+                        item.drawFrame(c);
+                }
+            //}
+            step = 2;
+            //synchronized (drawingTouchables) {
+            if (drawingTouchableItems != null)
+                for (IDrawing item : drawingTouchableItems) {
+                    i = item;
+                    if (item != null)
+                        item.drawFrame(c);
+                }
+            //}
+            step = 3;
+            if (drawingItems != null)
+                for (IDrawing item : drawingItems) {
+                    i = item;
+                    if (item != null && item.getLayer() > 0)
+                        item.drawFrame(c);
+                }
+            step = 4;
+        } catch (Throwable t) {
+            String str = "DrawingGroup.drawItems [step=" + step + "]";
+            if (step < 4 && i != null)
+                str += " [" + i.toString() + "]";
+            Utils.CrashReport(str, t);
+            throw t;
+        }
+    }
+
+    protected synchronized void recycleItems() {
+        if (groups != null)
+            groups.recycle();
+        if (groupItems != null)
+            Utils.recycleArray(groupItems);
+
+        if (drawings != null)
+            drawings.recycle();
+        if (drawingItems != null)
+            Utils.recycleArray(drawingItems);
+
+        if (drawingTouchables != null)
+            drawingTouchables.recycle();
+        if (drawingTouchableItems != null)
+            Utils.recycleArray(drawingTouchableItems);
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (repeaters != null)
+            repeaters.recycle();
+
+        recycleItems();
+
+        groups = null;
+        drawings = null;
+        drawingTouchables = null;
+    }
+}

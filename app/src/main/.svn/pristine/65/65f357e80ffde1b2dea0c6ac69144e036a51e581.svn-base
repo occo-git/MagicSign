@@ -1,0 +1,78 @@
+package com.softigress.magicsigns.UI._base.Controls._base.Buttons;
+
+import android.animation.ObjectAnimator;
+import android.graphics.Canvas;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class CheckerBase extends DrawingChecker {
+
+    private final static int disabledId = R.string.bmp_btn_unchecked;
+    private final static int uncheckedId = R.string.bmp_btn_unchecked;
+    private final static int checkedId = R.string.bmp_btn_checked;
+
+    private DrawingText txtLabel;
+
+    public CheckerBase(float fx, float fy, float fd, BitmapManager bitmapManager) {
+        super(fx, fy, fd, disabledId, uncheckedId, checkedId, bitmapManager);
+
+        clickSoundId = R.raw.ui_item_check01;
+        applyClickAnimator(ObjectAnimator.ofFloat(this, "scale", 1.0f, 0.9f, 1.0f).setDuration(200));
+    }
+
+    public void setLabelText(int stringId) { setLabelText(Utils.getRes(stringId)); }
+    public void setLabelText(String text) {
+        this.setLabelText(text, TextUtils.dialog_button_text);
+    }
+    public void setLabelText(String text, int size) {
+        txtLabel = new DrawingText(DrawingHAlign.LEFT, size);
+        txtLabel.setTextBack(4f, 64, 0, 0, 0);
+        txtLabel.setMultiLineInterval(.8f);
+        txtLabel.setText(text);
+    }
+    private DrawingVAlign valign = DrawingVAlign.CENTER;
+    public void setLabelTextVerticalAlignment(DrawingVAlign valign) {
+        this.valign = valign;
+        txtLabel.setVerticalAlign(valign);
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+        if (txtLabel != null) {
+            txtLabel.setAlpha(this.alpha);
+            float ffx =  fx + .75f * this.fw / MetrixUtils.screen_K;
+            if (valign == DrawingVAlign.CENTER)
+                txtLabel.setPoint(ffx, fy);
+            else if (valign == DrawingVAlign.TOP)
+                txtLabel.setPoint(ffx, fy - .5f * fd / 2);
+            else // bottom
+                txtLabel.setPoint(ffx, fy + .5f * fd / 2);
+            txtLabel.calc();
+        }
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+        if (txtLabel != null && isVisible())
+            txtLabel.drawFrame(c);
+        //c.drawLine(x, y, x + 200, y - h / 2, PaintUtils.getPaintStrokeWhite(255, PaintUtils.getStrokeWidth()));
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (txtLabel != null)
+            txtLabel.recycle();
+
+        txtLabel = null;
+    }
+}

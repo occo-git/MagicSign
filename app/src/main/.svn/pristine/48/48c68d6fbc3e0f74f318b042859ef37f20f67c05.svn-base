@@ -1,0 +1,660 @@
+package com.softigress.magicsigns.Game.Signs._base;
+
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.DashPathEffect;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PointF;
+import android.os.SystemClock;
+import androidx.annotation.Keep;
+
+import com.softigress.magicsigns.Activities._base.PauseInfo;
+import com.softigress.magicsigns.Game.Cells._base.DrawingCell;
+import com.softigress.magicsigns.Game.Puncher.RaySign;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Lightning.DrawingLightning;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Effects.Explode.DrawingExplode;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfo;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfoGroup;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Settings.Infos.SignStrength;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingSignCell extends DrawingCell implements ITouchable {
+
+    private static final float kFr = .6f;
+    private static final float collapsedFrK = .15f;
+    private static int maxBackAlpha = 32;
+    private static final float frShell = CurrentSettings.signFr * .62f;
+    private static final int maxShellAlpha = 32;
+    private static final int podDuration = 4000;
+
+    private SignInfo info;
+    private PointF[] basePoints;
+    private SignInfoGroup infoGroup;
+    private SignStrength strength;
+    //private int groupPointCount;
+
+    private long duration = CurrentSettings.signMaxDuration;
+    private final float fy0 = -CurrentSettings.signFr * 3f;
+    private final float fy1 = 1f;
+    private final float deltaFy = fy1 - fy0;
+    private boolean isEyes = true;
+    private boolean isCollapsed = false;
+    private boolean isLightning = false;
+    private boolean isPunched = false;
+    private boolean isMissed = false;
+    private final PauseInfo pauseInfo = new PauseInfo();
+
+    private Paint podPaint;
+    private Paint sPaint;
+    //private Paint sRotatePaint;
+    private Paint sShellPaint;
+    private Paint sEyePaint;
+    private Paint sEyePointPaint;
+    private int signAlpha = 255;
+    private Path signPath = new Path();
+
+    private final DrawingText txtScore;
+    private DrawingExplode explode;
+    private DrawingBase back;
+    private DrawingLightning lightning;
+
+    //region constructors
+    private DrawingSignCell(float fr, long duration, int bitmapId, BitmapManager bitmapManager) {
+        super(fr, CurrentSettings.signPodsCount, fr / 15f, fr / 5f); // 1 - fr, 2 - podCount, 3 - podFr, 4 - podL
+
+        this.duration = duration;
+
+        // кисть для Знака
+        sPaint = PaintUtils.getPaintStrokeWhite(255, CurrentSettings.signStrokeWidth);
+        sPaint.setDither(true);                    // set the dither to true
+        sPaint.setStrokeCap(Paint.Cap.ROUND);      // set the paint cap to round too
+        sPaint.setStrokeJoin(Paint.Join.ROUND);
+
+        // основная кисть пунктиром
+        paint1.setPathEffect(new DashPathEffect(new float[] { 2, 8}, 0));
+
+        // определеим рисовать ли Глаза
+        isEyes = Utils.getRandom() > .9f; // 1 из 10
+        if (isEyes) {
+            // кисти для Глаз
+            sEyePaint = PaintUtils.getPaintWhite(255);
+            sEyePointPaint = PaintUtils.getPaintBlack(255);
+        }
+
+        txtScore = new DrawingText(DrawingHAlign.LEFT, TextUtils.controls_game_cell_score);
+        txtScore.isPaintShadow = false;
+        txtScore.setAlpha(0);
+        txtScore.hide();
+
+        Bitmap explodeBitmap = Utils.getBitmap(R.string.bmp_halo_white_in, bitmapManager);
+        if (explodeBitmap != null)
+            explode = new DrawingExplode(fx, fy, fr, 5f * fr, 32, CurrentSettings.signBreakDuration / 3, explodeBitmap);
+
+        Bitmap bitmap = Utils.getBitmap(bitmapId, bitmapManager);
+        if (bitmap != null)
+            back = new DrawingBase(fr * 2, bitmap);
+
+        this.setPoint(.5f, fy0);
+        setPodDuration(podDuration);
+
+        calc();
+    }
+
+    public DrawingSignCell(SignInfo info, float fr, long duration) {
+        this(info, fr, duration, null);
+    }
+
+    public DrawingSignCell(SignInfo info, float fr, long duration, BitmapManager bitmapManager) {
+        this(fr, duration, R.string.bmp_spot_black, bitmapManager);
+        this.info = info;
+        basePoints = info.getBasePoints();
+        setStrength(info.strength);
+
+        podPaint = SignInfos.getPaintBySignInfo(strength);
+        setColor(podPaint.getColor());
+    }
+
+    public DrawingSignCell(SignInfoGroup infoGroup, float fr, long duration, BitmapManager bitmapManager) {
+        this(fr, duration, R.string.bmp_spot_black_spiral, bitmapManager);
+
+        this.infoGroup = infoGroup;
+        setStrength(this.infoGroup.strength);
+        //groupPointCount = waveCount > 0 ? waveCount : 1;
+
+        //sRotatePaint = PaintUtils.getPaintWhite(maxBackAlpha);
+
+        podPaint = SignInfos.getPaintBySignInfoGroup(strength);
+        setColor(podPaint.getColor());
+    }
+
+    private void setStrength(SignStrength strength) {
+        this.strength = strength;
+        setWaves(SignInfos.getSignWavesBySignInfo(strength));
+    }
+    //endregion
+
+    private IDrawingSignListener listener;
+    public void setListener(IDrawingSignListener l) { listener = l; }
+
+    private float shellFr = frShell;
+    @Keep
+    private void setShellFr(float fr) { shellFr = fr; }
+    @Keep
+    private void setShellAlpha(int a) {
+        if (sShellPaint != null)
+            sShellPaint.setAlpha(a);
+    }
+    @Keep
+    private void setSignAlpha(int a) { signAlpha = a; }
+
+    //region statuses
+    public SignInfo getCurrentSignInfo() { return si; }
+    public boolean isInProgress() { return isStarted && !isMissed && !isPunched && !isFinished; }
+    private boolean isAllowBreak() { return si != null && !isPunched && !isMissed && isOnScreen(); }
+    public boolean isGrouped() { return infoGroup != null; }
+    public boolean isCollapsed() { return isCollapsed; }
+    public boolean isLightning() { return isLightning; }
+
+    //region start / pause / resume
+    public void start(long delay) {
+        TaskUtils.postDelayed(delay, new Runnable() {
+            @Override
+            public void run() {
+                isStarted = true;
+                if (infoGroup != null)
+                    infoGroup.start();
+            }
+        });
+    }
+
+    public void pause() { pauseInfo.pause(); }
+    public void resume() {
+        if (startTicks > 0)
+            startTicks += pauseInfo.resume();
+        else
+            pauseInfo.resume();
+    }
+    //endregion
+
+    //region collapse / rise / punch / lightning / explode / miss
+    public void collapse() {
+        sShellPaint = PaintUtils.getPaintStrokeWhite(alpha, PaintUtils.strokeWidth);
+        sShellPaint.setAlpha(maxShellAlpha);
+        isCollapsed = true;
+        setFr(CurrentSettings.signFr * collapsedFrK);
+        setSignAlpha(0);
+    }
+
+    private void rise() {
+        if (isCollapsed) {
+            Utils.playSound(R.raw.sign_rise08);
+            Utils.vibrate(15);
+            isCollapsed = false;
+            cancelCellAnim();
+            startRiseAnim();
+        }
+    }
+
+    public void punch(SignPunchType punchType) {
+        isPunched = true;
+        if (lightning != null)
+            lightning.hide();
+        if (listener != null)
+            listener.onPunched(this, punchType);
+        startScoreAnim();
+        doBreakCell();
+    }
+
+    // punch, если соответствует знаку
+    public boolean getPunched(RaySign raySign) {
+        if (isAllowBreak()) {
+            if (si.check(raySign)) {
+                punch(SignPunchType.Simple);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void lightning() {
+        isLightning = true;
+        if (lightning == null)
+            lightning = new DrawingLightning(.01f, PaintUtils.strokeWidth2, PaintUtils.strokeWidth * 4f);
+        lightning.show();
+    }
+
+    public boolean explode() {
+        if (isAllowBreak()) {
+            isPunched = true;
+            long delay = Utils.getRandom(CurrentSettings.signExplodeDelay);
+            TaskUtils.postDelayed(delay, new Runnable() { @Override public void run() { punch(SignPunchType.Explode); } });
+            return true;
+        }
+        return false;
+    }
+
+    public void miss() {
+        if (isAllowBreak()) {
+            isMissed = true;
+            if (lightning != null)
+                lightning.hide();
+            if (listener != null)
+                listener.onMissed(si);
+            doBreakCell();
+        }
+    }
+    //endregion
+
+    private void doBreakCell() {
+        if (explode != null)
+            explode.startAnim();
+        cancelCellAnim();
+        breakCell(CurrentSettings.signFr);
+        if (isCollapsed)
+            startBreakCollapsedCellAnim();
+        Utils.playSoundPlop();
+        Utils.vibrate(10);
+
+        if (listener != null)
+            listener.onBreakCell(fx, fy);
+    }
+    //endregion
+
+    //region Anim
+    private AnimatorSet cellAnimSet;
+    private ObjectAnimator cellAnim;
+    private void cancelCellAnim() {
+        if (cellAnim != null && cellAnim.isStarted())
+            cellAnim.cancel();
+        cellAnim = null;
+        if (cellAnimSet != null && cellAnimSet.isStarted())
+            cellAnimSet.cancel();
+        cellAnimSet = null;
+    }
+
+    private void startRiseAnim() {
+        float ffr = getFr();
+        cellAnimSet = new AnimUtil()
+                .add(this, "fr", ffr, 1.2f * CurrentSettings.signFr, CurrentSettings.signFr)
+                .add(this, "signAlpha", 0, 255)
+                .add(this, "shellFr", frShell, frShell * 5f)
+                .add(this, "shellAlpha", maxShellAlpha, 0)
+                .startD(CurrentSettings.signRiseDuration);
+    }
+
+    private void startBreakCollapsedCellAnim() {
+        cellAnimSet = new AnimUtil()
+                .add(this, "signAlpha", 0, 255, 0)
+                .add(this, "shellFr", frShell, frShell * 10f)
+                .add(this, "shellAlpha", maxShellAlpha, 0)
+                .startD(CurrentSettings.signBreakDuration / 2);
+    }
+
+    private void startNextSignAnim() {
+        float ffr = fr;
+        cellAnim = ObjectAnimator.ofFloat(this, "fr", ffr, .5f * ffr, ffr).setDuration(CurrentSettings.signNextDuration);
+        cellAnim.start();
+    }
+
+    private void startScoreAnim() {
+        if (!isHelpItem && txtScore != null) {
+            Integer score = SignInfos.getScoreBySignInfo(this.strength);
+            if (score > 0) {
+                txtScore.setText("+" + score.toString());
+                txtScore.show();
+                new AnimUtil()
+                        .add(txtScore, "alpha", 0, 255, 128, 0)
+                        .add(txtScore, "fontSize", 1f, TextUtils.controls_game_cell_score)
+                        .startD(finishDuration);
+            }
+        }
+    }
+    //endregion
+
+    //region touch move
+    private boolean isOnTouch = false;
+    private int touchX, touchY;
+    public boolean onTouch(int x, int y) {
+        isOnTouch = true;
+        if (isInProgress()) {
+            touchX = x;
+            touchY = y;
+            isIn = false;
+            if (inBounds(x, y)) {
+                onTouch();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void onTouch() {
+        rise();
+    }
+
+    public boolean onTouchUp(int x, int y) {
+        isOnTouch = false;
+        if (isInProgress()) {
+            isIn = false;
+            return inBounds(x, y); // if (inBounds(x, y) { onTouchUp(); return true; }
+        }
+        return false;
+    }
+
+    //private void onTouchUp() { }
+
+    public void onMoveTo(int x, int y) {
+        if (isInProgress()) {
+            touchX = x;
+            touchY = y;
+            if (inBounds(x, y))
+                onMoveIn();
+            else
+                onMoveOut();
+        }
+    }
+
+    private boolean isIn = false;
+    private void onMoveIn() {
+        if (!isIn) {
+            isIn = true;
+            rise();
+        }
+    }
+
+    private void onMoveOut() {
+        isIn = false;
+        // out
+    }
+    //endregion
+
+    private boolean inBounds(float px, float py) {
+        float rr = MetrixUtils.screen_metrix_width * CurrentSettings.signFr;
+        return  x - rr  <= px && px <= x + rr &&
+                y - rr  <= py && py <= y + rr;
+    }
+
+    public boolean inRadius(float px, float py) {
+        float rr = MetrixUtils.screen_metrix_width * CurrentSettings.signFr;
+        float dx = x - px;
+        float dy = y - py;
+        return dx * dx + dy * dy <= rr * rr;
+    }
+
+    private boolean isOnScreen() { return fx > 0f && fx < 1f && fy > 0f && fy < 1f; }
+
+    //region draw
+    private SignInfo si;
+    private SignInfo nextSignInfo;
+    private boolean isOnNext;
+    private void nextSignInfo() {
+        if (infoGroup != null) {
+            nextSignInfo = infoGroup.getCurrent();
+            if (si == null && si != nextSignInfo) {
+                si = nextSignInfo;
+                basePoints = si.getBasePoints();
+            } else {
+                if (isInProgress() && (si == null || si.id != nextSignInfo.id)) {
+                    if (!isOnNext) {
+                        isOnNext = true;
+                        startNextSignAnim();
+                        //Utils.playSound(R.raw.sign_flip);
+                        TaskUtils.postDelayed(CurrentSettings.signNextDuration / 2, new Runnable() {
+                            @Override
+                            public void run() {
+                                if (isInProgress()) {
+                                    si = nextSignInfo;
+                                    basePoints = si.getBasePoints();
+                                    isOnNext = false;
+//                                    nextPodPaint(); // подкрашиваем один pod
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        } else
+            si = info;
+    }
+
+    private final long rotateDuration = CurrentSettings.signRotationDuration;
+    private long startRotateTicks = 0;
+    private float rotateAngel = 0;
+
+    private final long rotateLightningDuration = CurrentSettings.signLightningRotationDuration;
+    private long startLightningRotationTicks = 0;
+    private double rotateLightningAngel = 0;
+
+    public double getRotateLightningAngel() { return rotateLightningAngel; }
+
+    private long startTicks = 0;
+    private long delta = 0;
+    private void nextFrame() {
+        if (isStarted && !isPunched) {
+            long ticks = SystemClock.elapsedRealtime();
+            if (startTicks == 0)
+                startTicks = ticks;
+            if (!pauseInfo.isPaused)
+                delta = ticks - startTicks;
+
+            if (!isMissed && !isHelpItem)
+                setFy(fy0 + deltaFy * (float)delta / duration);
+
+            //if (delta < duration)
+            //    setFy(fy0 + deltaFy * (float)delta / duration);
+            //else {
+            //    if (!isPunched && !isMissed && !isFinished)
+            //        miss();
+            //}
+
+            if (infoGroup != null) {
+                if (startRotateTicks == 0)
+                    startRotateTicks = ticks;
+                long rDelta = ticks - startRotateTicks;
+                rotateAngel = Utils.PI2 * rDelta / rotateDuration;
+            }
+            if (isLightning) {
+                if (startLightningRotationTicks == 0)
+                    startLightningRotationTicks = ticks;
+                rotateLightningAngel = Utils.PI2 * (float) ((ticks - startLightningRotationTicks) % rotateLightningDuration) / rotateLightningDuration;
+            }
+        }
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+
+        int aa = maxBackAlpha * alpha / 255;
+        //if (sRotatePaint != null)
+        //    sRotatePaint.setAlpha(aa);
+        if (sShellPaint != null)
+            sShellPaint.setStrokeWidth(PaintUtils.strokeWidth);
+        if (sPaint != null) {
+            int spa = signAlpha * alpha / 255;
+            sPaint.setStrokeWidth(MetrixUtils.screen_metrix_height * CurrentSettings.signStrokeWidth);
+            sPaint.setAlpha(spa);
+        }
+        if (sEyePaint != null)
+            sEyePaint.setAlpha(alpha);
+        if (sEyePointPaint != null)
+            sEyePointPaint.setAlpha(alpha);
+
+        if (isInProgress()) {
+            if (txtScore != null)
+                txtScore.setPoint(fx, fy);
+            if (explode != null)
+                explode.setPoint(fx, fy);
+        }
+        if (back != null) {
+            back.setPoint(fx, fy);
+            back.setFd(2 * fr);
+            back.setAlpha(aa);
+        }
+        if (lightning != null)
+            lightning.setAlpha(alpha);
+
+        nextFrame();
+    }
+
+    @Override
+    public void drawBackground(Canvas c) {
+        super.drawBackground(c);
+
+        if (back != null) {
+            if (infoGroup != null)
+                back.setAngelRadians(-rotateAngel);
+            back.drawFrame(c);
+        }
+        if (explode != null)
+            explode.drawFrame(c);
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isStarted && !isFinished) {
+            super.drawFrame(c);
+
+            if (isEyes && !isCollapsed && !isOnBreak)
+                drawEyes(c);
+
+            //int step = 1;
+            //try {
+
+                if (sShellPaint != null)
+                    c.drawCircle(x, y, shellFr * MetrixUtils.screen_metrix_height, sShellPaint);
+                //step = 2;
+                // молния
+                if (isLightning && lightning != null && lightning.isVisible()) { // && !isPunched && !isMissed
+                    float sin = (float) Math.sin(rotateLightningAngel);
+                    float cos = (float) Math.cos(rotateLightningAngel);
+                    lightning.setPath(x + r * cos, y + r * sin,x - r * cos, y - r * sin);
+                    lightning.drawFrame(c);
+                }
+                //step = 3;
+                // вращающие точки для группы Signs
+                /*if (infoGroup != null) {
+                    //float rr = 1.65f * r;
+                    float pr = .1f * r;
+                    double angelDelta = 2 * Math.PI / groupPointCount;
+                    for (int i = 0; i < groupPointCount; i++) {
+                        double angel = rotateAngel + i * angelDelta;
+                        float px1 = x + r * (float) Math.cos(angel);
+                        float py1 = y - r * (float) Math.sin(angel);
+                        c.drawCircle(px1, py1, pr, sRotatePaint);
+                    }
+                }*/
+                //step = 4;
+                //region sign info
+                nextSignInfo();
+                if (si != null && sPaint != null) {
+                    float rkFr = r * kFr;
+                    PointF pbp = null;
+                    signPath.reset();
+                    for (PointF bp : basePoints) {
+                        if (pbp == null)
+                            signPath.moveTo(x + (bp.x - .5f) * rkFr, y + (bp.y - .5f) * rkFr);
+                        else
+                            signPath.lineTo(x + (bp.x - .5f) * rkFr, y + (bp.y - .5f) * rkFr);
+                        pbp = bp;
+                    }
+                    c.drawPath(signPath, sPaint);
+                }
+                //endregion
+                //step = 5;
+
+                if (txtScore != null)
+                    txtScore.drawFrame(c);
+                //step = 6;
+
+                //TextUtils.WriteTextCenter(c, x - r, y - r, info.id.toString());
+
+            /*} catch (Throwable t) {
+                String str = "DrawingSignCell.drawFrame [step=" + step + "]";
+                Utils.CrashReport(str, t);
+                throw t;
+            }*/
+        }
+    }
+
+    private void drawEyes(Canvas c) {
+        if (sEyePaint != null && sEyePointPaint != null) {
+            if (touchX == 0 && touchY == 0) {
+                touchX = MetrixUtils.screen_metrix_width / 2;
+                touchY = MetrixUtils.screen_metrix_height;
+            }
+            float eyeR = r * .2f;
+            float eyePointR = r * .075f;
+            float eyeY1 = y - r * 1.8f;
+            float eye1X1 = x - r * .5f;
+            float eye2X1 = x + r * .5f;
+            float eyeY2 = y - r * 1.2f;
+            float eye1X2 = x - r * .4f;
+            float eye2X2 = x + r * .4f;
+            drawEye(c, eyeR, eyePointR, eye1X1, eyeY1, eye1X2, eyeY2);
+            drawEye(c, eyeR, eyePointR, eye2X1, eyeY1, eye2X2, eyeY2);
+        }
+    }
+
+    private void drawEye(Canvas c, float eyeR, float eyePointR, float eyeX1, float eyeY1, float eyeX2, float eyeY2) {
+        float eyeRR = eyeR - eyePointR * 1.1f;
+        float eyePointX = eyeX1;
+        float eyePointY = eyeY1;
+        if (isOnTouch) {
+            float dX = eyeX1 - touchX;
+            float dY = eyeY1 - touchY;
+            double dR = Math.sqrt(dX * dX + dY * dY);
+            eyePointX = eyeX1 - (float) (eyeRR * dX / dR);
+            eyePointY = eyeY1 - (float) (eyeRR * dY / dR);
+        }
+        if (eyeR > 0 && eyePointR > 0) {
+            c.drawLine(eyeX1, eyeY1 + eyeR, eyeX2, eyeY2, paint1);
+            c.drawCircle(eyeX1, eyeY1, eyeRR * .5f, paint1);
+            c.drawCircle(eyeX1, eyeY1, eyeR, sEyePaint);
+            c.drawCircle(eyePointX, eyePointY, eyePointR, sEyePointPaint);
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        super.recycle();
+
+        if (txtScore != null)
+            txtScore.recycle();
+        if (explode != null)
+            explode.recycle();
+        if (back != null)
+            back.recycle();
+        if (lightning != null)
+            lightning.recycle();
+        if (signPath != null)
+            signPath.reset();
+
+        explode = null;
+        back = null;
+        lightning = null;
+        //sRotatePaint = null;
+        sPaint = null;
+        sShellPaint = null;
+        sEyePaint = null;
+        sEyePointPaint = null;
+        signPath = null;
+    }
+}

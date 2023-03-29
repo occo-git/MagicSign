@@ -1,0 +1,80 @@
+package com.softigress.magicsigns.UI._base.Effects.Trace;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PointF;
+import android.os.SystemClock;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingTrace implements IDrawing {
+
+    private final float fr;
+    private final int duration;
+    private ArrayRecyclableSimple<DrawingTracePoint> points = new ArrayRecyclableSimple<>(DrawingTracePoint.class);
+    private DrawingTracePoint[] pointItems;
+    private Paint paint;
+
+    public DrawingTrace(float pointFr, int pointDuration, Paint paint) {
+        fr = pointFr;
+        duration = pointDuration;
+        this.paint = paint;
+    }
+
+    public void addPoint(PointF point, float fluctuation) {
+        //if (point != null)
+        if (fluctuation > 0f) {
+            point.x += fluctuation * Utils.getRandom() * Utils.getRandomMathSign() / MetrixUtils.screen_K;
+            point.y += fluctuation * Utils.getRandom() * Utils.getRandomMathSign();
+        }
+        points.add(new DrawingTracePoint(point, SystemClock.elapsedRealtime()));
+        pointItems = points.getItems();
+    }
+
+    public void offset(float dx, float dy) {
+        if (pointItems != null)
+            for (DrawingTracePoint p : pointItems) {
+                p.fx += dx;
+                p.fy += dy;
+            }
+    }
+
+    public void setAlpha(int a) {
+        if (paint != null)
+            paint.setAlpha(a);
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (duration > 0) {
+            long ticks = SystemClock.elapsedRealtime();
+            if (pointItems != null)
+                for (DrawingTracePoint p : pointItems) {
+                    long delta = ticks - p.ticks;
+                    if (delta <= duration)
+                        c.drawCircle(
+                            MetrixUtils.screen_metrix_width * p.fx,
+                            MetrixUtils.screen_metrix_height * p.fy,
+                            MetrixUtils.screen_metrix_height * (fr - fr * delta / duration), paint);
+                }
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (points != null)
+            points.recycle();
+        points = null;
+        paint = null;
+    }
+}

@@ -1,0 +1,74 @@
+package com.softigress.magicsigns.UI._base.Effects.Stars.FallingStars;
+
+import android.graphics.Canvas;
+import android.os.SystemClock;
+
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+
+public class FallingStars implements IDrawing {
+
+    private boolean isVisible = false;
+    private static final float maxFd = .1f;
+    private final ArrayRecyclableSimple<FallingStar> stars = new ArrayRecyclableSimple<>(FallingStar.class);
+    private final FallingStar[] starItems;
+    private final int count;
+    private static final boolean isMoving = true;
+
+    public FallingStars(float fx, float fy, float fw, float fh, int count) {
+        this.count = count;
+        //if (MetrixUtils.screen_metrix_width > 0) {
+            for (int s = 0; s <= this.count; s++) {
+                FallingStar star = new FallingStar(fx, fy, fw, fh, maxFd);
+                star.hide();
+                stars.add(star);
+            }
+            starItems = stars.getItems();
+        //}
+    }
+
+    //region show / hide
+    public boolean isVisible() { return isVisible; }
+
+    public void show() {
+        if (!isVisible) {
+            isVisible = true;
+            for (FallingStar s : starItems)
+                s.restartWhithRandomOffsetTicks();
+        }
+    }
+
+    public void hide() {
+        if (isVisible) {
+            isVisible = false;
+            for (FallingStar s : starItems)
+                s.hide();
+        }
+    }
+    //endregion
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    @Override
+    public void drawFrame(Canvas canvas) {
+        long ticks = SystemClock.elapsedRealtime();
+        for (FallingStar s : starItems) {
+            s.nextFrame(ticks, isMoving);
+            s.drawFrame(canvas);
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (stars != null)
+            stars.recycle();
+    }
+}

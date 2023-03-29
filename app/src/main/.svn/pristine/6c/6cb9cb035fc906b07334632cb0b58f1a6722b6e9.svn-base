@@ -1,0 +1,228 @@
+package com.softigress.magicsigns.Game.Cells._base;
+
+import android.graphics.Canvas;
+import android.os.SystemClock;
+import androidx.annotation.Keep;
+
+import com.softigress.magicsigns._Base._Drawing._base.DrawingSimple;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingCell extends DrawingSimple {
+
+    public boolean isHelpItem = false;
+    public boolean isStarted = false;
+    public boolean isOnBreak = false;
+    public boolean isFinished = false;
+
+    protected static final long finishDuration = 2000;
+    private long podDuration = 1000;
+    protected int waveCount = 0;
+    private long wavesTicks = 0;
+
+    private float podFr;
+    private int podCount = 1;
+    //private ArrayRecyclable<DrawingCellPod> pods = new ArrayRecyclable<>();
+    private DrawingCellPod[] pods;
+    private float podAngelDelta;
+    private float startAngel = 0;
+    private float endAngel = 0;
+
+    public DrawingCell(float fr, int podCount, float podFr, float podL) {
+        super(fr);
+
+        this.podFr = podFr;
+
+        this.podCount = podCount;
+        this.podAngelDelta = Utils.PI2 / podCount;
+
+        pods = new DrawingCellPod[podCount];
+        for (int i = 0; i < podCount; i++) {
+            DrawingCellPod p = new DrawingCellPod(podFr);
+            p.setFl(podL);
+            pods[i] = p;
+        }
+    }
+
+    public void setAngelsDegrees(float startAngelDegrees, float endAngelDegrees) {
+        this.startAngel = (float) (startAngelDegrees * Math.PI / 180f);
+        this.endAngel = (float)(endAngelDegrees * Math.PI / 180f);
+        this.podAngelDelta = podCount < 1 ? 0 : (this.endAngel - this.startAngel) / (podCount - 1);
+    }
+
+    public void setPodDuration(long podDuration) {
+        this.podDuration = podDuration;
+        for (DrawingCellPod p : pods)
+            p.duration = podDuration;
+    }
+
+    @Keep
+    public void setPodFr(float podFr) {
+        this.podFr = podFr;
+        for (DrawingCellPod p : pods)
+            p.setFr(podFr);
+    }
+
+    protected float getPodFr() { return podFr; }
+
+    public void setPodL(float podL) {
+        for (DrawingCellPod p : pods)
+            p.setFl(podL);
+    }
+
+    public void setWaves(int waveCount) {
+        this.waveCount = waveCount;
+        long cellOffset = (long)(Utils.getRandom() * podDuration);
+        long offsetDelta = waveCount * (podDuration / podCount);
+        int i = 0;
+        for (DrawingCellPod p : pods)
+            p.setOffset(cellOffset + (podCount - i++) * offsetDelta);
+        wavesTicks = 0;
+    }
+
+    /*protected void breakCellFromMainCell(float cellFr) {
+        long duration = finishDuration / 2;
+        float dx = MainCell.cx - fx;
+        float dy = MainCell.cy - fy;
+        float dr = (float)Math.sqrt(dx * dx + dy * dy);
+        float k = .25f * (2f - dr / MainCell.cellFr);
+        k = k < 0 ? 0 : k;
+        float fx1 = fx - k * dx;
+        float fy1 = fy - k * dy;
+
+        ObjectAnimator aX = ObjectAnimator.ofFloat(this, "fx", fx, fx1).setDuration(duration);
+        ObjectAnimator aY = ObjectAnimator.ofFloat(this, "fy", fy, fy1).setDuration(duration);
+        ObjectAnimator aR = ObjectAnimator.ofFloat(this, "fr", cellFr, 3f * cellFr).setDuration(duration);
+        ObjectAnimator aA = ObjectAnimator.ofInt(this, "alpha", 255, 0).setDuration(duration);
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(aX, aY, aR, aA);
+        //set.setInterpolator(new AccelerateInterpolator());
+        set.setInterpolator(new DecelerateInterpolator());
+        set.start();
+
+        Utils.PlayPlop();
+
+        TaskUtils.postDelayed(finishDuration * 2, new Runnable() {
+            @Override
+            public void run() { isFinished = true; }
+        });
+    }*/
+
+    protected void breakCell(float cellFr) {
+        float currentFr = fr;
+        isOnBreak = true;
+        new AnimUtil()
+                .add(this, "fr",
+                        currentFr > 0 ?
+                            new float[] { currentFr, .9f * currentFr, cellFr, 1.5f * cellFr, 2f * cellFr, 2.5f * cellFr, 3f * cellFr } :
+                            new float[] { 0, 3f * cellFr })
+                .add(this, "alpha", 255, 0)
+                .startD(CurrentSettings.signBreakDuration);
+
+        TaskUtils.postDelayed(finishDuration * 2, new Runnable() {
+            @Override
+            public void run() { isOnBreak = false; isFinished = true; }
+        });
+    }
+
+    //region alpha/color
+    /*@Override
+    public void setAlpha(int a) {
+        super.setAlpha(a);
+        for (DrawingCellPod p : pods)
+            p.setAlpha(a);
+    }
+
+    @Override
+    public void setColor(int color) {
+        super.setColor(color);
+        for (DrawingCellPod p : pods)
+            p.setColor(color);
+    }
+
+    @Override
+    public void setColor(int a, int r, int g, int b) {
+        super.setColor(a, r, g, b);
+        for (DrawingCellPod p : pods)
+            p.setColor(a, r, g, b);
+    }
+
+    // установим цвет у определенного pod
+    public void setColor(int color, int podIndex) {
+        if (podIndex > 0 && podIndex < pods.size())
+            pods.get(podIndex).setColor(color);
+    }
+    public void setColor(int a, int r, int g, int b, int podIndex) {
+        if (podIndex >= 0 && podIndex < pods.size())
+            pods.get(podIndex).setColor(a, r, g, b);
+    }*/
+    //endregion
+
+    //region Draw
+    @Override
+    public void calc() {
+        super.calc();
+
+        float angel = startAngel;//
+        float pfx, pfy;
+        for (DrawingCellPod p : pods) {
+            pfy = fy - fr * (float)Math.sin(angel);
+            pfx = fx + fr * (float)Math.cos(angel) / MetrixUtils.screen_K;
+            p.setPoint(pfx, pfy);
+            p.setAngelRadians(angel); // задаем градус поворота pod
+            angel += podAngelDelta;
+        }
+    }
+
+    public void drawBackground(Canvas c) { }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isStarted) {
+            //int step = 1;
+            //try {
+                calc();
+                //step = 2;
+                drawBackground(c);
+                //step = 3;
+
+                long ticks = SystemClock.elapsedRealtime();
+                if (wavesTicks == 0)
+                    wavesTicks = ticks;
+                long delta = ticks - wavesTicks;
+                //step = 4;
+
+                if (paint != null)
+                    for (DrawingCellPod p : pods) {
+                        p.nextFrame(delta);
+                        p.drawPod(c, paint);
+                    }
+                //step = 5;
+            /*} catch (Throwable t) {
+                String str = "DrawingCell.drawFrame [step=" + step + "]";
+                if (pods != null)
+                    str += " [pods]";
+                if (paint != null)
+                    str += " [paint]";
+                if (paint1 != null)
+                    str += " [paint1]";
+                Utils.CrashReport(str, t);
+                throw t;
+            }*/
+        }
+    }
+    //endregion
+
+    /*@Override
+    public void recycle() {
+        super.recycle();
+
+        if (pods != null)
+            pods.recycle();
+
+        pods = null;
+    }*/
+}

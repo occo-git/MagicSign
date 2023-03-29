@@ -1,0 +1,112 @@
+package com.softigress.magicsigns.UI._Main.Dialogs;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpMenuDialog extends GrpDialog {
+
+    public final static int DIALOG_RESULT_INTRO = 1;
+    public final static int DIALOG_RESULT_OPTIONS = 2;
+    public final static int DIALOG_RESULT_RESET = 3;
+    public final static int DIALOG_RESULT_EXIT = 4;
+    public final static int DIALOG_RESULT_PLAY = 5;
+
+    private static final float dxBtn = .2f;
+    private static final float dyStart = 1 / 6f;
+    private static final float dyBtn = (1f - 2f * dyStart) / 3f;
+    private static final float fdBtn = .1f;
+
+    private final BtnBase btnReset;
+
+    public GrpMenuDialog() {
+        super(.8f, .6f);
+        name = "dlg_menu";
+
+        //showDuration = 750;
+        //hideDuration = 750;
+        //setCaptionText(Utils.getRes(R.string.dlg_Menu));
+        //setMessageText(Utils.getRes(R.string.dlg_Menu));
+
+        float bx = getByDx(dxBtn);
+
+        //region intro
+        BtnBase btnIntro = new BtnBase(bx, getByDy(dyStart), fdBtn, R.string.bmp_btn_empty);
+        btnIntro.setAngel(-15);
+        btnIntro.name = "btn_menu_intro";
+        btnIntro.setLabelText(R.string.dlg_Menu_Intro, DrawingHAlign.LEFT);
+        btnIntro.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_INTRO); }
+        });
+        addDlgControlTouchable(btnIntro, dxBtn, dyStart);
+
+        DrawingBase drop = new DrawingBase(bx, getByDy(dyStart), fdBtn / 2f);
+        drop.setDefaultBitmap(R.string.bmp_drop_80_pro);
+        addDlgControl(drop, dxBtn, dyStart );
+        //endregion
+
+        //region options
+        BtnBase btnOptions = new BtnBase(bx, getByDy(dyStart + dyBtn), fdBtn, R.string.bmp_btn_options);
+        btnOptions.name = "btn_menu_options";
+        btnOptions.setLabelText(R.string.dlg_Menu_Options, DrawingHAlign.LEFT);
+        btnOptions.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_OPTIONS); }
+        });
+        addDlgControlTouchable(btnOptions, dxBtn, dyStart + dyBtn);
+        //endregion
+
+        //region reset
+        btnReset = new BtnBase(bx, getByDy(dyStart + dyBtn * 2f), fdBtn, R.string.bmp_btn_repeat, R.string.bmp_btn_repeat, R.string.bmp_btn_repeat_disabled);
+        btnReset.name = "btn_menu_reset";
+        btnReset.setLabelText(R.string.dlg_Menu_Reset, DrawingHAlign.LEFT);
+        btnReset.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_RESET); }
+        });
+        btnReset.disable();
+        addDlgControlTouchable(btnReset, dxBtn, dyStart + dyBtn * 2f);
+        //endregion
+
+        //region exit
+        BtnBase btnExit = new BtnBase(bx, getByDy(dyStart + dyBtn * 3f), fdBtn, R.string.bmp_btn_exit);
+        btnExit.name = "btn_menu_exit";
+        btnExit.setLabelText(R.string.dlg_Menu_Exit, DrawingHAlign.LEFT);
+        btnExit.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_EXIT); }
+        });
+        addDlgControlTouchable(btnExit, dxBtn, dyStart + dyBtn  * 3f);
+        //endregion
+
+        //region help
+        /*BtnBase btnHelp = new BtnBase(bx, getByDy(dyBtn * 2.75f), fdBtn, R.drawable.btn_help);
+        btnHelp.name = "btn_menu_help";
+        btnHelp.setLabelText(R.string.dlg_Menu_Help, DrawingBase.CONST_HALIGN_LEFT);
+        btnHelp.clickSoundId = R.raw.ui_item_click08;
+        btnHelp.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { onResult(DIALOG_RESULT_HELP); }
+        });
+        addDlgControlTouchable(btnHelp, dxBtn, dyBtn  * 2.75f);*/
+        //endregion
+
+        addCloseButton();
+    }
+
+    public void update() {
+        // отключаем кнопку Начать заново
+        // если нет связи, если пользователь не залогинен, если результат 0
+        if (!Utils.authManager.isConnected() || Utils.authManager.getCurrentProviderHash() == 0)
+            btnReset.disable();
+        else {
+            if (Utils.dataBaseManager.currentUserScoreInfo != null && Utils.dataBaseManager.currentUserScoreInfo.score > 0)
+                btnReset.enable();
+            else
+                btnReset.disable();
+        }
+        btnReset.refreshCurrentStatus();
+    }
+}

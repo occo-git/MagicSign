@@ -1,0 +1,753 @@
+package com.softigress.magicsigns.Activities._base;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
+import android.content.ComponentCallbacks2;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.net.Uri;
+import android.opengl.GLSurfaceView;
+import android.os.Bundle;
+import android.os.StrictMode;
+import android.os.SystemClock;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import com.crashlytics.android.Crashlytics;
+import com.softigress.magicsigns.Activities.AdActivity.VideoAdActivity;
+import com.softigress.magicsigns.Activities.MainActivity.MainActivity;
+import com.softigress.magicsigns.DrawingThread;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._Main.Dialogs.Login.IGetNameListener;
+import com.softigress.magicsigns.UI._base.Effects.Flash.Flash;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfoJpg;
+import com.softigress.magicsigns._system.FireBase.Storage.StorageManager;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.CensUtils;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.io.File;
+import java.io.FileOutputStream;
+
+import io.fabric.sdk.android.Fabric;
+
+public class BaseSurfaceActivity extends Activity
+        implements View.OnTouchListener, SurfaceHolder.Callback, IDrawing {
+
+    private final int layoutId;
+    private SurfaceView mSurface;
+    private GLSurfaceView mGLSurface;
+    private DrawingThread mThread;
+
+    private final int pointerMaxCount = 3;
+    private PointerInfo[] pointerInfos;
+    private Paint pointerPaint;
+
+    protected ActivityGroupBase currentGroup;
+    //private SparseArray<DrawingGroup> groups;
+    //private DrawingFlash flash;
+    private Flash flash;
+
+    public BaseSurfaceActivity(int layoutId) {
+        this.layoutId = layoutId;
+        //this.groups = new SparseArray<>();
+    }
+
+    @Override
+    public synchronized void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        int step = 0;
+        try {
+            Fabric.with(this, new Crashlytics());
+
+            // fix "File exposed beyond app through ClipData.Item.getUri()"
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+
+            //if (CurrentSettings.isTestOpenGL) {
+            //    setContentView(layoutId);
+            //    mGLSurface = findViewById(R.id.surface);
+            //    mGLSurface.setOnTouchListener(this);
+            //    mGLSurface.setRenderer(new GLSurfaceRenderer());
+            //} else {
+                step = 1;
+                pointerInfos = new PointerInfo[pointerMaxCount];
+                for (int i = 0; i < pointerMaxCount; i++)
+                    pointerInfos[i] = new PointerInfo();
+                step = 2;
+                pointerPaint = PaintUtils.getPaintWhite(255);
+                step = 3;
+                setContentView(layoutId);
+                step = 4;
+                mSurface = findViewById(R.id.surface); // (SurfaceView)
+                mSurface.setOnTouchListener(this);
+                mSurface.getHolder().addCallback(this);
+                step = 5;
+                flash = new Flash();
+                step = 6;
+                onCreated();
+                step = 7;
+            //}
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onCreate [" + step + "]", t);
+        }
+    }
+
+    protected void onCreated() { }
+
+    private boolean isLoaded = false;
+    private boolean isLoading = false;
+    protected synchronized boolean onLoad() {
+        return false;
+    }
+
+    public long hideCurrentGroup() {
+        long hideDuration = 0;
+        try {
+            //if (ctrlStarsCount != null)
+            //    ctrlStarsCount.hide();
+            if (currentGroup != null) {
+                hideDuration = currentGroup.hide();
+                if (flash != null) {
+                    TaskUtils.postDelayed(hideDuration, new Runnable() { @Override public void run() { flash.show(); }});
+                    hideDuration += Flash.showDuration;
+                }
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.hideCurrentGroup", t);
+        }
+        return hideDuration;
+    }
+
+    public void setCurrentGroup(ActivityGroupBase group) {
+        try {
+            ActivityGroupBase prevGroup = currentGroup;
+            currentGroup = group;
+            if (flash != null)
+                flash.hide();
+            // очищаем ресурсы предыдущей группы
+            if (prevGroup != null)
+                prevGroup.recycleResources();
+            if (currentGroup != null)
+                currentGroup.show();
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.setCurrentGroup", t);
+        }
+    }
+
+    public void onExitGame() {
+        try {
+            //Utils.PlayCancel();
+            Utils.saveSettings();
+            finish(); // exit app
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onExitGame", t);
+        }
+    }
+    public void onResetGame() {
+        try {
+            Utils.resetSettings();
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onResetGame", t);
+        }
+    }
+
+    //region Connection
+    public void onConnectionOff() {
+        if (currentGroup != null)
+            currentGroup.onConnectionOff();
+    }
+    public void onConnectionOn() {
+        if (currentGroup != null)
+            currentGroup.onConnectionOn();
+    }
+    public void onConnection(boolean isOnOff) {
+        if (currentGroup != null)
+            currentGroup.onConnection(isOnOff);
+    }
+    //endregion
+
+    public void onAuthChanged() {
+        if (currentGroup != null)
+            currentGroup.onAuthChanged();
+    }
+
+    //region Share
+    public void onShareScreenshot() {
+        try {
+            Bitmap b = getScreenShot();
+            if (b != null) {
+                Long ticks = SystemClock.elapsedRealtime();
+                FileInfoJpg fileInfo = new FileInfoJpg(StorageManager.SCREENSHOT_FILENAME_PREFIX + ticks.toString());
+                File file = Utils.storageManager.getExternalStorageFile(fileInfo);
+                if (file != null) {
+                    FileOutputStream fos = new FileOutputStream(file);
+                    b.compress(Bitmap.CompressFormat.JPEG, 85, fos);
+                    fos.flush();
+                    fos.close();
+                    Utils.playSound(R.raw.camera_click);
+
+                    //Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+                    //ArrayList<Uri> uriList = new ArrayList<>();
+                    //uriList.add(Uri.fromFile(file));
+                    //shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uriList);
+                    //shareIntent.setType("image/*");
+
+                    String appUrl = Utils.remoteConfigManager.getAppUrl();
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                    shareIntent.putExtra(Intent.EXTRA_TEXT, appUrl);
+                    shareIntent.setType("image/*");
+                    shareIntent.addCategory(Intent.CATEGORY_DEFAULT);
+                    Intent intent = Intent.createChooser(shareIntent, Utils.getRes(R.string.dlg_Share_Title));
+                    startActivityForResult(intent, MainActivity.REQUEST_SHARE_SCREENSHOT);
+                }
+                b.recycle();
+                b = null;
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onShareScreenshot", t);
+        }
+        finally {
+            //mSurface.setDrawingCacheEnabled(false);
+        }
+    }
+    private Bitmap getScreenShot() {
+        try {
+            if (currentGroup != null) {
+                Bitmap b = Bitmap.createBitmap(mSurface.getWidth(), mSurface.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas c = new Canvas(b);
+                currentGroup.drawFrame(c);
+                return b;
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.getScreenShot", t);
+        }
+        return null;
+    }
+    public void onShareLink() {
+        try {
+            String appUrl = Utils.remoteConfigManager.getAppUrl();
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, appUrl);
+            shareIntent.addCategory(Intent.CATEGORY_DEFAULT);
+            shareIntent.setType("text/plain");
+            Intent intent = Intent.createChooser(shareIntent, Utils.getRes(R.string.dlg_Share_Title));
+            startActivityForResult(intent, MainActivity.REQUEST_SHARE_LINK);
+
+            /*Intent intent = new AppInviteInvitation.IntentBuilder("test title 123")
+                    .setMessage("message 12345")
+                    .setDeepLink(Uri.parse("http://app"))
+                    //.setCustomImage(Uri.parse(getString(R.string.invitation_custom_image)))
+                    .setCallToActionText("Try Magic Signs!")
+                    .build();
+            startActivityForResult(intent, 0);*/
+
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onShareLink", t);
+        }
+    }
+    public void onGetName(final IGetNameListener getNameListener) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(Utils.getRes(R.string.dlg_Login_Firebase_Title))
+                .setIcon(R.mipmap.drop_app)
+                .setMessage(R.string.dlg_Login_Firebase_Message);
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setFilters(new InputFilter[] { new InputFilter.LengthFilter(CensUtils.maxLength) });
+        builder.setView(input);
+
+        builder.setPositiveButton(Utils.getRes(R.string.dlg_Ok), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String name = input.getText().toString();
+                if (name != null) {
+                    if (name.length() < 6 || name.length() > 50) {
+                        Utils.Toast(R.string.dlg_Login_Firebase_RepeatMessage);
+                        onGetName(getNameListener);
+                    } else if (getNameListener != null) {
+                        String censName = CensUtils.checkNameReg(name);
+                        if (censName != null)
+                            getNameListener.handleGetName(censName);
+                    }
+                }
+                keyboardShowHide();
+            }
+        });
+        builder.setNegativeButton(Utils.getRes(R.string.dlg_Cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                keyboardShowHide();
+                dialog.cancel();
+            }
+        });
+        builder.show();
+        keyboardShowHide();
+    }
+    public void onRateGame(final int stars) {
+        try {
+            StringBuilder starsString = new StringBuilder();
+            for (int i = 1; i <= 5; i++)
+                starsString.append(i > stars ? "☆" : "★");
+
+            if (stars < 4) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(starsString.toString())
+                        .setIcon(R.mipmap.drop_app)
+                        .setMessage(R.string.dlg_Rate_Message);
+
+                final EditText input = new EditText(this);
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                builder.setView(input);
+
+                final String subject = starsString.toString();
+                builder.setPositiveButton(Utils.getRes(R.string.dlg_Rate_Send), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        CurrentSettings.isRatePressed = true;
+                        Utils.SetUserProperty(AnalyticsManager.MS_UP_RATED, true);
+
+                        // отправляем сообщение на почту
+                        onSendEmail(subject, input.getText().toString());
+                    }
+                });
+                builder.setNegativeButton(Utils.getRes(R.string.dlg_Rate_Later), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Utils.SetUserProperty(AnalyticsManager.MS_UP_RATED, false);
+
+                        keyboardShowHide();
+                        dialog.cancel();
+                    }
+                });
+                builder.show();
+                keyboardShowHide();
+
+            } else {
+
+                CurrentSettings.isRatePressed = true;
+                Utils.SetUserProperty(AnalyticsManager.MS_UP_RATED, true);
+
+                // переходим в PlayMarket для подтверждения оценки
+                //test String rateUrl = "https://play.google.com/store/apps/details?id=com.rovio.angrybirdsrio";
+                Intent rateIntent = new Intent(Intent.ACTION_VIEW);
+                // try PlayMarket url
+                String rateMarketUrl = Utils.remoteConfigManager.getRateGameMarketUrl();
+                rateIntent.setData(Uri.parse(rateMarketUrl));
+                if (isNotActivityStarted(rateIntent, null)) {
+                    // try browser url
+                    String rateUrl = Utils.remoteConfigManager.getRateGameUrl();
+                    rateIntent.setData(Uri.parse(rateUrl));
+                    if (isNotActivityStarted(rateIntent, null))
+                        Utils.Toast(R.string.dlg_Share_No_PlayMarket);
+                }
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onRateGame", t);
+        }
+    }
+    private void keyboardShowHide() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null)
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    }
+    private void onSendEmail(String subject, String text) {
+        try {
+            //Uri uri = Uri.parse("mailto:");
+            //Intent sendIntent = new Intent(Intent.ACTION_SENDTO, uri);
+            Intent sendIntent = new Intent(Intent.ACTION_SEND);
+            sendIntent.setData(Uri.parse("mailto"));
+            sendIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{Utils.remoteConfigManager.getSupportEmail()});
+            sendIntent.setType("text/plain");
+            sendIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
+            sendIntent.putExtra(Intent.EXTRA_TEXT, text);
+            sendIntent.setType("message/rfc822");
+            if (isNotActivityStarted(sendIntent, Utils.getRes(R.string.dlg_Rate_ChooseProgramm)))
+                Utils.Toast(R.string.dlg_Rate_NoEmailClient);
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onSendEmail", t);
+        }
+    }
+    public void onBrowseUrl(String url) {
+        Intent urlIntent = new Intent(Intent.ACTION_VIEW);
+        urlIntent.setData(Uri.parse(url));
+        if (isNotActivityStarted(urlIntent, null))
+            Utils.Toast(R.string.dlg_Share_No_Url);
+    }
+    private boolean isNotActivityStarted(Intent intent, String caption) {
+        try {
+            if (caption != null)
+                startActivity(Intent.createChooser(intent, caption));
+            else
+                startActivity(intent);
+            return false;
+        } catch (ActivityNotFoundException e) {
+            return true;
+        }
+    }
+    //endregion
+
+    //region Touch
+    private final PointerInfo p = new PointerInfo();
+
+    public boolean onTouch(View v, MotionEvent event) {
+        try {
+            int pointerIndex = event.getPointerCount() - 1;// число касаний
+            if (pointerIndex < 0) {
+                for (PointerInfo p : pointerInfos)
+                    p.TouchUp();
+            } else {
+                int action = event.getActionMasked();
+                int x = (int) event.getX(pointerIndex);
+                int y = (int) event.getY(pointerIndex);
+                boolean isDown = false;
+                if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) // касание
+                {
+                    p.Touch(x, y);
+                    onTouch(x, y);
+                    isDown = true;
+                } else if (action == MotionEvent.ACTION_MOVE) // перемещение по экрану
+                {
+                    p.Move(x, y);
+                    onMove(p.dx, p.dy);
+                    onMoveTo(x, y);
+                    isDown = true;
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) // прерывание касаний
+                {
+                    p.TouchUp();
+                    onTouchUp(x, y);
+                }
+                for (int i = 0; i < pointerMaxCount; i++) {
+                    if (i < pointerIndex || (i == pointerIndex && isDown))
+                        pointerInfos[i].Touch((int) event.getX(i), (int) event.getY(i));
+                    else
+                        pointerInfos[i].TouchUp();
+                }
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onTouch(x, y)", t);
+        }
+        //return super.onTouchEvent(event);
+        return true;
+    }
+
+    private void onTouch(int x, int y) {
+        try {
+            if (currentGroup != null)
+                currentGroup.onTouch(x, y);
+            onTouch();
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onTouch", t);
+        }
+    }
+
+    private void onTouch() { }
+
+    private void onTouchUp(int x, int y) {
+        try {
+            if (currentGroup != null)
+                currentGroup.onTouchUp(x, y);
+            onTouchUp();
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onTouchUp", t);
+        }
+    }
+
+    private void onTouchUp() { }
+
+    private void onMove(int dx, int dy) { }
+
+    private void onMoveTo(int x, int y) {
+        try {
+            if (currentGroup != null)
+                currentGroup.onMoveTo(x, y);
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onMoveTo(x, y)", t);
+        }
+    }
+    //endregion
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() {
+        //int step = 0;
+        try {
+            //step = 1;
+            // узнаем размеры экрана из класса Display
+            Display display = getWindowManager().getDefaultDisplay();
+            //step = 2;
+            DisplayMetrics metrics = new DisplayMetrics();
+            //step = 3;
+            display.getMetrics(metrics);
+            //step = 4;
+            MetrixUtils.screen_metrix_width = metrics.widthPixels;
+            MetrixUtils.screen_metrix_height = metrics.heightPixels;
+            PaintUtils.apply(MetrixUtils.screen_metrix_width, MetrixUtils.screen_metrix_height);
+            //step = 5;
+            //MetrixUtils.scale = (float) metrics.widthPixels / (float) MetrixUtils.screen_default_width;
+            MetrixUtils.scale = (float) metrics.heightPixels / (float) MetrixUtils.screen_default_height;
+            //step = 6;
+            MetrixUtils.screen_K = (float) metrics.widthPixels / (float) metrics.heightPixels;
+            //step = 7;
+
+            if (currentGroup != null) {
+                //step = 8;
+                currentGroup.calc();
+                //step = 9;
+                //Utils.Toast(MetrixUtils.screen_metrix_width + " x " + MetrixUtils.screen_metrix_height);
+            }
+            //step = 10;
+            if (flash != null) {
+                //step = 11;
+                flash.calc();
+                //step = 12;
+            }
+            //step = 13;
+
+        } catch (Throwable t) {
+            //Utils.CrashReport("BSA.calc [step=" + step + "]", t);
+            Utils.CrashReport("BSA.calc", t);
+            //throw t;
+        }
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        //int step = 0;
+        try {
+            //step = 1;
+            if (currentGroup != null) {
+                //currentGroup.calc();
+                currentGroup.drawFrame(c);
+                //step = 2;
+                // connectivity
+                if (Utils.authManager != null)
+                    Utils.authManager.checkConnectionAsync();
+                //step = 3;
+                // manage music
+                if (Utils.musicPlayer != null)
+                    Utils.musicPlayer.nextStep();
+            }
+            //step = 4;
+            if (flash != null) {
+                //flash.calc();
+                flash.drawFrame(c);
+            }
+        } catch (Throwable t) {
+            //Utils.CrashReport("BSA.drawFrame [step=" + step + "]", t);
+            Utils.CrashReport("BSA.drawFrame", t);
+            //throw t;
+        }
+        //drawPointers(c);
+    }
+
+    public void drawPointers(Canvas c) {
+        try {
+            for (PointerInfo p : pointerInfos)
+                if (p != null && p.isInTouch)
+                    c.drawCircle(p.x1, p.y1, 100, pointerPaint);
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.drawPointers", t);
+        }
+    }
+    //endregion
+
+    //region Surface
+    @Override
+    public synchronized void surfaceCreated(SurfaceHolder holder) {
+        try {
+            if (mThread == null)
+                mThread = new DrawingThread(holder, this);
+            Thread.State s = mThread.getState();
+            if (s == Thread.State.NEW)// || s == Thread.State.WAITING)
+                mThread.start();
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.surfaceCreated", t);
+        }
+    }
+
+    @Override
+    public synchronized void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        try {
+            //Utils.Toast("6 surfaceChanged");
+            //onInit();
+            calc();
+            //Utils.Toast("7 surfaceChanged OK");
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.surfaceChanged", t);
+        }
+    }
+
+    @Override
+    public synchronized void surfaceDestroyed(SurfaceHolder holder) {
+        /*
+        if (mThread != null) {
+           mThread.quit();
+           mThread.recycle();
+           mThread = null;
+        }
+        */
+    }
+    //endregion
+
+    @Override
+    public void onTrimMemory(int lev) {
+        super.onTrimMemory(lev);
+        switch (lev) {
+            case ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN:
+                //releaseUnUsedBitmaps(3);
+                break;
+            case ComponentCallbacks2.TRIM_MEMORY_BACKGROUND:
+                //releaseUnUsedBitmaps(1);
+                break;
+            case ComponentCallbacks2.TRIM_MEMORY_MODERATE:
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE:
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW:
+            case ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL:
+            case ComponentCallbacks2.TRIM_MEMORY_COMPLETE:
+                //releaseUnUsedBitmaps(0);
+                break;
+        }
+    }
+
+    //region Pause Resume Back KeyDown Destroy
+    @Override
+    public void onPause() {
+        // set music on pause
+        Utils.pauseMusic();
+
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        int step = 0;
+        try {
+            //resume music
+            Utils.resumeMusic();
+            //play current group music
+            if (currentGroup != null)
+                currentGroup.playMusic();
+
+            calc();
+            step = 1;
+            if (!isLoaded) {
+                step = 2;
+                TaskUtils.postDelayed(500, new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!isLoading) {
+                            isLoading = true;
+                            isLoaded = onLoad();
+                        }
+                        isLoading = false;
+                    }
+                });
+                step = 3;
+            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onResume [step=" + step + "]", t);
+        }
+    }
+
+    private boolean isOnBack = false;
+    @Override
+    public void onBackPressed() {
+        try {
+            if (currentGroup != null) {
+                if (!isOnBack) {
+                    isOnBack = true;
+                    long delay = currentGroup.back();
+                    TaskUtils.postDelayed(delay, new Runnable() {
+                        @Override
+                        public void run() {
+                            isOnBack = false;
+                        }
+                    });
+                }
+            } //else
+                //super.onBackPressed();
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.onBackPressed", t);
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            //case KeyEvent.KEYCODE_MENU:         return true;
+            //case KeyEvent.KEYCODE_SEARCH:       return true;
+            //case KeyEvent.KEYCODE_BACK:         return true;
+            case KeyEvent.KEYCODE_VOLUME_UP:    Utils.applySoundVolume(true);     return true;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:  Utils.applySoundVolume(false);    return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    // Perform any final cleanup before an activity is destroyed
+    @Override
+    public synchronized void onDestroy() {
+        super.onDestroy();
+        recycle();
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        try {
+            /*if (groups != null) {
+                for (int i = 0; i < groups.size(); i++) {
+                    IDrawing b = groups.valueAt(i);
+                    if (b != null)
+                        b.recycle();
+                }
+                groups.clear();
+            }*/
+            if (currentGroup != null)
+                currentGroup.recycle();
+            if (flash != null)
+                flash.recycle();
+
+//            if (mThread != null) {
+//                mThread.quit();
+//                mThread.recycle();
+//                mThread = null;
+//            }
+        } catch (Throwable t) {
+            Utils.CrashReport("BSA.recycle", t);
+        } finally {
+            currentGroup = null;
+            //groups = null;
+            mSurface = null;
+            mGLSurface = null;
+            mThread = null;
+            pointerPaint = null;
+            flash = null;
+        }
+    }
+}

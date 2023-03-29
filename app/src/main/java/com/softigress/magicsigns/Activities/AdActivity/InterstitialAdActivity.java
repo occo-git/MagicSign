@@ -1,0 +1,70 @@
+package com.softigress.magicsigns.Activities.AdActivity;
+
+import android.app.Activity;
+import android.os.Bundle;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns._system.Utils.AdUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+// межстраничное рекламное объявление
+public class InterstitialAdActivity extends Activity {
+
+    private InterstitialAd mInterstitialAd;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_ad);
+
+        /*Button btnAd = (Button) findViewById(R.id.btnAd);
+        btnAd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                loadAd();
+            }
+        });*/
+
+        String ad_id = Utils.getRes(R.string.page_ad_unit_id);
+        MobileAds.initialize(this, ad_id);
+        mInterstitialAd = new InterstitialAd(this);
+        mInterstitialAd.setAdUnitId(ad_id);
+        mInterstitialAd.setAdListener(new AdListener() {
+            // Code to be executed when an ad finishes loading.
+            @Override public void onAdLoaded() { showAd(); } // показываем рекламу
+            // Code to be executed when an ad request fails.
+            @Override public void onAdFailedToLoad(int errorCode) {
+                String err = AdUtils.getRequestErrorString(errorCode);
+            }
+            // Code to be executed when the ad is displayed.
+            @Override public void onAdOpened() { }
+            // Code to be executed when the user has left the app.
+            @Override public void onAdLeftApplication() { }
+            // Code to be executed when when the interstitial ad is closed.
+            @Override public void onAdClosed() { closeAd(); } // при закрытии рекламы
+        });
+
+        loadAd();
+    }
+
+    private void loadAd() {
+        if (mInterstitialAd != null)
+            mInterstitialAd.loadAd(AdUtils.getRequest());
+    }
+
+    private void showAd() {
+        try {
+            if (mInterstitialAd != null && mInterstitialAd.isLoaded())
+                mInterstitialAd.show();
+            //else
+            //    Log.d("TAG", "The interstitial wasn't loaded yet.");
+        }
+        catch (Throwable t) {
+            Utils.CrashReport("InterstitialAdActivity.showAd", t);
+        }
+    }
+
+    private void closeAd() { }
+}

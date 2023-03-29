@@ -1,0 +1,82 @@
+package com.softigress.magicsigns;
+
+import android.graphics.Canvas;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
+import android.view.SurfaceHolder;
+
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingThread extends HandlerThread implements Handler.Callback {
+    private static final int MSG_DRAW = 100;
+    private static final int MSG_TOUCH = 101;
+    private static final int MSG_CLEAR = 102;
+
+    private SurfaceHolder surfaceHolder;
+    private Handler mReceiver;
+    private IDrawing drawing;
+
+    public DrawingThread(SurfaceHolder holder, IDrawing drawing) {
+        super("DrawingThread");
+        this.surfaceHolder = holder;
+        this.drawing = drawing;
+    }
+
+    @Override
+    protected void onLooperPrepared() {
+        mReceiver = new Handler(getLooper(), this);
+        mReceiver.sendEmptyMessage(MSG_DRAW); // drawing
+    }
+
+    public void startDraw() {
+        if (mReceiver != null)
+            mReceiver.sendEmptyMessage(MSG_DRAW);
+        //else
+        //    Utils.Toast("mReceiver = null");
+    }
+
+    @Override
+    public synchronized boolean quit() {
+        mReceiver.removeCallbacksAndMessages(null);
+        return super.quit();
+    }
+
+    @Override
+    public synchronized boolean handleMessage(Message msg) {
+        if (msg.what == MSG_DRAW) {
+                //int step = 0;
+                try {
+                    Canvas c = surfaceHolder.lockCanvas();
+                    if (c != null) {
+                        //c.drawColor(Color.RED);
+                        //step = 1;
+                        if (this.drawing != null)
+                            this.drawing.drawFrame(c);
+                        //step = 2;
+                        surfaceHolder.unlockCanvasAndPost(c);
+                    }
+                }
+                catch (Throwable t) {
+                    //String str = "DrawingThread.handleMessage[MSG_DRAW] [step=" + step + "]";
+                    //if (step == 1)
+                    //    str += " [drawing=" + drawing.toString() + "]";
+                    //Utils.CrashReport(str, t);
+                    Utils.CrashReport("DrawingThread.handleMessage[MSG_DRAW]", t);
+                    throw t;
+                }
+        }
+        mReceiver.sendEmptyMessage(MSG_DRAW);
+        return true;
+    }
+
+    public void recycle() {
+
+        if (mReceiver != null)
+            mReceiver = null;
+        if (surfaceHolder != null)
+            surfaceHolder = null;
+        drawing = null;
+    }
+}

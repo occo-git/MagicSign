@@ -1,0 +1,188 @@
+package com.softigress.magicsigns._system;
+
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.SystemClock;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.IAsyncLoadFile;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.io.File;
+import java.io.InputStream;
+
+public class MusicPlayer {
+
+    private static final long previousMusicStopDuration = 2000;
+    private int currentMusicId = 0;
+    private int nextMusicId = 0;
+
+    private static MediaPlayer mediaPlayer = new MediaPlayer();
+    private final Context context;
+
+    public MusicPlayer(Context context) {
+        this.context = context;
+        setLooping(true);
+    }
+
+    private boolean isLooping = false;
+    private void setLooping(boolean isLooping) { this.isLooping = isLooping; }
+
+    private float volume = 1f;
+    public void setVolume(float vol) {
+        volume = vol;
+        if (mediaPlayer != null)
+            mediaPlayer.setVolume(vol, vol);
+    }
+
+    //region pause / resume
+    private boolean isPaused = false;
+    public void pause() {
+        isPaused = true;
+        stop();
+    }
+    public void resume() { isPaused = false; }
+    //endregion
+
+    //region play
+    public void play(int musicId) {
+        if (Utils.isMusic()) {
+            if (musicId > 0 && musicId != currentMusicId) {
+                isFile = false;
+                currentMusicId = musicId;
+                MainActivityUtils.doStartLoadMusic(musicId);
+                Utils.storageManager.downloadFireBaseFile( // start download music and play if enabled
+                        musicId,
+                        new IAsyncLoadFile() {
+                            @Override
+                            public void onProgress(FileInfo fileInfo, float progress) {
+                                MainActivityUtils.doSetLoadMusicProgress(fileInfo, progress);
+                            }
+                            @Override
+                            public void onFinish(FileInfo fileInfo) {
+                                if (fileInfo != null) {
+                                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                        nextMusicId = fileInfo.id;
+                                        stop(previousMusicStopDuration);
+                                    } else
+                                        playInternal(fileInfo.id);
+                                }
+                            }
+                            @Override
+                            public void onError(Throwable t) { }
+                        });
+            }
+        }
+    }
+
+    private void playInternal(int musicId) {
+        if (Utils.isMusic() && !isPaused) {
+            nextMusicId = 0;
+            currentMusicId = musicId;
+            FileInfo fileInfo = Utils.remoteConfigManager.getFileInfo(musicId);
+            if (fileInfo != null) {
+                File f = Utils.storageManager.getExternalStorageFile(fileInfo);
+                if (f != null && f.exists()) {
+                    try {
+                        mediaPlayer = MediaPlayer.create(this.context, Uri.fromFile(f));
+                        startPlayer();
+                    } catch (Throwable t) {
+                        Utils.CrashReport("MusicPlayer.playInternal", t);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isFile = false;
+    public void playFile(int fileId, boolean isForce) {
+        if (Utils.isMusic()) {
+            if (fileId > 0 && (fileId != currentMusicId || isForce)) {
+                isFile = true;
+                currentMusicId = fileId;
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    nextMusicId = fileId;
+                    stop(previousMusicStopDuration);
+                } else
+                    playFileInternal(fileId);
+            }
+        }
+    }
+
+    private void playFileInternal(int fileId) {
+        if (Utils.isMusic() && !isPaused) {
+            nextMusicId = 0;
+            currentMusicId = fileId;
+            try {
+                mediaPlayer = MediaPlayer.create(this.context, currentMusicId);
+                startPlayer();
+            } catch (Throwable t) {
+                Utils.CrashReport("MusicPlayer.playFileInternal", t);
+            }
+        }
+    }
+
+    private void startPlayer() {
+        if (mediaPlayer != null) {
+            mediaPlayer.setVolume(volume, volume);
+            mediaPlayer.setLooping(isLooping);
+            mediaPlayer.start();
+        }
+    }
+    //endregion
+
+    //region stop
+    public void stop() {
+        currentMusicId = 0;
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.stop();
+        }
+    }
+
+    private long stopDuration = 0;
+    private long startStopTicks = 0;
+    private boolean isOnStop = false;
+    private void stop(long stopDuration) {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            this.stopDuration = stopDuration;
+            this.startStopTicks = 0;
+            isOnStop = true;
+        }
+    }
+    //endregion
+
+    public void nextStep() {
+        long ticks = SystemClock.elapsedRealtime();
+        if (isOnStop) {
+            if (startStopTicks == 0)
+                startStopTicks = ticks;
+            long delta = ticks - startStopTicks;
+            float currentVolume = 0;
+            if (delta <= stopDuration) {
+                currentVolume = volume * (1f - delta / (float)stopDuration);
+                if (mediaPlayer != null)
+                    mediaPlayer.setVolume(currentVolume, currentVolume);
+            }
+            else {
+                if (mediaPlayer != null)
+                    mediaPlayer.stop();
+                isOnStop = false;
+
+                if (nextMusicId > 0) {
+                    if (isFile)
+                        playFileInternal(nextMusicId);
+                    else
+                        playInternal(nextMusicId);
+                }
+            }
+        }
+    }
+
+    public void recycle() {
+        stop();
+        mediaPlayer = null;
+    }
+}

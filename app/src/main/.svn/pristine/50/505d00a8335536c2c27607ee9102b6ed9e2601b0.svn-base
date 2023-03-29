@@ -1,0 +1,249 @@
+package com.softigress.magicsigns.UI._Main.Dialogs.Help;
+
+import android.graphics.Typeface;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Drop.DropMotionType;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpHelpDialog extends GrpDialog {
+
+    private static final float dxContentsTitle =      .50f,   dyContentsTitle =   .10f;
+    private static final float dxContentRow =         .15f,   dyContentRow =      .22f, dyContentRowDelta = .07f;
+    private static final float dxContents =           .15f,   dyContents =        .10f;
+    private static final float dxItem =       .50f,   dyItem =        .15f, fdItem = .1f; // элемент (картинка и др.)
+    private static final float dxTitle =      .50f,   dyTitle =       .30f;
+    private static final float dxText =       .10f,   dyText =        .40f;
+    private static final float dxPrev =       .15f,   dyPrev =        .90f;
+    private static final float dxIndex =      .35f,   dyIndex =       .90f;
+    private static final float dxNext =       .55f,   dyNext =        .90f;
+    private static final float dxDrop =       .80f,   dyDrop =        .95f, fdDrop = .1f;
+    private static final float btnItemFd =    .0333f;
+    private static final float btnControlFd = .05f;
+    private static final float btnContentFd = .062f;
+
+    private final DrawingBase idea;
+    private final DrawingText contentsTite;
+    private final HelpItem helpItem;
+    private final DrawingText itemTitle;
+    private final DrawingText itemText;
+    private final BtnBase btnPrev, btnNext, btnContents;
+    private final DrawingText index;
+    private final FunnyDrop drop;
+
+    private BtnBase[] contentsControls;
+    private HelpItemInfo[] itemInfos;
+    private int itemsCount = 0;
+    private int currentIndex = 0;
+    private boolean isContents = true;
+
+    public GrpHelpDialog() {
+        super(.8f, .62f);//, R.drawable.btn_ok);
+        name = "dlg_exit";
+
+        idea = new DrawingBase(.1f, R.string.bmp_item_idea);
+        addDlgControl(idea, dxContents, dyContents);
+
+        //region Item, Title, Text
+        contentsTite = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_big);
+        contentsTite.setText(R.string.dlg_Help_contetns);
+        contentsTite.setTextBack(4f, 64, 0, 0, 0);
+        addDlgControl(contentsTite, dxContentsTitle, dyContentsTitle);
+
+        helpItem =  new HelpItem(getByDx(dxItem), getByDy(dyItem), fdItem);
+        addDlgControl(helpItem, dxItem, dyItem);
+
+        itemTitle = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_big);
+        itemTitle.setTextBack(4f, 64, 0, 0, 0);
+        addDlgControl(itemTitle, dxTitle, dyTitle);
+
+        itemText = new DrawingText(DrawingHAlign.LEFT, TextUtils.dialog_help_text);
+        itemText.setVerticalAlign(DrawingVAlign.TOP);
+        itemText.setTypeface(Typeface.DEFAULT);
+        itemText.setTextBack(4f, 64, 0, 0, 0);
+        addDlgControl(itemText, dxText, dyText);
+        //endregion
+
+        //region Prev / Index / Next / Contents
+        btnPrev = new BtnBase(getByDx(dxPrev), getByDy(dyPrev), btnControlFd, R.string.bmp_btn_exit);
+        btnPrev.name = "btn_prev";
+        btnPrev.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { prev(); }
+        });
+        addDlgControlTouchable(btnPrev, dxPrev, dyPrev);
+
+        index = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_xsmall);
+        index.setTextBack(4f, 64, 0, 0, 0);
+        addDlgControl(index, dxIndex, dyIndex);
+
+        btnNext = new BtnBase(getByDx(dxNext), getByDy(dyNext), btnControlFd, R.string.bmp_btn_play);
+        btnNext.name = "btn_prev";
+        btnNext.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { next(); }
+        });
+        addDlgControlTouchable(btnNext, dxNext, dyNext);
+
+        btnContents = new BtnBase(getByDx(dxContents), getByDy(dyContents), btnContentFd, R.string.bmp_btn_menu);
+        btnContents.name = "btn_contents";
+        btnContents.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { showHideControls(true); }
+        });
+        addDlgControlTouchable(btnContents, dxContents, dyContents);
+        //endregion
+
+        drop = new FunnyDrop(fdDrop);
+        drop.loadStatuses(new int[] {
+                //FunnyDrop.STATUS_10_SIMPLE,
+                //FunnyDrop.STATUS_11_SIMPLE_BLINK,
+                FunnyDrop.STATUS_20_INTEREST,
+                FunnyDrop.STATUS_21_INTEREST_BLINK,
+                //FunnyDrop.STATUS_30_SURPRISE,
+                //FunnyDrop.STATUS_40_JOKE,
+                //FunnyDrop.STATUS_50_LAUGH,
+                //FunnyDrop.STATUS_60_HAPPY,
+                //FunnyDrop.STATUS_61_HAPPY_BLINK,
+                //FunnyDrop.STATUS_70_PUNCHED,
+                FunnyDrop.STATUS_80_PRO,
+                //FunnyDrop.STATUS_90_SLEEP,
+                //FunnyDrop.STATUS_100_WAIT,
+                //FunnyDrop.STATUS_101_WAIT_BLINK,
+        });
+        drop.setDefaultStatusId(FunnyDrop.STATUS_80_PRO);
+        drop.isAllowMotion = true;
+        addDlgControlTouchable(drop, dxDrop, dyDrop);
+
+        addDlgCloseButton();
+    }
+
+    public void addItemInfos(int[] data) {
+        if (data != null) {
+            this.itemsCount = data.length / 4;
+            contentsControls = new BtnBase[itemsCount];
+            itemInfos = new HelpItemInfo[itemsCount];
+
+            for (int i = 0; i < data.length; i += 4) {
+                int index = data[i];
+                int typeId = data[i + 1];
+                int titleId = data[i + 2];
+                int textId = data[i + 3];
+                addItemInfo(index, typeId, titleId, textId);
+            }
+        }
+    }
+
+    private void addItemInfo(final int index, int typeId, int titleId, int textId) {
+        if (itemInfos != null && contentsControls != null) {
+            itemInfos[index] = new HelpItemInfo(index, typeId, titleId, textId);
+
+            float dfx = dxContentRow;
+            float dfy = dyContentRow + index * dyContentRowDelta;
+            BtnBase btn = new BtnBase(getByDx(dfx), getByDy(dfy), btnItemFd, R.string.bmp_btn_checked);
+            btn.clickSoundId = R.raw.ui_item_click14;
+            btn.setLabelTextSized(titleId, TextUtils.dialog_text_xsmall, DrawingHAlign.LEFT);
+            btn.setLabelAlignK(2f); // интервал между кнопкой и ее подписью
+            btn.setListener(new IClickListener() {
+                @Override
+                public void handleOnClick(ITouchable e) {
+                    setIndex(index);
+                }
+            });
+            addDlgControlTouchable(btn, dfx, dfy);
+            contentsControls[index] = btn;
+        }
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        refreshControls();
+    }
+
+    private void prev() {
+        currentIndex--;
+        if (currentIndex < 0)
+            currentIndex = 0;
+        refreshControls();
+    }
+    private void next() {
+        currentIndex++;
+        if (currentIndex == itemsCount)
+            currentIndex = itemsCount - 1;
+        refreshControls();
+    }
+    private void setIndex(int index) {
+        if (index < itemsCount)
+            currentIndex = index;
+        showHideControls(false);
+    }
+    private void showHideControls(boolean isContents) {
+        this.isContents = isContents;
+        refreshControls();
+    }
+
+    private void refreshControls() {
+        if (isContents) {
+            helpItem.hide();
+            itemTitle.hide();
+            itemText.hide();
+            btnPrev.hide();
+            btnNext.hide();
+            index.hide();
+            btnContents.hide();
+            contentsTite.show();
+            idea.show();
+            if (contentsControls != null)
+                for (BtnBase btn : contentsControls)
+                    if (btn != null)
+                        btn.show();
+            drop.setDefaultStatusId(FunnyDrop.STATUS_20_INTEREST);
+            drop.setMotion(DropMotionType.INTEREST);
+        } else {
+            contentsTite.hide();
+            if (contentsControls != null)
+                for (BtnBase btn : contentsControls)
+                    btn.hide();
+            idea.hide();
+            helpItem.show();
+            itemTitle.show();
+            itemText.show();
+            index.show();
+            btnContents.show();
+
+            if (currentIndex == 0)
+                btnPrev.hide();
+            else if (!btnPrev.isVisible())
+                btnPrev.show();
+
+            if (currentIndex == itemsCount - 1)
+                btnNext.hide();
+            else if (!btnNext.isVisible())
+                btnNext.show();
+            index.setText(String.format("%1$s %2$s %3$s", currentIndex + 1, Utils.getRes(R.string.dlg_Help_of), itemsCount));
+
+            HelpItemInfo itemInfo = itemInfos[currentIndex];
+            if (itemInfo.textId != HelpItemInfo.TYPE_NONE  && itemInfo.titleId > 0 && itemInfo.textId > 0) {
+                helpItem.setType(itemInfo.typeId);
+                itemTitle.setText(itemInfo.titleId);
+                itemText.setText(itemInfo.textId);
+            } else {
+                helpItem.setType(HelpItemInfo.TYPE_NONE);
+                itemTitle.setText("");
+                itemText.setText("");
+            }
+            drop.setMessagePoint(drop.getFx(), drop.getFy() - fdDrop );
+            //drop.showMessage(1000, new MessageInfo("exclamation", R.string.dlg_Help_drop_message, false, MessageInfo.MSG_TEMPER_UP)); // exclamation
+            drop.setDefaultStatusId(FunnyDrop.STATUS_80_PRO);
+            drop.setMotion(DropMotionType.PRO);
+        }
+    }
+}

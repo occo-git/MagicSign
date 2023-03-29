@@ -1,0 +1,107 @@
+package com.softigress.magicsigns.UI._base.Effects.Stars.OutStars;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+public class OutStars implements IDrawing {
+
+    private final Bitmap bitmap;
+    private final ArrayRecyclableSimple<OutStar> stars = new ArrayRecyclableSimple<>(OutStar.class);
+    private final OutStar[] starItems;
+    private final AnimatorSet animSet;
+    private boolean isVisible;
+
+    public OutStars(float fx, float fy, float starFr, float rr, float rR, int count, int duration) {
+
+        bitmap = BitmapManager.GetBitmap(R.string.bmp_star);
+        for (int i = 0; i < count; i++)
+            stars.add(new OutStar(starFr));
+        starItems = stars.getItems();
+
+        Random random = new Random();
+        AnimUtil au = new AnimUtil();
+        //ArrayList<Animator> anims = new ArrayList<>();
+        for (OutStar star : starItems) {
+            star.setAlpha(0);
+            star.setScale(0f);
+
+            double angel = Math.PI * random.nextInt(360) / 180f;
+            float r = rr + (rR - rr) * random.nextInt(100) / 100f;
+            float x = fx + (float) (r * Math.sin(angel)) / MetrixUtils.screen_K;
+            float y = fy + (float) (r * Math.cos(angel));
+            au.add(star, "Fx", fx, x)
+              .add(star, "Fy", fy, y)
+              .add(star, "Alpha", 128, 128, 255, 128, 0)
+              .add(star, "Scale", 0f, 1f);
+
+            /*Animator sX = ObjectAnimator.ofFloat(star, "Fx", fx, x).setDuration(duration);
+            Animator sY = ObjectAnimator.ofFloat(star, "Fy", fy, y).setDuration(duration);
+            Animator sA = ObjectAnimator.ofInt(star, "Alpha", 128, 128, 255, 128, 0).setDuration(duration);
+            Animator sS = ObjectAnimator.ofFloat(star, "Scale", 0f, 1f).setDuration(duration);
+            anims.add(sX);
+            anims.add(sY);
+            anims.add(sA);
+            anims.add(sS);*/
+        }
+        animSet = au.startAD(duration);
+        /*animSet = new AnimatorSet();
+        animSet.setDuration(duration);
+        animSet.setInterpolator(new AccelerateDecelerateInterpolator());
+        animSet.playTogether(anims);*/
+        //endregion
+    }
+
+    public void start() {
+        isVisible = true;
+        if (animSet != null)
+            animSet.start();
+    }
+
+    public void reset() {
+        if (animSet != null && animSet.isStarted())
+            animSet.cancel();
+        isVisible = false;
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() {
+        for (OutStar s : starItems)
+            s.calc();
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isVisible) {
+            calc();
+            if (bitmap != null)
+                for (OutStar s : starItems)
+                    s.drawFrame(c, bitmap);
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        reset();
+        //if (stars != null)
+            stars.recycle();
+    }
+}

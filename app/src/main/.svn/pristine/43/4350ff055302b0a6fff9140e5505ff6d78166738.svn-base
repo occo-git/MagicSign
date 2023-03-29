@@ -1,0 +1,260 @@
+<resources>
+    <string name="app_name">Magic Signs</string>
+
+    <string name="prepare_for_ad">Перерыв на рекламу …</string>
+    <string name="game_loading">… загрузка …</string>
+    <string name="game_bad_data">НЕВЕРНЫЕ ДАННЫЕ</string>
+
+    <!-- Главный экран -->
+    <string name="main_comment_score_empty">Рисуем знаки для защиты/и получаем больше звезд</string>
+
+    <!-- Игра -->
+    <string name="game_wave_index">Волна</string>
+    <string name="game_wave_ready">Приготовьтесь!</string>
+    <string name="game_record_break">Рекорд побит!</string>
+    <string name="game_tap_text">Подбираем!</string>
+
+    <!-- Рейтинг -->
+    <string name="rating_caption">Рейтинг</string>
+    <string name="rating_comment">Чтобы посмотреть/таблицу рейтинга,/нужно войти</string>
+
+    <!-- Лаборатория -->
+    <string name="lab_caption">Секрет</string>
+    <string name="lab_comment">Для экспериментов/в лаборатори,/нужно войти</string>
+    <string name="lab_videos">Эликсир/за видео</string>
+    <string name="lab_potion_for_video">Эликсир за видео</string>
+
+    <!-- Диалоги -->
+    <string name="dlg_Age_Exit">Нажмите еще раз для выхода</string>
+
+    <string name="dlg_Menu">меню</string>
+    <string name="dlg_Menu_Options">настройки</string>
+    <string name="dlg_Menu_Intro">заставка</string>
+    <string name="dlg_Menu_Reset">начать/заново</string>
+    <string name="dlg_Menu_Exit">выйти/из игры</string>
+    <string name="dlg_Menu_Help">помощь</string>
+
+    <string name="dlg_Reset_ResetTheGame">Начать игру/заново?</string>
+    <string name="dlg_Exit_ExitTheGame">Выйти/из игры?</string>
+    <string name="dlg_Exit_Title">Выйти?</string>
+    <string name="dlg_Exit_IdeaText">При выходе из игры/текущие достижения/не сохранятся</string>
+    <string name="dlg_Pause_Title">Пауза</string>
+    <string name="dlg_Pause_IdeaText">Продолжить игру</string>
+    <string name="dlg_Age_Title">Каков ваш возраст?</string>
+    <string name="dlg_Age_IdeaText">Пожалуйста, укажите/свой возраст</string>
+    <string name="dlg_Exit">выйти</string>
+
+    <string name="dlg_Sound">звук</string>
+    <string name="dlg_Music">музыка</string>
+    <string name="dlg_Vibr">вибрация</string>
+    <string name="dlg_Play">играть</string>
+    <string name="dlg_Yes">да</string>
+    <string name="dlg_No">нет</string>
+    <string name="dlg_Ok">ОК</string>
+    <string name="dlg_Cancel">Отмена</string>
+
+    <string name="dlg_Share">поделиться</string>
+    <string name="dlg_Share_Title">Поделиться в</string>
+    <string name="dlg_ShareScreenshot">поделиться снимком</string>
+    <string name="dlg_Share_Screenshot">поделиться/снимком</string>
+    <string name="dlg_Share_Link">поделиться/ссылкой</string>
+    <string name="dlg_Share_RateTheGame">оценить/игру</string>
+    <string name="dlg_Share_Rate">оценить</string>
+    <string name="dlg_Share_No_PlayMarket">Невозможно открыть Play market. Попробуйте позже.</string>
+    <string name="dlg_Share_No_Url">Невозможно открыть ссылку. Попробуйте позже.</string>
+
+    <string name="dlg_Rate">Оценить игру</string>
+    <string name="dlg_Rate_IdeaText">Спасибо за/реальную поддержку!</string>
+    <string name="dlg_Rate_ChooseProgramm">Выберите почтовую программу:</string>
+    <string name="dlg_Rate_Message">Комментарий:</string>
+    <string name="dlg_Rate_Send">Отправить</string>
+    <string name="dlg_Rate_Later">Позже</string>
+    <string name="dlg_Rate_NoEmailClient">К сожалению, не установлено ни одного почтового клиента.</string>
+
+    <string name="dlg_Login_SingIn_with_Firebase">Новый аккаунт</string>
+    <string name="dlg_Login_SingIn_with_Google">Войти через Google</string>
+    <string name="dlg_Login_SingIn_with_Facebook">Войти через Facebook</string>
+    <string name="dlg_Login_SingIn_with_Twitter">Войти через Twitter</string>
+    <string name="dlg_Login_SingIn_Policy">Политика/конфиденциальности</string>
+    <string name="dlg_Login_Firebase_Title">Создать новый аккаунт</string>
+    <string name="dlg_Login_Firebase_Message">Имя (6 – 50 символов):</string>
+    <string name="dlg_Login_Firebase_RepeatMessage">Пожалуйста, введите имя (6 – 50 символов)</string>
+    <string name="dlg_Login_SignIn">войти</string>
+    <string name="dlg_LogingIn">вход</string>
+    <string name="dlg_Login_SignOut">выйти</string>
+    <string name="dlg_LogingOut">выход</string>
+    <string name="dlg_Login_Message">Для сохранения/результатов/нужно войти</string>
+    <string name="dlg_Loged_Message">Результаты/отображаются в таблице/рейтинга</string>
+    <string name="dlg_Login_CredetialAlreadyInUse">Этот аккаунт уже связан с другим пользователем.</string>
+    <string name="dlg_Login_NetworkError">Ошибка подключения к сети.</string>
+
+    <string name="dlg_Help_of">|</string>
+    <string name="dlg_Help_contetns">Помощь</string>
+    <string name="dlg_Help_drop_message">!</string>
+    <string name="dlg_Help_100_game_title">Об игре</string>
+    <string name="dlg_Help_100_game_text"> Рисуем знаки для защиты/и получаем больше звезд./Cтань лучшим в рейтинге!/Отрази все 32 волны/вирусов, чтобы выиграть!</string>
+    <string name="dlg_Help_101_stars_title">Звезды</string>
+    <string name="dlg_Help_101_stars_text"> Устраняем вирусы,/падающие сверху, защищаем/нашу планету и получаем больше/звезд. Чем сильней защита, тем/больше получаем звезд!/Получай бонусы за устранение/нескольких вирусов подряд,/страйки и комбо.</string>
+    <string name="dlg_Help_102_signs_title">Вирусы</string>
+    <string name="dlg_Help_102_signs_text"> Вирусы опасны,/не позволяй им попасть на нашу/планету! Чтобы устранить вирус,/нужно (без отрыва) нарисовать/знак, который виден у него внутри.</string>
+    <string name="dlg_Help_103_waves_title">Волны</string>
+    <string name="dlg_Help_103_waves_text"> Вирусы накатывают волнами./Чем дальше, тем сложней их отразить./Чтобы выиграть,нужно/отразить все 32 волны.</string>
+    <string name="dlg_Help_104_protection_title">Мембрана</string>
+    <string name="dlg_Help_104_protection_text"> Мембрана помогает защищаться/от вирусов./Если вирус достигает Мембраны,/она принимает удар на себя.</string>
+    <string name="dlg_Help_105_multiplier_title">Уровень защиты</string>
+    <string name="dlg_Help_105_multiplier_text"> Чем выше уровень защиты/Мембраны, тем труднее вирусам/ее пробить./Чтобы усилить защиту, собираем/Энергию вирусов.</string>
+    <string name="dlg_Help_106_energy_title">Энергия</string>
+    <string name="dlg_Help_106_energy_text"> Собираем Энергию, которую/отдают вирусы./Энергия усиливает защиту!/Чем выше уровень защиты,/тем больше ударов/выдержит Мембрана.</string>
+    <string name="dlg_Help_107_dna_title">ДНК</string>
+    <string name="dlg_Help_107_dna_text"> ДНК заполняется при устранении/любого вируса./Полностью заполненная ДНК/создает Бомбу!</string>
+    <string name="dlg_Help_108_dna_element_title">ДНК-сегмент</string>
+    <string name="dlg_Help_108_dna_element_text"> Собираем зеленые ДНК-сегменты,/которые выпадают из вирусов./Чем больше ДНК-сегментов/собрать, тем быстрее будет/заполняться ДНК для/содания Бомбы!</string>
+    <string name="dlg_Help_109_dna_bomb_title">Бомба</string>
+    <string name="dlg_Help_109_dna_bomb_text"> Бомба взрывает видимые вирусы!/Заполненная ДНК создает/одну Бомбу. Нажимаем на иконку/Бомбы, чтобы ее использовать./Также Бомбу можно подобрать/после устранения вируса.</string>
+
+    <string name="dlg_Help_201_bottle_title">Пустая колба</string>
+    <string name="dlg_Help_201_bottle_text"> Собери Эликсиры, чтобы заполнить/все пустые колбы и сможешь/разгадать Секрет!</string>
+    <string name="dlg_Help_202_potion_title">Эликсир</string>
+    <string name="dlg_Help_202_potion_text"> Эликсир можно получить за 50/устраненных вирусов/каждого типа. Собери 10 видов/Эликсиров и раскрой секретную/формулу!</string>
+    <string name="dlg_Help_203_marker_title">Маркер</string>
+    <string name="dlg_Help_203_marker_text"> Каждому типу Эликсира/соответствует свой Маркер./Подумай, как правильно/расставить Маркеры./Разгадай секрет и получи/Награду!</string>
+    <string name="dlg_Help_204_secret_title">О секрете</string>
+    <string name="dlg_Help_204_secret_text"> Раскрой секретную формулу!/Правильно расставь Маркеры/на все Эликсиры,/чтобы выполнялось равенство.</string>
+
+    <string name="dlg_Result_Fail">результат</string>
+    <string name="dlg_Result_Good">Победа!</string>
+    <string name="dlg_Result_Repeat">повторить</string>
+
+    <string name="dlg_NoConnection_Message">нет связи ...</string>
+    <string name="dlg_NoConnection_Idea">Пожалуйста, проверьте/настройки сети/и подключение/к интернету</string>
+
+    <string name="dlg_Potion_Video_View">Смотреть/1 видео</string>
+    <string name="dlg_Potion_Available">доступно</string>
+
+    <!-- Бонусы -->
+    <string name="bonus_combo_title">комбо</string>
+    <string name="bonus_sequence_title">подряд</string>
+    <string name="bonus_strike_title">страйк</string>
+    <string name="bonus_guess_title">угадано</string>
+    <string name="bonus_lightning_title">удар/молнии</string>
+
+    <!-- Достижения -->
+    <string name="ach_potion_title">эликсир</string>
+
+    <!-- Сообщения -->
+    <string name="message_drop_interest_01">Привет!</string>
+    <string name="message_drop_interest_02">Начнем!</string>
+    <string name="message_drop_interest_03">Как ты?</string>
+    <string name="message_drop_interest_04">Я готов помочь!</string>
+    <string name="message_drop_interest_05">Многое зависит от тебя!</string>
+    <string name="message_drop_interest_06">Спасем ЖИЗНЬ на Земле!</string>
+
+    <string name="message_drop_punched_01">Ах!</string>
+    <string name="message_drop_punched_02">Полегче</string>
+    <string name="message_drop_punched_03">Эй!</string>
+
+    <string name="message_drop_sleep_01">... сплю</string>
+    <string name="message_drop_sleep_02">... разбудите</string>
+    <string name="message_drop_sleep_03">... проверьте связь</string>
+    <!-- FunnyDrop.MES_INTEREST -->
+    <string name="message_game_drop_interest_01">Рад помочь!</string>
+    <string name="message_game_drop_interest_02">Смотри в оба!</string>
+    <string name="message_game_drop_interest_03">Нужен совет?</string>
+    <string name="message_game_drop_interest_04">Рисуем знаки/для защиты!</string>
+    <string name="message_game_drop_interest_05">Собирай энергию!</string>
+    <string name="message_game_drop_interest_06">Для ДНК -/зеленый сегмент</string>
+    <string name="message_game_drop_interest_07">Бомба - /оранжевый элемент</string>
+    <string name="message_game_drop_interest_08">У тебя получится!</string>
+    <string name="message_game_drop_interest_09">Нужно/сосредоточиться!</string>
+    <!-- FunnyDrop.MES_SURPRISE -->
+    <string name="message_game_drop_surprise_01">Ай!</string>
+    <string name="message_game_drop_surprise_02">Не пропускай!</string>
+    <string name="message_game_drop_surprise_03">Защищаем!</string>
+    <string name="message_game_drop_surprise_04">Нужно собраться!</string>
+    <string name="message_game_drop_surprise_05">Осторожно!</string>
+    <!-- FunnyDrop.MES_JOKE -->
+    <string name="message_game_drop_joke_01">Весело!</string>
+    <string name="message_game_drop_joke_02">Легко!</string>
+    <string name="message_game_drop_joke_03">Готово!</string>
+    <string name="message_game_drop_joke_04">Да!</string>
+    <string name="message_game_drop_joke_05">Еще!</string>
+    <!-- FunnyDrop.MES_LAUGH -->
+    <string name="message_game_drop_laugh_01">Ха-ха-ха!</string>
+    <string name="message_game_drop_laugh_02">Хорошо!</string>
+    <string name="message_game_drop_laugh_03">Супер!</string>
+    <string name="message_game_drop_laugh_04">Прекрасно!</string>
+    <!-- FunnyDrop.MES_HAPPY -->
+    <string name="message_game_drop_happy_01">Так держать!</string>
+    <string name="message_game_drop_happy_02">Продолжаем!</string>
+    <string name="message_game_drop_happy_03">Еще лучше!</string>
+    <string name="message_game_drop_happy_04">Достойно!</string>
+    <!-- FunnyDrop.MES_PUNCHED -->
+    <string name="message_game_drop_punched_01">O\'кей</string>
+    <string name="message_game_drop_punched_02">Еще раз?</string>
+    <string name="message_game_drop_punched_03">Продолжим?</string>
+    <!-- FunnyDrop.MES_PRO -->
+    <string name="message_game_drop_pro_01">Супер!</string>
+    <string name="message_game_drop_pro_02">Профессионально!</string>
+    <string name="message_game_drop_pro_03">Шикарно!</string>
+    <string name="message_game_drop_pro_04">Высший класс!</string>
+    <!-- FunnyDrop.MES_BOMB_0 -->
+    <string name="message_game_drop_bomb_01">Безрезультатно!</string>
+    <string name="message_game_drop_bomb_02">Ни одного!</string>
+    <string name="message_game_drop_bomb_03">Мимо!</string>
+    <!-- FunnyDrop.MES_BOMB_1 -->
+    <string name="message_game_drop_bomb_11">Только один</string>
+    <string name="message_game_drop_bomb_12">Нужно больше!</string>
+    <string name="message_game_drop_bomb_13">Что-то маловато</string>
+    <!-- FunnyDrop.MES_BOMB_2 -->
+    <string name="message_game_drop_bomb_21">Хорошо</string>
+    <string name="message_game_drop_bomb_22">Есть парочка!</string>
+    <string name="message_game_drop_bomb_23">Нормально</string>
+    <!-- FunnyDrop.MES_BOMB_3_ -->
+    <string name="message_game_drop_bomb_31">Ба-бах!</string>
+    <string name="message_game_drop_bomb_32">Великолепно!</string>
+    <string name="message_game_drop_bomb_33">Идеально!</string>
+
+    <string name="message_game_multiplier_01">Это Уровень защиты</string>
+    <string name="message_game_multiplier_02">Для защиты/собираем Энергию</string>
+    <string name="message_game_multiplier_03">Сильнее защита -/больше очков!</string>
+
+    <string name="message_game_dna_01">Заполняем ДНК/и получаем Бомбу</string>
+    <string name="message_game_dna_02">Зеленые сегменты/для ДНК</string>
+    <string name="message_game_dna_03">Это ДНК</string>
+
+    <string name="message_game_dna_bomb_01">Это Бомба</string>
+    <string name="message_game_dna_bomb_02">Заполняем ДНК/и получаем Бомбу</string>
+    <string name="message_game_dna_bomb_03">Взрывает все!</string>
+    <string name="message_game_dna_bomb_04">Бомбу дает/оранжевый элемент</string>
+
+    <string name="message_result_orden_01">Заслуженная награда!</string>
+    <string name="message_result_orden_02">Слава победителю!</string>
+    <string name="message_result_orden_03">Ты так крут!</string>
+    <string name="message_result_orden_04">Цель достигнута!</string>
+
+    <!-- Intro -->
+    <string name="intro_skip">пропустить</string>
+    <string name="intro_frame1_txt1">Земля/2 миллиарда лет назад</string>
+    <string name="intro_frame2_txt1">ЖИЗНЬ сталкивается/с различными трудностями</string>
+    <string name="intro_frame2_txt2">Потепление</string>
+    <string name="intro_frame3_txt2">Обледенение</string>
+    <string name="intro_frame5_txt1">Однажды</string>
+    <string name="intro_frame6_txt1">комета,/пролетая мимо Земли</string>
+    <string name="intro_frame7_txt1">принесла</string>
+    <string name="intro_frame7_txt2">инопланетный/ВИРУС</string>
+    <string name="intro_frame8_txt1">Земле нужен тот,/кто ее защитит!</string>
+    <string name="intro_frame8_txt2">Кто станет/этим Героем?</string>
+    <string name="intro_frame9_msg1">Привет,/я иммунная клетка/Нумми!</string>
+    <string name="intro_frame9_msg2">Я могу тебе помочь</string>
+    <string name="intro_frame9_msg3">Мне известен сопособ/разрушения вирусов!</string>
+    <string name="intro_frame10_msg1">Если нарисовать/знак правильно,/ДНК вируса/разрушится!</string>
+    <string name="intro_frame10_msg_good1">Прекрасно!</string>
+    <string name="intro_frame10_msg_good2">Супер!</string>
+    <string name="intro_frame10_msg_good3">Отлично!</string>
+    <string name="intro_frame10_msg_again1">Почти сработало</string>
+    <string name="intro_frame10_msg_again2">Должно получиться</string>
+    <string name="intro_frame10_msg_again3">Попробуй еще раз</string>
+    <string name="intro_frame11_txt1">Стань нашим Героем!</string>
+    <string name="intro_frame11_txt2">С твоей помощью/мы спасем/ЖИЗНЬ на Земле!</string>
+
+</resources>

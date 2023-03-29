@@ -1,0 +1,235 @@
+package com.softigress.magicsigns.Game.Dna.ProgressDna;
+
+import android.graphics.Canvas;
+import com.softigress.magicsigns.Game.Dna._base.DrawingDna;
+import com.softigress.magicsigns.Game.Dna._base.DrawingDnaPod;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Counters.CtrlCounterInv;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageInfo;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class ProgressDna extends DrawingDna {
+
+    public static final float dnaFx = .5f, dnaFy = .83f;
+    private static final long resetDuration = 500;
+    private static final long upReadyDuration = 1000;
+    private static final long scoreDuration = 1000;
+
+    private int currentPodIndex = 0;
+    private int readyPodsCount = 0;
+    private DrawingText txtScore;
+    private final DrawingBase invBack;
+    private final DrawingBase dnaHalo; // white
+    private final DrawingBase dnaReadyHalo; // green
+
+    //private DrawingFrameRate frameRate;
+
+    private static final MessageInfo[] mis = MessageInfo.getMessages(
+            "progressDna",
+            new int[] {
+                    1, 0, R.string.message_game_dna_01,
+                    1, 0, R.string.message_game_dna_02,
+                    0, 0, R.string.message_game_dna_03,
+            });
+    public static MessageInfo getMessage() { return MessageInfo.getRandomMessage(mis); }
+
+    public ProgressDna(float fr) {
+        super(fr, CurrentSettings.dnaPodsCount, fr / 60f, fr / 6f);
+
+        if (CurrentSettings.isDnaFullScore) {
+            txtScore = new DrawingText(DrawingHAlign.LEFT, TextUtils.controls_game_bonus_cell_score);
+            txtScore.isPaintShadow = false;
+            txtScore.setAlpha(0);
+            txtScore.hide();
+        }
+
+        invBack = new DrawingBase(fr, R.string.bmp_spot_orange);
+        invBack.setAlpha(0);
+        invBack.hide();
+
+        dnaHalo = new DrawingBase(1.5f * fr, R.string.bmp_halo_white_out);
+        dnaHalo.setAngel(90);
+        dnaHalo.setAlpha(0);
+        dnaHalo.hide();
+
+        dnaReadyHalo = new DrawingBase(1.5f * fr, R.string.bmp_halo_green_out);
+        dnaReadyHalo.setAlpha(0);
+        dnaReadyHalo.hide();
+
+        //frameRate = new DrawingFrameRate("dna", .04f, .55f);
+    }
+
+    private IProgressDnaListener listener;
+    public void setListener(IProgressDnaListener l) { listener = l; }
+
+    public void reset() {
+        setPodsOff();
+        setPodsReady(readyPodsCount);
+        currentPodIndex = readyPodsCount;
+    }
+
+    //region pods on
+    public void nextPodOn() {
+        currentPodIndex++;
+        if (currentPodIndex > podsCount)
+            currentPodIndex = podsCount;
+        DrawingDnaPod lastPodOn = setPodsOn(currentPodIndex);
+        startPodOnAnim(lastPodOn);
+
+        if (isProgressFinished()) {
+            reset();
+            startResetAnim();
+            // если при заполнении Dna добавляем долнительные очки
+            if (CurrentSettings.isDnaFullScore) {
+                if (listener != null)
+                    listener.handleFinished(CurrentSettings.dnaFullScore);
+                startScoreAnim(CurrentSettings.dnaFullScore);
+            } else {
+                // обрабатываем событие заполнения Dna
+                if (listener != null)
+                    listener.handleFinished(0);
+            }
+        }
+    }
+    private boolean isProgressFinished() { return currentPodIndex == podsCount; }
+    //endregion
+
+    //region pods ready
+    public int nextPodReady() {
+        DrawingDnaPod lastReadyPod = setReadyPodsCount(readyPodsCount + 1);
+        startPodReadyAnim(lastReadyPod);
+        return readyPodsCount;
+    }
+
+    public DrawingDnaPod setReadyPodsCount(int count) {
+        readyPodsCount = count;
+        if (currentPodIndex < readyPodsCount)
+            currentPodIndex = readyPodsCount;
+        return setPodsReady(readyPodsCount);
+    }
+
+    public int getReadyPodsCount() { return readyPodsCount; }
+    //endregion
+
+    private void startResetAnim() {
+        if (invBack != null) {
+            long duration = resetDuration;
+            float ffx = fx;
+            invBack.setPoint(fx, fy);
+            invBack.setAlpha(0);
+            invBack.show();
+
+            new AnimUtil()
+                    .add(invBack, "Alpha", 0, 128, 64, 0)
+                    .add(invBack, "fx", ffx - fr / 2, CtrlCounterInv.invFx)
+                    .add(invBack, "widthScale", 1f, 3f, 1f)
+                    .add(invBack, "heightScale", 0f, .25f, 1f)
+                    .start(duration);
+
+            TaskUtils.postDelayed(duration, new Runnable() {
+                @Override
+                public void run() { invBack.hide(); }
+            });
+        }
+    }
+
+    private void startPodOnAnim(DrawingDnaPod lastPodOn) {
+        if (lastPodOn != null && dnaHalo != null) {
+            long duration = upReadyDuration;
+            dnaHalo.setPoint(lastPodOn.getFx(), fy);
+            dnaHalo.setAlpha(0);
+            dnaHalo.show();
+
+            new AnimUtil()
+                    .add(dnaHalo, "Alpha", 255, 255, 0)
+                    .add(dnaHalo, "widthScale", 0f, 1f)
+                    .add(dnaHalo, "heightScale", 0f, .16f)
+                    .startAD(duration);
+
+            TaskUtils.postDelayed(duration, new Runnable() {
+                @Override
+                public void run() { dnaHalo.hide(); }
+            });
+        }
+    }
+
+    private void startPodReadyAnim(DrawingDnaPod lastReadyPod) {
+        if (lastReadyPod != null && dnaReadyHalo != null) {
+            long duration = upReadyDuration;
+            dnaReadyHalo.setPoint(lastReadyPod.getFx(), fy);
+            dnaReadyHalo.setAlpha(0);
+            dnaReadyHalo.show();
+
+            new AnimUtil()
+                    .add(dnaReadyHalo, "Alpha", 255, 255, 0)
+                    .add(dnaReadyHalo, "widthScale", 0f, .16f)
+                    .add(dnaReadyHalo, "heightScale", 0f, 1f)
+                    .startAD(duration);
+
+            Utils.playSound(R.raw.dna_pick04);
+
+            TaskUtils.postDelayed(duration, new Runnable() {
+                @Override
+                public void run() { dnaReadyHalo.hide(); }
+            });
+        }
+    }
+
+    private void startScoreAnim(Integer score) {
+        if (txtScore != null) {
+            float ffr = this.fr;
+            txtScore.setPoint(fx - fr, fy);
+            txtScore.setText("+ " + score.toString());
+            txtScore.show();
+
+            new AnimUtil()
+                    .add(txtScore, "alpha", 0, 255, 128, 0)
+                    .add(txtScore, "fontSize", 1f, TextUtils.controls_game_bonus_cell_score)
+                    .add(this, "fr", ffr, 1.5f * ffr, ffr)
+                    .startD(scoreDuration);
+        }
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        //if (frameRate != null)
+        //    frameRate.start();
+
+        super.drawFrame(c);
+
+        if (txtScore != null)
+            txtScore.drawFrame(c);
+        if (invBack != null)
+            invBack.drawFrame(c);
+        if (dnaHalo != null)
+            dnaHalo.drawFrame(c);
+        if (dnaReadyHalo != null)
+            dnaReadyHalo.drawFrame(c);
+
+        //if (frameRate != null)
+        //    frameRate.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (txtScore != null)
+            txtScore.recycle();
+        if (invBack != null)
+            invBack.recycle();
+        if (dnaHalo != null)
+            dnaHalo.recycle();
+        if (dnaReadyHalo != null)
+            dnaReadyHalo.recycle();
+        //if (frameRate != null)
+        //    frameRate.recycle();
+    }
+}

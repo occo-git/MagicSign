@@ -1,0 +1,146 @@
+package com.softigress.magicsigns.Activities.MainActivity;
+
+import com.softigress.magicsigns.UI._Main.Dialogs.Login.IGetNameListener;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public abstract class MainActivityUtils {
+    private static IMainListener mainListener;
+
+    public static void setMainListener(IMainListener l) { mainListener = l; }
+
+    public static void doInitAd() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_init_ad");
+        if (mainListener != null)
+            mainListener.handleOnInitAd();
+    }
+
+    public static void doShowIntro() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_show_intro");
+        if (mainListener != null)
+            mainListener.handleOnShowIntro();
+    }
+
+    public static void doShowMain() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_show_main");
+        if (mainListener != null)
+            mainListener.handleOnShowMain();
+    }
+
+    public static void doShowRating() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_show_rating");
+        if (mainListener != null)
+            mainListener.handleOnShowRating();
+    }
+
+    public static void doShowLab() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_show_lab");
+        if (mainListener != null)
+            mainListener.handleOnShowLab();
+    }
+
+    public static void doStartGame() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_start_game");
+        if (mainListener != null)
+            mainListener.handleOnStartGame();
+    }
+
+    public static void doPause(GrpDialog dlg) {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_pause");
+        if (mainListener != null)
+            mainListener.handleOnPause(dlg);
+    }
+
+    public static void doResume() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_resume");
+        if (mainListener != null)
+            mainListener.handleOnResume();
+    }
+
+    public static void doResetGame() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_reset_game");
+        if (mainListener != null)
+            mainListener.handleOnResetGame();
+    }
+
+    public static void doExitGame() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_exit_game");
+        if (mainListener != null)
+            mainListener.handleOnExitGame();
+    }
+
+    public static void doConnectionOff() {
+        //Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_conn_off");
+        if (mainListener != null)
+            mainListener.handleConnectionOff();
+    }
+
+    public static void doConnectionOn() {
+        //Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_conn_on");
+        if (mainListener != null)
+            mainListener.handleConnectionOn();
+    }
+
+    public static void doConnection(boolean isOnOff) {
+        if (mainListener != null)
+            mainListener.handleConnection(isOnOff);
+    }
+
+    public static void doAuthChanged() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_auth_changed");
+        if (mainListener != null)
+            mainListener.handleAuthChanged();
+    }
+
+    public static void doShareScreenshot() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_share_scr");
+        if (mainListener != null)
+            mainListener.handleShareScreenshot();
+    }
+
+    public static void doShareLink() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_share_link");
+        if (mainListener != null)
+            mainListener.handleShareLink();
+    }
+
+    public static void doRateGame(int stars) {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_rate_game");
+        if (mainListener != null)
+            mainListener.handleRateGame(stars);
+    }
+
+    public static void doBrowseUrl(String url) {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_browse_url");
+        if (mainListener != null)
+            mainListener.handleBrowseUrl(url);
+    }
+
+    public static void doGetName(IGetNameListener getNameListener) {
+        if (mainListener != null)
+            mainListener.handleGetName(getNameListener);
+    }
+
+    public static void doStartLoadMusic(int musicId) {
+        if (mainListener != null)
+            mainListener.handleStartLoadMusic(musicId);
+    }
+
+    public static void doSetLoadMusicProgress(FileInfo fileInfo, float progress) {
+        if (mainListener != null)
+            mainListener.handleSetLoadMusicProgress(fileInfo, progress);
+    }
+
+    public static void doShowInterstitialAd() {
+        if (mainListener != null)
+            mainListener.handleShowInterstitialAd();
+    }
+
+    public static void doShowVideoAd(AchievementType type) {
+        if (mainListener != null)
+            mainListener.handleShowVideoAd(type);
+    }
+}

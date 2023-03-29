@@ -1,0 +1,2323 @@
+package com.softigress.magicsigns._system.Settings.Infos;
+
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.os.Trace;
+import android.util.SparseArray;
+
+import com.softigress.magicsigns.Game.Puncher.RaySign;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls.Bonuses.BonusType;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.util.ArrayList;
+
+public abstract class SignInfos {
+
+    private static SparseArray<SignStrength> strengthInts = new SparseArray<>();
+    private static ArrayRecyclableSimple<SignInfo> sInfos;
+    private static SignInfo[] sInfoItems;
+    private static SparseArray<SignInfo[]> sInfoItemsByStrengthInt;
+    private static ArrayRecyclableSimple<SignInfoGroup> sInfoGroups;
+    private static SignInfoGroup[] sInfoGroupItems;
+    private static SparseArray<SignInfoGroup[]> sInfoGroupItemsByStrengthInt;
+
+    public static void loadSignInfos() {
+
+        sInfos = new ArrayRecyclableSimple<>(SignInfo.class);
+        sInfoGroups = new ArrayRecyclableSimple<>(SignInfoGroup.class);
+
+        //region All signs
+
+        //region 1
+        // |     0
+        // |
+        // ----
+        SignInfo si11 = addSignInfo(11,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        //    | 90
+        //    |
+        // ----
+        SignInfo si12 = addSignInfo(12,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.SIMPLE);
+        // ---- 180
+        //    |
+        //    |
+        SignInfo si13 = addSignInfo(13,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        // ---- 270
+        // |
+        // |
+        SignInfo si14 = addSignInfo(14,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                }, SignStrength.SIMPLE);
+        addSignInfoGroup(1, SignStrength.SIMPLE, si11, si12, si13, si14);
+        //endregion
+        //region 2
+        // \    / 0
+        //  \  /
+        //   \/
+        SignInfo si21 = addSignInfo(21,
+                new float[]{
+                        0f, 0f,
+                        .25f, .5f,
+                        .5f, 1f,
+                        .75f, .5f,
+                        1f, 0f,
+                }, SignStrength.SIMPLE);
+        // \    / 90
+        //  \  /
+        //   \/
+        SignInfo si22 = addSignInfo(22,
+                new float[]{
+                        0f, 0f,
+                        .5f, .25f,
+                        1f, .5f,
+                        .5f, .75f,
+                        0f, 1f,
+                }, SignStrength.SIMPLE);
+        // \    / 180
+        //  \  /
+        //   \/
+        SignInfo si23 = addSignInfo(23,
+                new float[]{
+                        0f, 1f,
+                        .25f, .5f,
+                        .5f, 0f,
+                        .75f, .5f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        // \    / 270
+        //  \  /
+        //   \/
+        SignInfo si24 = addSignInfo(24,
+                new float[]{
+                        1f, 0f,
+                        .5f, .25f,
+                        0f, .5f,
+                        .5f, .75f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        addSignInfoGroup(2, SignStrength.SIMPLE, si21, si22, si23, si24);
+        //endregion
+        //region 3
+        // |  / 0
+        // | /
+        // |/
+        SignInfo si31 = addSignInfo(31,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                }, SignStrength.SIMPLE);
+        // |  / 90
+        // | /
+        // |/
+        SignInfo si32 = addSignInfo(32,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, .5f,
+                        0f, 0f,
+                }, SignStrength.SIMPLE);
+        // |  / 180
+        // | /
+        // |/
+        SignInfo si33 = addSignInfo(33,
+                new float[]{
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        // |  / 270
+        // | /
+        // |/
+        SignInfo si34 = addSignInfo(34,
+                new float[]{
+                        1f, 1f,
+                        .5f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.SIMPLE);
+        addSignInfoGroup(3, SignStrength.SIMPLE, si31, si32, si33, si34);
+        //endregion
+        //region 4
+        // \  | 0
+        //  \ |
+        //   \|
+        SignInfo si41 = addSignInfo(41,
+                new float[]{
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.SIMPLE);
+        // \  | 90
+        //  \ |
+        //   \|
+        SignInfo si42 = addSignInfo(42,
+                new float[]{
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.SIMPLE);
+        // \  | 180
+        //  \ |
+        //   \|
+        SignInfo si43 = addSignInfo(43,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        // \  | 270
+        //  \ |
+        //   \|
+        SignInfo si44 = addSignInfo(44,
+                new float[]{
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        addSignInfoGroup(4, SignStrength.SIMPLE, si41, si42, si43, si44);
+        //endregion
+        //region 5
+        // ----
+        // |
+        // ----
+        SignInfo si51 = addSignInfo(51,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        // |  |
+        // |  |
+        // ----
+        SignInfo si52 = addSignInfo(52,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.NORMAL);
+        // ----
+        //    |
+        // ----
+        SignInfo si53 = addSignInfo(53,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.NORMAL);
+        // ----
+        // |  |
+        // |  |
+        SignInfo si54 = addSignInfo(54,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(5, SignStrength.NORMAL, si51, si52, si53, si54);
+        //endregion
+        //region 6
+        // |\   0
+        // | \
+        // ----
+        SignInfo si61 = addSignInfo(61,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, .5f,
+                        0f, 0f,
+                }, SignStrength.NORMAL);
+        // |\   90
+        // | \
+        // ----
+        SignInfo si62 = addSignInfo(62,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                }, SignStrength.NORMAL);
+        // |\   180
+        // | \
+        // ----
+        SignInfo si63 = addSignInfo(63,
+                new float[]{
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.NORMAL);
+        // |\   270
+        // | \
+        // ----
+        SignInfo si64 = addSignInfo(64,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(6, SignStrength.NORMAL, si61, si62, si63, si64);
+        //endregion
+        //region 7
+        //  /\  0
+        // /  \
+        // ----
+        SignInfo si71 = addSignInfo(71,
+                new float[]{
+                        .5f, 0f,
+                        .25f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .75f, .5f,
+                        .5f, 0f,
+                }, SignStrength.NORMAL);
+        //  /\  90
+        // /  \
+        // ----
+        SignInfo si72 = addSignInfo(72,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, .75f,
+                        0f, .5f,
+                        .5f, .25f,
+                        1f, 0f,
+                }, SignStrength.NORMAL);
+        //  /\  180
+        // /  \
+        // ----
+        SignInfo si73 = addSignInfo(73,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .75f, .5f,
+                        .5f, 1f,
+                        .25f, .5f,
+                        0f, 0f,
+                }, SignStrength.NORMAL);
+        //  /\  270
+        // /  \
+        // ----
+        SignInfo si74 = addSignInfo(74,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .75f,
+                        1f, .5f,
+                        .5f, .25f,
+                        0f, 0f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(7, SignStrength.NORMAL, si71, si72, si73, si74);
+        //endregion
+        //region 8
+        // --- 0
+        //  /
+        // ---
+        SignInfo si81 = addSignInfo(81,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        // --- 90
+        //  /
+        // ---
+        SignInfo si82 = addSignInfo(82,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(8, SignStrength.NORMAL, si81, si82, si81, si82);
+        //endregion
+        //region 9
+        // --- 0
+        //  \
+        // ---
+        SignInfo si91 = addSignInfo(91,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.NORMAL);
+        // --- 90
+        //  \
+        // ---
+        SignInfo si92 = addSignInfo(92,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(9, SignStrength.NORMAL, si91, si92, si91, si92);
+        //endregion
+        //region 10
+        // ----
+        // |  |
+        // ----
+        SignInfo si101 = addSignInfo(101,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        //endregion
+        //region 11
+        // ---- 0
+        //  ><
+        // ----
+        SignInfo si111 = addSignInfo(111,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        .25f, .75f,
+                        .5f, .5f,
+                        .25f, .25f,
+                        0f, 0f,
+                }, SignStrength.HARD);
+        // ---- 90
+        //  ><
+        // ----
+        SignInfo si112 = addSignInfo(112,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .25f, .75f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .25f,
+                        0f, 0f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(11, SignStrength.HARD, si111, si112, si111, si112);
+        //endregion
+        //region 12
+        // ---- 0
+        //  >
+        // ----
+        SignInfo si121 = addSignInfo(121,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        // ---- 90
+        //  >
+        // ----
+        SignInfo si122 = addSignInfo(122,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        // ---- 180
+        //  >
+        // ----
+        SignInfo si123 = addSignInfo(123,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.HARD);
+        // ---- 270
+        //  >
+        // ----
+        SignInfo si124 = addSignInfo(124,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(12, SignStrength.HARD, si121, si122, si123, si124);
+        //endregion
+        //region 13
+        // ---- 0
+        //    >
+        // ----
+        SignInfo si131 = addSignInfo(131,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, .25f,
+                        1f, .5f,
+                        .5f, .75f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.INSANE);
+        // ---- 90
+        //    >
+        // ----
+        SignInfo si132 = addSignInfo(132,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .25f, .5f,
+                        .5f, 0f,
+                        .75f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.INSANE);
+        // ---- 180
+        //    >
+        // ----
+        SignInfo si133 = addSignInfo(133,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, .25f,
+                        0f, .5f,
+                        .5f, .75f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.INSANE);
+        // ---- 270
+        //    >
+        // ----
+        SignInfo si134 = addSignInfo(134,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .25f, .5f,
+                        .5f, 1f,
+                        .75f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(13, SignStrength.INSANE, si131, si132, si133, si134);
+        //endregion
+        //region 14
+        //   ┌── 0
+        //  │ ─┐
+        // └──┘
+        SignInfo si141 = addSignInfo(141,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        //   ┌── 90
+        //  │ ─┐
+        // └──┘
+        SignInfo si142 = addSignInfo(142,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        //   ┌── 180
+        //  │ ─┐
+        // └──┘
+        SignInfo si143 = addSignInfo(143,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        //   ┌── 270
+        //  │ ─┐
+        // └──┘
+        SignInfo si144 = addSignInfo(144,
+                new float[]{
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(14, SignStrength.INSANE, si141, si142, si143, si144);
+        //endregion
+        //region 15
+        //   ┌── 0
+        //  └─┐
+        // ──┘
+        SignInfo si151 = addSignInfo(151,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.INSANE);
+        //   ┌── 90
+        //  └─┐
+        // ──┘
+        SignInfo si152 = addSignInfo(152,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(15, SignStrength.INSANE, si151, si152, si151, si152);
+        //endregion
+        //region 16
+        //   ──┐ 0
+        //  ┌─┘
+        // └──
+        SignInfo si161 = addSignInfo(161,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.INSANE);
+        //   ──┐ 90
+        //  ┌─┘
+        // └──
+        SignInfo si162 = addSignInfo(162,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(16, SignStrength.INSANE, si161, si162, si161, si162);
+        //endregion
+        //region 17
+        // |    0
+        // |  /
+        // |/
+        SignInfo si171 = addSignInfo(171,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .75f,
+                        1f, .5f,
+                }, SignStrength.SIMPLE);
+        // |    90
+        // |  /
+        // |/
+        SignInfo si172 = addSignInfo(172,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .75f, .5f,
+                        .5f, 0f,
+                }, SignStrength.SIMPLE);
+        // |    180
+        // |  /
+        // |/
+        SignInfo si173 = addSignInfo(173,
+                new float[]{
+                        0f, .5f,
+                        .5f, .25f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        // |    270
+        // |  /
+        // |/
+        SignInfo si174 = addSignInfo(174,
+                new float[]{
+                        .5f, 1f,
+                        .25f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.SIMPLE);
+        addSignInfoGroup(17, SignStrength.SIMPLE, si171, si172, si173, si174);
+        //endregion
+        //region 18
+        //    | 0
+        //  \ |
+        //   \|
+        SignInfo si181 = addSignInfo(181,
+                new float[]{
+                        0f, .5f,
+                        .5f, .75f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.SIMPLE);
+        //    | 90
+        //  \ |
+        //   \|
+        SignInfo si182 = addSignInfo(182,
+                new float[]{
+                        .5f, 1f,
+                        .75f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.SIMPLE);
+        //    | 180
+        //  \ |
+        //   \|
+        SignInfo si183 = addSignInfo(183,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .25f,
+                        1f, .5f,
+                }, SignStrength.SIMPLE);
+        //    | 270
+        //  \ |
+        //   \|
+        SignInfo si184 = addSignInfo(184,
+                new float[]{
+                        .5f, 0f,
+                        .25f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.SIMPLE);
+        addSignInfoGroup(18, SignStrength.SIMPLE, si181, si182, si183, si184);
+        //endregion
+        //region 19
+        //  ┌┐   0
+        // └┼┐
+        // └┘
+        SignInfo si191 = addSignInfo(191,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        0f, 0f,
+                }, SignStrength.INSANE);
+        //  ┌┐   90
+        // └┼┐
+        // └┘
+        SignInfo si192 = addSignInfo(192,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(19, SignStrength.INSANE, si191, si192, si191, si192);
+        //endregion
+        //region 20
+        //   ┌┐   0
+        //  │└┐
+        // └─┘
+        SignInfo si201 = addSignInfo(201,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        //   ┌┐   90
+        //  │└┐
+        // └─┘
+        SignInfo si202 = addSignInfo(202,
+                new float[]{
+                        .5f, .5f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f
+                }, SignStrength.INSANE);
+        //   ┌┐   180
+        //  │└┐
+        // └─┘
+        SignInfo si203 = addSignInfo(203,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        0f, .5f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        //   ┌┐   270
+        //  │└┐
+        // └─┘
+        SignInfo si204 = addSignInfo(204,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        addSignInfoGroup(20, SignStrength.INSANE, si201, si202, si203, si204);
+        //endregion
+        //region 21
+        // ---/ 0
+        // /--/
+        // /---
+        SignInfo si211 = addSignInfo(211,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, .25f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        .5f, .75f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.CRAZY);
+        // ---/ 90
+        // /--/
+        // /---
+        SignInfo si212 = addSignInfo(212,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .25f, .5f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        .75f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.CRAZY);
+        addSignInfoGroup(21, SignStrength.CRAZY, si211, si212, si211, si212);
+        //endregion
+        //region 22
+        // \--- 0
+        // \--\
+        // ---\
+        SignInfo si221 = addSignInfo(221,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, .25f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        .5f, .75f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.CRAZY);
+        // \--- 90
+        // \--\
+        // ---\
+        SignInfo si222 = addSignInfo(222,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .25f, .5f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        .75f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.CRAZY);
+        addSignInfoGroup(22, SignStrength.CRAZY, si221, si222, si221, si222);
+        //endregion
+        //region 23
+        // |\/| 0
+        // |__|
+        SignInfo si231 = addSignInfo(231,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        // |\/| 90
+        // |__|
+        SignInfo si232 = addSignInfo(232,
+                new float[]{
+                        0f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        // |\/| 180
+        // |__|
+        SignInfo si233 = addSignInfo(233,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        // |\/| 270
+        // |__|
+        SignInfo si234 = addSignInfo(234,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        addSignInfoGroup(23, SignStrength.INSANE, si231, si232, si233, si234);
+        //endregion
+        //region 24
+        //  /\  0
+        // |__|
+        SignInfo si241 = addSignInfo(241,
+                new float[]{
+                        .5f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        .5f, 0f,
+                }, SignStrength.INSANE);
+        //  /\  90
+        // |__|
+        SignInfo si242 = addSignInfo(242,
+                new float[]{
+                        .5f, 0f,
+                        .0f, .5f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                }, SignStrength.INSANE);
+        //  /\  180
+        // |__|
+        SignInfo si243 = addSignInfo(243,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        .5f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        //  /\  270
+        // |__|
+        SignInfo si244 = addSignInfo(244,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, .5f,
+                        .5f, 0f,
+                        0f, 0f
+                }, SignStrength.INSANE);
+        addSignInfoGroup(24, SignStrength.INSANE, si241, si242, si243, si244);
+        //endregion
+        //region 25
+        // ----- 0
+        // |---|
+        // -----
+        SignInfo si251 = addSignInfo(251,
+                new float[]{
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                }, SignStrength.CRAZY);
+        // ----- 90
+        // |---|
+        // -----
+        SignInfo si252 = addSignInfo(252,
+                new float[]{
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                }, SignStrength.CRAZY);
+        addSignInfoGroup(25, SignStrength.CRAZY, si251, si252, si251, si252);
+        //endregion
+        //region 26
+        //   \/  0
+        //  / \
+        // ----
+        SignInfo si261 = addSignInfo(261,
+                new float[]{
+                        .0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                }, SignStrength.NORMAL);
+        //   \/  90
+        //  / \
+        // ----
+        SignInfo si262 = addSignInfo(262,
+                new float[]{
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                }, SignStrength.NORMAL);
+        //   \/  180
+        //  / \
+        // ----
+        SignInfo si263 = addSignInfo(263,
+                new float[]{
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        //   \/  270
+        //  / \
+        // ----
+        SignInfo si264 = addSignInfo(264,
+                new float[]{
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(26, SignStrength.NORMAL, si261, si262, si263, si264);
+        //endregion
+        //region 27
+        //  --- 0
+        // | / |
+        //  ---
+        SignInfo si271 = addSignInfo(271,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f
+                }, SignStrength.INSANE);
+        //  --- 90
+        // | / |
+        //  ---
+        SignInfo si272 = addSignInfo(272,
+                new float[]{
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(27, SignStrength.INSANE, si271, si272, si271, si272);
+        //endregion
+        //region 28
+        // |___ 0
+        // |
+        SignInfo si281 = addSignInfo(281,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                }, SignStrength.NORMAL);
+        // |___ 90
+        // |
+        SignInfo si282 = addSignInfo(282,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                }, SignStrength.NORMAL);
+        // |___ 180
+        // |
+        SignInfo si283 = addSignInfo(283,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                }, SignStrength.NORMAL);
+        // |___ 270
+        // |
+        SignInfo si284 = addSignInfo(284,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(28, SignStrength.NORMAL, si281, si282, si283, si284);
+        //endregion
+        //region 29
+        // |___ 0
+        //     |
+        SignInfo si291 = addSignInfo(291,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        // |___ 90
+        //     |
+        SignInfo si292 = addSignInfo(292,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(29, SignStrength.NORMAL, si291, si292, si291, si292);
+        //endregion
+        //region 30
+        //  ___| 0
+        // |
+        SignInfo si301 = addSignInfo(301,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        0f, 1f,
+                }, SignStrength.NORMAL);
+        //  ___| 90
+        // |
+        SignInfo si302 = addSignInfo(302,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(30, SignStrength.NORMAL, si301, si302, si301, si302);
+        //endregion
+        //region 31
+        // |___| 0
+        //     |
+        SignInfo si311 = addSignInfo(311,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        // |___| 90
+        //     |
+        SignInfo si312 = addSignInfo(312,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        // |___| 180
+        //     |
+        SignInfo si313 = addSignInfo(313,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        // |___| 270
+        //     |
+        SignInfo si314 = addSignInfo(314,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(31, SignStrength.HARD, si311, si312, si313, si314);
+        //endregion
+        //region 32
+        //  ___| 0
+        // |   |
+        SignInfo si321 = addSignInfo(321,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        0f, 1f,
+                }, SignStrength.HARD);
+        //  ___| 90
+        // |   |
+        SignInfo si322 = addSignInfo(322,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        //  ___| 180
+        // |   |
+        SignInfo si323 = addSignInfo(323,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        //  ___| 270
+        // |   |
+        SignInfo si324 = addSignInfo(324,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(32, SignStrength.HARD, si321, si322, si323, si324);
+        //endregion
+        //region 33
+        // |/ 0
+        // |\
+        SignInfo si331 = addSignInfo(331,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .25f,
+                        1f, 0f,
+                        .5f, .25f,
+                        0f, .5f,
+                        .5f, .75f,
+                        1f, 1f,
+                }, SignStrength.INSANE);
+        // |/ 90
+        // |\
+        SignInfo si332 = addSignInfo(332,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .25f, .5f,
+                        0f, 0f,
+                        .25f, .5f,
+                        .5f, 1f,
+                        .75f, .5f,
+                        1f, 0f,
+                }, SignStrength.INSANE);
+        // |/ 180
+        // |\
+        SignInfo si333 = addSignInfo(333,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        .5f, .25f,
+                        0f, 0f,
+                        .5f, .25f,
+                        1f, .5f,
+                        .5f, .75f,
+                        0f, 1f,
+                }, SignStrength.INSANE);
+        // |/ 270
+        // |\
+        SignInfo si334 = addSignInfo(334,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, 0f,
+                        .25f, .5f,
+                        0f, 1f,
+                        .25f, .5f,
+                        .5f, 0f,
+                        .75f, .5f,
+                        1f, 1f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(33, SignStrength.INSANE, si331, si332, si333, si334);
+        //endregion
+        //region 34
+        // |_| 0
+        // | |
+        SignInfo si341 = addSignInfo(341,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f,
+                        1f, .5f,
+                        1f, .0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        // |_| 90
+        // | |
+        SignInfo si342 = addSignInfo(342,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                        .5f, 0f,
+                        .0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(34, SignStrength.HARD, si341, si342, si341, si342);
+        //endregion
+        //region 35
+        // \/ 0
+        // /\
+        SignInfo si351 = addSignInfo(351,
+                new float[]{
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                }, SignStrength.HARD);
+        //endregion
+        //region 36
+        // ----- 0
+        //  >< |
+        // -----
+        SignInfo si361 = addSignInfo(361,
+                new float[]{
+                        1f, 1f,
+                        .75f, .75f,
+                        .5f, .5f,
+                        .25f, .25f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.CRAZY);
+        // ----- 90
+        //  >< |
+        // -----
+        SignInfo si362 = addSignInfo(362,
+                new float[]{
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.CRAZY);
+        // ----- 180
+        //  >< |
+        // -----
+        SignInfo si363 = addSignInfo(363,
+                new float[]{
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        .25f, .75f,
+                        .5f, .5f,
+                        .75f, .25f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                }, SignStrength.CRAZY);
+        // ----- 270
+        //  >< |
+        // -----
+        SignInfo si364 = addSignInfo(364,
+                new float[]{
+                        1f, 1f,
+                        .75f, .75f,
+                        .5f, .5f,
+                        .25f, .25f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .25f, .75f,
+                        .5f, .5f,
+                        .75f, .25f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.CRAZY);
+        addSignInfoGroup(36, SignStrength.CRAZY, si361, si362, si363, si364);
+        //endregion
+        //region 37
+        // ------ 0
+        // | >  |
+        // ------
+        SignInfo si371 = addSignInfo(361,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f,
+                }, SignStrength.CRAZY);
+        // ------ 90
+        // | >  |
+        // ------
+        SignInfo si372 = addSignInfo(372,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        .25f, .75f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                }, SignStrength.CRAZY);
+        // ------ 180
+        // | >  |
+        // ------
+        SignInfo si373 = addSignInfo(373,
+                new float[]{
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .75f, .75f,
+                        .5f, .5f,
+                        .75f, .25f,
+                        1f, 0f,
+                }, SignStrength.CRAZY);
+        // ------ 270
+        // | >  |
+        // ------
+        SignInfo si374 = addSignInfo(374,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .25f,
+                        0f, 0f,
+                }, SignStrength.CRAZY);
+        addSignInfoGroup(37, SignStrength.CRAZY, si371, si372, si373, si374);
+        //endregion
+        //region 38
+        //   ┌──┐ 0
+        //  │ ─┘
+        // └───
+        SignInfo si381 = addSignInfo(381,
+                new float[]{
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        //   ┌──┐ 90
+        //  │ ─┘
+        // └───
+        SignInfo si382 = addSignInfo(382,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        //   ┌──┐ 180
+        //  │ ─┘
+        // └───
+        SignInfo si383 = addSignInfo(383,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        //   ┌──┐ 270
+        //  │ ─┘
+        // └───
+        SignInfo si384 = addSignInfo(384,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        .5f, .5f,
+                }, SignStrength.INSANE);
+        addSignInfoGroup(38, SignStrength.INSANE, si381, si382, si383, si384);
+        //endregion
+        //region 39
+        // ----
+        // |><|
+        // ----
+        SignInfo si391 = addSignInfo(391,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f
+                }, SignStrength.CRAZY);
+        //endregion
+        //region 40
+        // ---- 0
+        //  \/|
+        // / \|
+        SignInfo si401 = addSignInfo(401,
+                new float[]{
+                        0f, 1f,
+                        .25f, .75f,
+                        .5f, .5f,
+                        .75f, .25f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        // ---- 90
+        //  \/|
+        // / \|
+        SignInfo si402 = addSignInfo(402,
+                new float[]{
+                        1f, 1f,
+                        .75f, .75f,
+                        .5f, .5f,
+                        .25f, .25f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                }, SignStrength.HARD);
+        // ---- 180
+        //  \/|
+        // / \|
+        SignInfo si403 = addSignInfo(403,
+                new float[]{
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.HARD);
+        // ---- 270
+        //  \/|
+        // / \|
+        SignInfo si404 = addSignInfo(404,
+                new float[]{
+                        0f, 0f,
+                        .25f, .25f,
+                        .5f, .5f,
+                        .75f, .75f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .75f, .25f,
+                        .5f, .5f,
+                        .25f, .75f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(40, SignStrength.HARD, si401, si402, si403, si404);
+        //endregion
+        //region 41
+        // --- 0
+        //  / |
+        // ---
+        SignInfo si411 = addSignInfo(411,
+                new float[]{
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        // --- 90
+        //  / |
+        // ---
+        SignInfo si412 = addSignInfo(412,
+                new float[]{
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                }, SignStrength.HARD);
+        // --- 180
+        //  / |
+        // ---
+        SignInfo si413 = addSignInfo(413,
+                new float[]{
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                }, SignStrength.HARD);
+        // --- 270
+        //  / |
+        // ---
+        SignInfo si414 = addSignInfo(414,
+                new float[]{
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, .5f,
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(41, SignStrength.HARD, si411, si412, si413, si414);
+        //endregion
+        //region 42
+        // --- 0
+        //  \ |
+        // ---
+        SignInfo si421 = addSignInfo(421,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .5f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.HARD);
+        // --- 90
+        //  \ |
+        // ---
+        SignInfo si422 = addSignInfo(422,
+                new float[]{
+                        1f, 1f,
+                        1f, .5f,
+                        1f, 0f,
+                        .5f, .5f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.HARD);
+        // --- 180
+        //  \ |
+        // ---
+        SignInfo si423 = addSignInfo(423,
+                new float[]{
+                        1f, 0f,
+                        .5f, 0f,
+                        0f, 0f,
+                        .5f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                        0f, .5f,
+                        0f, 0f,
+                }, SignStrength.HARD);
+        // --- 270
+        //  \ |
+        // ---
+        SignInfo si424 = addSignInfo(424,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .5f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                        .5f, 1f,
+                        0f, 1f,
+                }, SignStrength.HARD);
+        addSignInfoGroup(42, SignStrength.HARD, si421, si422, si423, si424);
+        //endregion
+
+        /*
+        //region 27
+        // |___ 0
+        // |  /
+        // |/
+        SignInfo si271 = addSignInfo(271,
+                new float[]{
+                        0f, 0f,
+                        0f, .5f,
+                        0f, 1f,
+                        .5f, .75f,
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f
+                }, SignStrength.NORMAL);
+        // |___ 90
+        // |  /
+        // |/
+        SignInfo si272 = addSignInfo(272,
+                new float[]{
+                        0f, 1f,
+                        .5f, 1f,
+                        1f, 1f,
+                        .75f, .5f,
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f
+                }, SignStrength.NORMAL);
+        // |___ 180
+        // |  /
+        // |/
+        SignInfo si273 = addSignInfo(273,
+                new float[]{
+                        1f, .5f,
+                        .5f, .5f,
+                        0f, .5f,
+                        .5f, .25f,
+                        1f, 0f,
+                        1f, .5f,
+                        1f, 1f,
+                }, SignStrength.NORMAL);
+        // |___ 270
+        // |  /
+        // |/
+        SignInfo si274 = addSignInfo(274,
+                new float[]{
+                        .5f, 0f,
+                        .5f, .5f,
+                        .5f, 1f,
+                        .25f, .5f,
+                        0f, 0f,
+                        .5f, 0f,
+                        1f, 0f,
+                }, SignStrength.NORMAL);
+        addSignInfoGroup(27, SignStrength.NORMAL, si271, si272, si273, si274);
+        //endregion
+        */
+
+        //endregion
+
+        sInfoItems = sInfos.getItems();
+        sInfoGroupItems = sInfoGroups.getItems();
+
+        int s = 0;
+        strengthInts = new SparseArray<>(); // набор SignStrength по int ключу
+        sInfoItemsByStrengthInt = new SparseArray<>(); // массивы Signs по int ключу SignStrength
+        sInfoGroupItemsByStrengthInt = new SparseArray<>(); // массивы групп Signs по int ключу SignStringth
+        for (SignStrength strength : SignStrength.values()) {
+            strengthInts.append(s, strength);
+
+            ArrayRecyclableSimple<SignInfo> infos = new ArrayRecyclableSimple<>(SignInfo.class);
+            for (SignInfo info : sInfoItems)
+                if (info.strength == strength)
+                    infos.add(info);
+            sInfoItemsByStrengthInt.append(s, infos.getItems());
+
+            ArrayRecyclableSimple<SignInfoGroup> groups = new ArrayRecyclableSimple<>(SignInfoGroup.class);
+            for (SignInfoGroup group : sInfoGroupItems)
+                if (group.strength == strength)
+                    groups.add(group);
+            sInfoGroupItemsByStrengthInt.append(s, groups.getItems());
+
+            s++;
+        }
+    }
+
+    //region add
+    private static SignInfo addSignInfo(int id, float[] points, SignStrength strength) {
+        SignInfo sInfo = new SignInfo(id, points, strength);
+        sInfos.add(sInfo);
+        return sInfo;
+    }
+
+    private static void addSignInfoGroup(int id, SignStrength strength, SignInfo info1, SignInfo info2, SignInfo info3, SignInfo info4) {
+        sInfoGroups.add(new SignInfoGroup(id, strength, info1, info2, info3, info4));
+    }
+    //endregion
+
+    //region get SingInfo
+    private static int getInt(SignStrength strength) {
+        int index = strengthInts.indexOfValue(strength);
+        if (index >= 0)
+            return strengthInts.keyAt(index);
+        else
+            return -1;
+    }
+
+    public static SignInfo getRandomInfoByParams(SignStrength strength) {
+        SignInfo[] infos = getInfosByParams(strength);
+        if (infos != null && infos.length > 0)
+            return infos[Utils.getRandom(infos.length)];
+        return null;
+    }
+
+    private static SignInfo[] getInfosByParams(SignStrength strength) {
+        int s = getInt(strength);
+        if (s >= 0)
+            if (sInfoItemsByStrengthInt.indexOfKey(s) >= 0)
+                return sInfoItemsByStrengthInt.get(s);
+        return null;
+    }
+    //endregion
+
+    //region get SignInfoGroup
+    public static SignInfoGroup getRandomInfoGroupByParams(SignStrength strength) {
+        try {
+
+            SignInfoGroup[] infoGroups = getInfoGroupsByParams(strength);
+            if (infoGroups != null && infoGroups.length > 0) {
+                SignInfoGroup g = infoGroups[Utils.getRandom(infoGroups.length)];
+                if (g != null)
+                    return g.getClone();
+            }
+
+        } catch (Throwable t) {
+            Utils.CrashReport("SignInfos.getRandomInfoGroupByParams", t);
+        }
+        return null;
+    }
+
+    private static SignInfoGroup[] getInfoGroupsByParams(SignStrength strength) {
+        try {
+
+            int s = getInt(strength);
+            if (s >= 0)
+                if (sInfoGroupItemsByStrengthInt.indexOfKey(s) >= 0)
+                    return sInfoGroupItemsByStrengthInt.get(s);
+        } catch (Throwable t) {
+            Utils.CrashReport("SignInfos.getInfoGroupsByParams", t);
+        }
+        return null;
+    }
+    //endregion
+
+    //region sign color/paint
+    public static int getColorByAchievementType(AchievementType type) {
+        switch (type) {
+            case EMPTY_00:          return Color.argb(255,   0,   0,   0); // black
+            case SIMPLE_01:         return Color.argb(255, 240, 240,   0); // yellow
+            case NORMAL_02:         return Color.argb(255, 255, 128,   0); // orange
+            case HARD_03:           return Color.argb(255, 220,   0,   0); // red
+            case INSANE_04:         return Color.argb(255, 180,   0, 180); // violet
+            case CRAZY_05:          return Color.argb(255,  80,  80, 180); // sea
+            case SIMPLE_01_GROUP:   return Color.argb(255, 240, 240,  50); // yellow
+            case NORMAL_02_GROUP:   return Color.argb(255, 255, 128,  50); // orange
+            case HARD_03_GROUP:     return Color.argb(255, 220,  50,  50); // red
+            case INSANE_04_GROUP:   return Color.argb(255, 180,  50, 180); // violet
+            case CRAZY_05_GROUP:    return Color.argb(255, 120, 120, 180); // sea
+            case FINAL_10:          return Color.argb(255,  50,  50,  50); // black
+            default:                return Color.argb(255, 255, 255, 255); // white
+        }
+    }
+
+    private static Paint getPaintByAchievementType(AchievementType type) {
+        return PaintUtils.getPaint(getColorByAchievementType(type));
+    }
+
+    public static Paint getPaintBySignInfo(SignStrength strength) {
+        switch (strength) {
+            case SIMPLE:  return getPaintByAchievementType(AchievementType.SIMPLE_01); // yellow
+            case NORMAL:  return getPaintByAchievementType(AchievementType.NORMAL_02); // orange
+            case HARD:    return getPaintByAchievementType(AchievementType.HARD_03);   // red
+            case INSANE:  return getPaintByAchievementType(AchievementType.INSANE_04); // violet
+            case CRAZY:   return getPaintByAchievementType(AchievementType.CRAZY_05);  // sea
+            default:      return getPaintByAchievementType(AchievementType.EMPTY_00);  // black
+        }
+    }
+
+    public static Paint getPaintBySignInfoGroup(SignStrength strength) {
+        switch (strength) {
+            case SIMPLE:  return getPaintByAchievementType(AchievementType.SIMPLE_01_GROUP);    // yellow
+            case NORMAL:  return getPaintByAchievementType(AchievementType.NORMAL_02_GROUP);    // orange
+            case HARD:    return getPaintByAchievementType(AchievementType.HARD_03_GROUP);      // red
+            case INSANE:  return getPaintByAchievementType(AchievementType.INSANE_04_GROUP);    // violet
+            case CRAZY:   return getPaintByAchievementType(AchievementType.CRAZY_05_GROUP);     // sea
+            default:      return getPaintByAchievementType(AchievementType.EMPTY_00);           // black
+        }
+    }
+    //endregion
+
+    public static Integer getScoreBySignInfo(SignStrength strength) {
+        int score = 0;
+        switch (strength) {
+            case SIMPLE:  score = CurrentSettings.signScore_SIMPLE; break;
+            case NORMAL:  score = CurrentSettings.signScore_NORMAL; break;
+            case HARD:    score = CurrentSettings.signScore_HARD; break;
+            case INSANE:  score = CurrentSettings.signScore_INSANE; break;
+            case CRAZY:   score = CurrentSettings.signScore_CRAZY; break;
+            default:      score = 0; break;
+        }
+        return score * CurrentSettings.scoreMultiplier;
+    }
+
+    public static int getSignWavesBySignInfo(SignStrength strength) {
+        switch (strength) {
+            case SIMPLE:  return 0;
+            case NORMAL:  return 2;
+            case HARD:    return 3;
+            case INSANE:  return 4;
+            case CRAZY:   return 5;
+            default:      return 0;
+        }
+    }
+
+    public static boolean isGroupAchievementType(AchievementType type) {
+        return Utils.inArray(type, new AchievementType[] {
+                AchievementType.SIMPLE_01_GROUP,
+                AchievementType.NORMAL_02_GROUP,
+                AchievementType.HARD_03_GROUP,
+                AchievementType.INSANE_04_GROUP,
+                AchievementType.CRAZY_05_GROUP});
+    }
+
+    public static int getBitmapIdByAchievementType(AchievementType type) {
+        switch (type) {
+            case NONE:              return  0;
+            case EMPTY_00:          return R.string.bmp_potion_00_empty;
+            case SIMPLE_01:         return R.string.bmp_potion_01_simple;
+            case NORMAL_02:         return R.string.bmp_potion_02_normal;
+            case HARD_03:           return R.string.bmp_potion_03_hard;
+            case INSANE_04:         return R.string.bmp_potion_04_insane;
+            case CRAZY_05:          return R.string.bmp_potion_05_crazy;
+            case SIMPLE_01_GROUP:   return R.string.bmp_potion_01_simple_group;
+            case NORMAL_02_GROUP:   return R.string.bmp_potion_02_normal_group;
+            case HARD_03_GROUP:     return R.string.bmp_potion_03_hard_group;
+            case INSANE_04_GROUP:   return R.string.bmp_potion_04_insane_group;
+            case CRAZY_05_GROUP:    return R.string.bmp_potion_05_crazy_group;
+            case FINAL_10:          return R.string.bmp_potion_10_final;
+            default:                return 0;
+        }
+    }
+
+    public static int getVideoCountByAchievementType(AchievementType type) {
+        switch (type) {
+            case SIMPLE_01:         return 6;
+            case NORMAL_02:         return 7;
+            case HARD_03:           return 8;
+            case INSANE_04:         return 9;
+            case CRAZY_05:          return 10;
+            case SIMPLE_01_GROUP:   return 11;
+            case NORMAL_02_GROUP:   return 12;
+            case HARD_03_GROUP:     return 13;
+            case INSANE_04_GROUP:   return 14;
+            case CRAZY_05_GROUP:    return 15;
+            default:                return 0;
+        }
+    }
+
+    public static int getBitmapIdByBonusType(BonusType type) {
+        switch (type) {
+            case COMBO: return R.string.bmp_bonus_combo;
+            case SEQUENCE: return R.string.bmp_bonus_sequence;
+            case STRIKE: return R.string.bmp_bonus_strike;
+            case GUESS: return R.string.bmp_bonus_guess;
+            case LIGHTNING: return R.string.bmp_bonus_lightning;
+            default: return 0;
+        }
+    }
+
+    // бонус за угадывание collapsed Sign
+    public static Integer getBonusBySignInfo(SignStrength strength) { return getScoreBySignInfo(strength) * CurrentSettings.bonusGuessCoeff; }
+
+    public static SignInfo getFitSignInfo(RaySign raySign) {
+        if (sInfoItems != null && raySign != null) {
+            ArrayList<SignInfo> fitInfos = new ArrayList<>();
+            for (SignInfo info : sInfoItems)
+                if (info.check(raySign))
+                    fitInfos.add(info);
+            if (fitInfos.size() > 0)
+                return fitInfos.get(0);
+        }
+        return null;
+    }
+
+    public static void recycle() {
+        if (sInfos != null)
+            sInfos.recycle();
+        if (sInfoGroups != null)
+            sInfoGroups.recycle();
+        sInfos = null;
+        sInfoGroups = null;
+    }
+}

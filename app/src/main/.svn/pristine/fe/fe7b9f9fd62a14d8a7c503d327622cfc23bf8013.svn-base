@@ -1,0 +1,86 @@
+package com.softigress.magicsigns._system.Settings;
+
+public abstract class CurrentSettings {
+
+    //
+    public static final boolean isTestOpenGL = false;
+    public static final boolean isTestMode = false; // включает дополнительные кнопки для тестирования
+    public static final boolean isDrawFPS = false;
+    public static final boolean isDrawBackground = false;
+    public static final boolean isShowBanner = true; // показать рекламный баннер
+    public static final boolean isAdvVideo = false; // признак Показывать рекламное видео
+    public static final boolean isCheckConnection = true;
+    //public static boolean isDrawConnectionStatus = true;
+
+    // изменяемые опции приложения
+    public static boolean isRatePressed = false; // кнопка Оценить была нажата
+    public static boolean isShowAdvVideo = false; // признак Показать сейчас рекламное видео для продолжения
+    public static long gameDurationCurrent = 0; // текущее игровое время (время проведенное в игре в текущем сеансе)
+    public static boolean isRateVisible() { return !isRatePressed && gameDurationCurrent > gameDurationToShowRate; } // видимость кнопки Оценить
+    public static int scoreMultiplier = 1; // множитель очков (значение меняется в процессе игры)
+    public static float dnaReadyFx = 0; // координата последней ready элемента в Dna (значение меняется в процессе игры)
+    public static int puncherRayPointCount = 60; // точек в отображаемой puncher кривой
+    public static int adultAge = 15; // недетский возраст
+
+    // неизменяемые опции приложения
+    public static final String APP_SETTINGS_NAME = "mainsettings"; // наименование для сохраняемых настроек приложения
+    public static final boolean isAuthorisationToPlay = false; // необходимость авторизации, чтобы начать играть
+    private static final long gameDurationToShowRate = 30000; // (5 min) количество игрового времени, после которого показывать кнопку Оценить
+
+    public static final float signFr = .044f; // размер DrawingSignCell .066f
+    public static final float signOffset = 2f * CurrentSettings.signFr; // отступ Signs от края экрана
+    public static final int signMaxCount = (int)((1f - 2f * CurrentSettings.signOffset) / (2f * CurrentSettings.signFr)); // максимальное количество Signs, помещающихся на экране в ряд
+    public static final float signAreaR = .15f; // точность
+    public static final float signStrokeWidth = .0075f;
+
+    public static final int groundStarsCount = 20; // число звезд на фоне
+    public static final Integer signWavesCount = 32; // число волн
+    public static final int signWaveStartDelta = 3000; // пауза перед началом следующей волны
+    public static final int signPodsCount = 15; // число pods в sign
+    public static final int signHelpCount = 7; // количество Signs для которых показывается подсказка (при их появлении) в начале игры
+    public static final int signMaxDuration = 10000; // 10 sec максимальное полное время перемещения
+    public static final int signDurationFluctuation = 3000; // флуктуация времени старта и времени перемещения
+    public static final int singStartStepDelta = 5000; // периодичность старта SStep в SWave
+    public static final int signStarPickDelay = 0; // задержка перед учетом уничтоженного Sign
+    public static final int signRiseDuration = 500; // время анимации раскрытия DrawingSignCell
+    public static final int signNextDuration = 500; // время анимации поворота DrawingSignCell
+    public static final int signRotationDuration = 3000; // промежуток поворота DrawingSignCell
+    public static final int signExplodeDelay = 500; // среднее время задержки уничтожения Sign после применения инвентаря
+    public static final int signLightningRotationDuration = 5000; // промежуток поворота молнии в DrawingSignCell
+    public static final int signLightningDuration = 750; // время действия молнии из DrawingSignCell
+    public static final float signLightningFd = .025f; // пропоция молнии из DrawingSignCell
+
+    public static final boolean isSaveDnas = false; // сохраняем в БД количество накопленных ready Dna pods
+    public static final boolean isDnaFullScore = false; // при заполнении Dna добавляем долнительные очки
+    public static final int dnaFullScore = 500; // количество очков, добавляемых при заполнении Dna
+    public static final int dnaPodsCount = 20; // количество элементов Dna
+    public static final int dnaMaxReadyPodsCount = 10; // максимальное количество ready элементов Dna
+    //public static final float probabilityEnergyDna = .02f; // максимальная вероятность появления элемента Dna 2%
+    public static final int coverCellChargeFullAmount = 10; // количество очков для полной зарядки CoverCell
+    public static final int explodeStartDelay = 500; // задержка перед уничтожением
+    public static final float probabilityEnergyExplode = .005f; // вероятность появления Explode 0.5%
+
+    public static final int scoreMultiplierMax = 10; // максимальное значение множителя очков
+    public static final int signScore_SIMPLE = 10;
+    public static final int signScore_NORMAL = 25;
+    public static final int signScore_HARD = 50;
+    public static final int signScore_INSANE = 75;
+    public static final int signScore_CRAZY = 100;
+
+    public static final int potionSignsCount = 50; // количество sign, чтобы получить potion
+    public static final int potionSignsGroupCount = 50; // количество sign в группе, чтобы получить potion
+
+    public static final int bonusDelay = 1000; // пауза до начисления бонуса
+    public static final int bonusCombo1 = 250; // количество очков за одновременно сбитые Sign (2 - 2 х 250, 3 - 3 х 250, ...)
+    public static final int bonusStrike1 = 100; // количество очков за одновременно взорванные Sign (2 - 2 х 100, 3 - 3 х 100, ...)
+    public static final int bonusSequence1 = 50; // количество очков за сбитых подряд Sign (5 - 5 х 50)
+    public static final int bonusGuessCoeff = 5; // коэффициент за угадывание collapsed Sign
+    public static final int bonusLightning = 500; // количество очков за сбитый молнией Sign
+
+    public static final int grpShowDuration = 500; // время отображения экранов
+    public static final int grpHideDuration = 0; // время закрытия экранов
+    public static final int windowShowDuration = 120; // время отображения окон
+    public static final int windowHideDuration = 60; // время закрытия окон
+
+    public static final int rateRowsCount = 7; // число строк в рейтинге (top пользователей)
+}

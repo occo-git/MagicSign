@@ -1,0 +1,581 @@
+package com.softigress.magicsigns.UI.FinishedResult;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.graphics.Canvas;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.GrpGameTitle;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageInfo;
+import com.softigress.magicsigns.UI._base.Effects.Circles.CirclesBase;
+import com.softigress.magicsigns.UI._base.Effects.Stars.FallingStars.FallingStars;
+import com.softigress.magicsigns.UI._base.Effects.Stars.OutStars.OutStars;
+import com.softigress.magicsigns.UI._base.Groups.GrpCrown;
+import com.softigress.magicsigns._Base._Drawing.DrawingGroup;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.util.ArrayList;
+
+public class GrpFinishedResult extends DrawingGroup {
+
+    public boolean isVisible = false;
+    public static final int showDuration = 750;
+    private static final int showControlsDuration = 2000;
+    private static final int starDuration = 1000;
+    private static final long hideDuration = 500;
+
+    private static final int starsCount = 20;
+    private final AnimatorSet goodResultAnimSet;
+    private AnimatorSet controlsAnimSet;
+    private AnimatorSet animSet;
+
+    private final static float xCrown =    .50f,    yCrown =    .134f,  fdCrown =       .30f;
+    private final static float xStars =    .50f,    yStars =    .32f,   frBackStar =    .50f, frStar = .05f, rr = .1f, rR = .5f;
+    private final static float xScore =    .50f,    yScore =    .32f,   fdStar =        .05f;
+    private final static float xRTitle =   .50f,    yRTitle =   .44f;
+    private final static float xOrden =    .50f,    yOrden =    .57f,   fdOrden =       .366f;
+    //private final static float xRating = .90f,    yRating =   .85f;
+    private final static float xRepeat =   .50f,    yRepeat =   .62f,   fdRepeat =      .120f;
+    private final static float xShare =    .90f,    yShare =    .05f,   fdShare =       .075f;
+
+    private final GrpCrown grpCrown;
+    private final DrawingBase resultBackStar;
+    private final DrawingBase resultBack;
+    private final DrawingBaseTouchable orden;
+    private final DrawingText txtResultTitle;
+    private final DrawingText txtScore;
+    private final DrawingBase star;
+    private final BtnBase btnRepeat;
+    private final DrawingBase showVideo;
+    private final DrawingBase showVideoOk;
+    private final CirclesBase circlesRepeat;
+    //private final BtnBase btnRating;
+    private final BtnBase btnShare;
+    private final GrpGameTitle grpGameTitle;
+    private final OutStars outStars;
+    private FallingStars fallingStars;
+
+    private boolean isWin = false;
+    private Integer score = 0;
+
+    private static final MessageInfo[] mis = MessageInfo.getMessages(
+            "finishedResultWin",
+            new int[] {
+                    0, 1, R.string.message_result_orden_01,
+                    0, 1, R.string.message_result_orden_02,
+                    0, 1, R.string.message_result_orden_03,
+                    0, 1, R.string.message_result_orden_04
+            });
+    public static MessageInfo getOrdenMessage() { return MessageInfo.getRandomMessage(mis); }
+
+    public GrpFinishedResult(IGrpFinishedResultListener l) {
+        super();
+
+        setListener(l);
+
+        grpCrown = new GrpCrown(xCrown, yCrown, fdCrown);
+        addDrawingGroup(grpCrown);
+
+        // region init back and stars + good result animation
+        ArrayList<Animator> goodResultAnims = new ArrayList<>();
+        resultBackStar = new DrawingBase(xStars, yStars, frBackStar);
+        resultBackStar.setDefaultBitmap(R.string.bmp_star);
+        resultBackStar.setScale(0);
+        addDrawing(resultBackStar);
+        Animator bS = ObjectAnimator.ofFloat(resultBackStar, "Scale", 0f, 1f, 0f).setDuration(showDuration);
+        Animator bA = ObjectAnimator.ofInt(resultBackStar, "Alpha", 0, 255, 0).setDuration(showDuration);
+        goodResultAnims.add(bS);
+        goodResultAnims.add(bA);
+
+        resultBack = new DrawingBase(xStars, yStars, 1f);
+        resultBack.setDefaultBitmap(R.string.bmp_spot_orange);
+        resultBack.setScale(0);
+        resultBack.setAlpha(0);
+        addDrawing(resultBack);
+        Animator rbS = ObjectAnimator.ofFloat(resultBack, "Scale", 1.68f, .8f, .38f).setDuration(starDuration);
+        Animator rbA = ObjectAnimator.ofInt(resultBack, "Alpha", 0, 100, 200, 0).setDuration(starDuration);
+        goodResultAnims.add(rbS);
+        goodResultAnims.add(rbA);
+
+        goodResultAnimSet = new AnimatorSet();
+        goodResultAnimSet.setDuration(starDuration);
+        goodResultAnimSet.setInterpolator(new AccelerateDecelerateInterpolator());
+        goodResultAnimSet.playTogether(goodResultAnims);
+
+        outStars = new OutStars(xStars, yStars, frStar, rr, rR, starsCount, starDuration * 2);
+        addDrawing(outStars);
+        //endregion
+
+        txtScore = new DrawingText(DrawingHAlign.CENTER, TextUtils.controls_game_result_score);
+        //txtScore.setTextBack(12f, 70, 128, 64, 0);
+        txtScore.setTextBack(8f, 32, 255, 255, 255);
+        txtScore.setAlpha(0);
+        txtScore.setPoint(xScore, yScore);
+        addDrawing(txtScore);
+
+        star = new DrawingBase(fdStar, R.string.bmp_star);
+        star.setAlpha(0);
+        star.setPoint(xScore, yScore - fdStar);
+        addDrawing(star);
+
+        txtResultTitle = new DrawingText(DrawingHAlign.CENTER, TextUtils.controls_game_result_title);
+        txtResultTitle.setTextBack(6f, 16, 255, 255, 255);
+        txtResultTitle.setAlpha(0);
+        txtResultTitle.setPoint(xRTitle, yRTitle);
+        addDrawing(txtResultTitle);
+
+        orden = new DrawingBaseTouchable(xOrden, yOrden, fdOrden);
+        orden.setDefaultBitmap(R.drawable.orden);
+        orden.setListener(new ITouchableListener() {
+            @Override
+            public void handelOnTouch(ITouchable item) { }
+            @Override
+            public void handelOnTouchUp(ITouchable item) {
+                if (listener != null)
+                    listener.handleOnOrdenTouchUp();
+            }
+        });
+        orden.setScale(0);
+        addDrawingTouchable(orden);
+
+        //region Repeat
+        btnRepeat = new BtnBase(xRepeat, 1.75f, fdRepeat, R.string.bmp_btn_play);
+        btnRepeat.name = "btn_repeat_game";
+        btnRepeat.clickSoundId = R.raw.start02;
+        btnRepeat.setLabelText(R.string.dlg_Result_Repeat);
+        btnRepeat.setLabelTextBackARGB(16, 0, 0, 0);
+        btnRepeat.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                // перед закрытием диалога показываем рекламное видео
+                if (CurrentSettings.isShowVideo)
+                    MainActivityUtils.doShowVideoAd(null);
+                else {
+                    circlesRepeat.stop();
+                    if (listener != null)
+                        listener.handleOnRepeat();
+                    CurrentSettings.isShowVideo = true;
+                }
+            }
+        });
+        addDrawingTouchable(btnRepeat);
+        circlesRepeat = new CirclesBase(.475f * fdRepeat, .85f * fdRepeat, 5000, false, true);
+        circlesRepeat.setPoint(xRepeat, 1.75f);
+        addDrawing(circlesRepeat);
+
+        showVideo = new DrawingBase(xRepeat, 1.75f, fdRepeat / 4f);
+        showVideo.setDefaultBitmap(R.string.bmp_video);
+        showVideo.setAngel(-15);
+        addDrawing(showVideo);
+        showVideoOk = new DrawingBase(xRepeat, 1.75f, fdRepeat / 8f);
+        showVideoOk.setDefaultBitmap(R.string.bmp_aim_ok); //R.string.bmp_btn_ok);
+        addDrawing(showVideoOk);
+
+        //endregion
+
+        /*btnRating = new BtnBase(xRating, 1.75f, .15f, R.drawable.btn_rating);
+        btnRating.clickSoundId = R.raw.ui_item_click05;
+        addDrawingTouchable(btnRating);
+        btnRating.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) {
+                MainActivityUtils.doShowRating();
+            }
+        });*/
+
+        grpGameTitle = new GrpGameTitle();
+        grpGameTitle.hide();
+        addDrawingGroup(grpGameTitle);
+
+        btnShare = new BtnBase(-.5f, yShare, fdShare, R.string.bmp_btn_screenshot);
+        btnShare.name = "btn_share_scr_game";
+        btnShare.setLabelTextSized(R.string.dlg_ShareScreenshot, TextUtils.dialog_text_xxsmall, DrawingHAlign.RIGHT);
+        btnShare.setLabelAlign(DrawingHAlign.RIGHT);
+        btnShare.setLabelTextBackARGB(16, 0, 0, 0);
+        addDrawingTouchable(btnShare);
+        btnShare.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) {
+                CurrentSettings.isDrawConnectionStatus = false;
+                btnShare.hide();
+                if (!isCrowVisible)
+                    grpGameTitle.show();
+                // пауза, чтобы не скринить анимацию нажатия кнопки
+                // делаем снимок экрана
+                TaskUtils.postDelayed(BtnBase.circlesDuration, new Runnable() {
+                    @Override public void run() {
+                        MainActivityUtils.doShareScreenshot();
+                        grpGameTitle.hide();
+                        btnShare.show();
+                        CurrentSettings.isDrawConnectionStatus = true;
+                    }
+                });
+            }
+        });
+
+        addRepeater(7000, new Runnable() {
+            @Override
+            public void run() { animateControls(); }
+        });
+    }
+
+    private IGrpFinishedResultListener listener;
+    private void setListener(IGrpFinishedResultListener l) { this.listener = l; }
+
+    public void setResult(FinishedResultInfo finishedResult) {
+        this.isWin = finishedResult.isWin;
+        this.score = finishedResult.score;
+        if (isWin) {
+            orden.show();
+            txtResultTitle.setText(R.string.dlg_Result_Good);
+            txtScore.setText(score.toString());
+            //long delay = Utils.stopMusicWithDelay();
+            //Utils.playSound(R.raw.orden_short, delay);
+            Utils.playMusic(3005); // orden_short
+        } else {
+            orden.hide();
+            txtResultTitle.setText(R.string.dlg_Result_Fail);
+            txtScore.setText(score > 0 ? score.toString() : "");
+        }
+        if (score == 0)
+            txtResultTitle.setText("");
+    }
+
+    private boolean isCrowVisible = false;
+    public void setIndex(int index) {
+        isCrowVisible = grpCrown.setIndex(index);
+    }
+
+    public void reset() {
+        if (goodResultAnimSet != null && goodResultAnimSet.isStarted())
+            goodResultAnimSet.cancel();
+        if (outStars != null)
+            outStars.reset();
+        if (controlsAnimSet != null && controlsAnimSet.isStarted())
+            controlsAnimSet.cancel();
+        //goodResultAnimSet = null;
+        controlsAnimSet = null;
+
+        this.isWin = false;
+        //back0.hide();
+        resultBack.hide();
+        orden.hide();
+        txtResultTitle.hide();
+        txtScore.hide();
+        star.hide();
+        btnRepeat.hide();
+        showVideo.hide();
+        showVideoOk.hide();
+        circlesRepeat.finish();
+
+        //btnRating.hide();
+        btnShare.hide();
+    }
+
+    //region show hide
+    private void cancelAnim() {
+        if (animSet != null && animSet.isStarted())
+            animSet.cancel();
+    }
+
+    public void showResult() {
+        isVisible = true;
+        //region reset
+        resultBackStar.show();
+        resultBackStar.setScale(0);
+        resultBackStar.setAlpha(0);
+        resultBackStar.setPoint(xStars, yStars);
+        resultBack.show();
+        resultBack.setScale(0);
+        resultBack.setAlpha(0);
+        resultBack.setPoint(xStars, yStars);
+        orden.setScale(0);
+        orden.setAlpha(0);
+        orden.setPoint(xOrden, yOrden);
+        txtResultTitle.show();
+        txtResultTitle.setAlpha(0);
+        txtResultTitle.setPoint(xRTitle, yRTitle);
+        txtScore.show();
+        txtScore.setAlpha(0);
+        txtScore.setPoint(xScore, yScore);
+        if (score > 0) {
+            txtScore.calc();
+            float tw = txtScore.getTextWidth();
+            star.setPoint(xScore + fdStar + .5f * tw / MetrixUtils.screen_metrix_width, yScore - fdStar);
+            star.show();
+            star.setAlpha(0);
+        }
+        //endregion
+
+        /*Utils.dataBaseManager.setListener(new IDataBaseManagerListener() {
+            @Override
+            public void onRatingChanged(ScoreInfo userScore, ArrayRecyclable<ScoreInfo> scores) {
+                if (userScore != null)
+                    if (score >= userScore.score)
+                        grpCrown.setIndex(userScore.index);
+            }
+            @Override
+            public void onTopUserInfosChanged(ArrayRecyclable<UserRatingRowInfo> rowInfos) { }
+            @Override
+            public void onCurrentUserInfoChanged(UserRatingRowInfo rowInfo) {
+                if (rowInfo != null)
+                    Utils.dataBaseManager.currentUserScoreInfo = rowInfo.userScoreInfo;
+            }
+        });
+        Utils.dataBaseManager.setRatingListenerOn();
+        Utils.dataBaseManager.setUserListenerOn();*/
+
+        goodResultAnimSet.start();
+        outStars.start();
+
+        if (isWin) {
+            Utils.playSound(R.raw.ui_result_out01);
+            TaskUtils.postDelayed(showDuration, new Runnable() {
+                @Override
+                public void run() {
+                    new AnimUtil()
+                            .add(orden, "Scale", 0f, 2f, 1.1f, 1f)
+                            .add(orden, "Alpha", 0, 255, 255, 255)
+                            .add(orden, "angel", 0, 5, -5, 2, -2, 0)
+                            .start(showDuration);
+
+                    /*Animator oS1 = ObjectAnimator.ofFloat(orden, "Scale", 0f, 2f, 1.1f, 1f).setDuration(showDuration);
+                    Animator oA1 = ObjectAnimator.ofInt(orden, "Alpha", 0, 255, 255, 255).setDuration(showDuration);
+                    Animator oA2 = ObjectAnimator.ofFloat(orden, "angel", 0, 5, -5, 2, -2, 0).setDuration(showDuration);
+                    AnimatorSet set = new AnimatorSet();
+                    set.playTogether(oS1, oA1, oA2);
+                    set.start();*/
+                    Utils.playSound(R.raw.ui_result_good01, showDuration / 2);
+
+                    fallingStars = new FallingStars(0, 0, 1f, .5f, 25);
+                    fallingStars.show();
+                }
+            });
+        } else
+            Utils.playSound(R.raw.ui_result_fail02);
+
+        controlsAnimSet = new AnimUtil()
+                .add(txtResultTitle, "Alpha", 0, 255)
+                .add(txtScore, "Alpha", 0, 255)
+                .add(star, "Alpha", 0, 255)
+                .start(showDuration, starDuration / 2);
+        /*Animator rtA = ObjectAnimator.ofInt(txtResultTitle, "Alpha", 0, 255).setDuration(showDuration);
+        Animator scA = ObjectAnimator.ofInt(txtScore, "Alpha", 0, 255).setDuration(showDuration);
+        Animator stA = ObjectAnimator.ofInt(star, "Alpha", 0, 255).setDuration(showDuration);
+        rtA.setStartDelay(showDuration);
+        controlsAnimSet = new AnimatorSet();
+        controlsAnimSet.setDuration(showDuration);
+        controlsAnimSet.setStartDelay(showDuration / 2);
+        controlsAnimSet.playTogether(rtA, scA, stA);
+        controlsAnimSet.start();*/
+    }
+
+    public void showControls() {
+        cancelAnim();
+        if (isWin) {
+            //btnRating.setPoint(xRating, 1.75f);
+            //btnRating.show();
+            btnShare.setPoint(-.5f, yShare);
+            btnShare.show();
+
+            animSet = new AnimUtil()
+                    .add(btnShare, "Fx", -.5f, xShare + .02f, xShare)
+                    .add(btnShare, "Alpha", 0, 255)
+                    .startD(showControlsDuration, starDuration / 4);
+
+            /*//Animator b2 = ObjectAnimator.ofFloat(btnRating, "Fy", 1.2f, yRating - .02f, yRating).setDuration(showControlsDuration);
+            //Animator bA2 = ObjectAnimator.ofInt(btnRating, "alpha", 0, 255).setDuration(showControlsDuration);
+            Animator b3 = ObjectAnimator.ofFloat(btnShare, "Fx", -.5f, xShare + .02f, xShare).setDuration(showControlsDuration);
+            Animator bA3 = ObjectAnimator.ofInt(btnShare, "Alpha", 0, 255).setDuration(showControlsDuration);
+            animSet = new AnimatorSet();
+            animSet.setInterpolator(new DecelerateInterpolator());
+            animSet.setDuration(showControlsDuration);
+            animSet.setStartDelay(starDuration / 4);
+            animSet.playTogether(b3, bA3);
+            animSet.start();*/
+
+        } else {
+            float frRepeat = .5f * fdRepeat;
+            float offsetFxVideo = frRepeat / MetrixUtils.screen_K;
+            btnRepeat.setPoint(xRepeat, 1.75f);
+            btnRepeat.show();
+            showVideo.setPoint(xRepeat + offsetFxVideo, 1.75f);
+            showVideoOk.setPoint(xRepeat + offsetFxVideo, 1.75f);
+            refreshVideoControls();
+            circlesRepeat.setPoint(xRepeat, 1.75f);
+            circlesRepeat.stop();
+            btnShare.setPoint(-.5f, yShare);
+            btnShare.show();
+            float yr = score > 0 ? yRepeat : yStars;
+            animSet = new AnimUtil()
+                    .add(btnRepeat,     "Fy",       1.2f, yr - .02f, yr)
+                    .add(btnRepeat,     "Alpha",    0, 255)
+                    .add(circlesRepeat, "Fy",       1.2f, yr - .02f, yr)
+                    .add(showVideo,     "Fy",       1.2f, yr - .02f - frRepeat, yr - frRepeat)
+                    .add(showVideo,     "Alpha",    0, 255)
+                    .add(showVideoOk,   "Fy",       1.2f, yr - .02f - frRepeat, yr - frRepeat)
+                    .add(showVideoOk,   "Alpha",    0, 255)
+                    .add(btnShare,      "Fx",       score > 0 ? new float[] { -.5f,  xShare + .02f, xShare} : new float[] { -.5f })
+                    .add(btnShare,      "Alpha",    0, 255)
+                    .startD(showControlsDuration, starDuration / 4);
+
+            /*Animator b1Y = ObjectAnimator.ofFloat(btnRepeat, "Fy", 1.2f, yr - .02f, yr).setDuration(showControlsDuration);
+            Animator b1A = ObjectAnimator.ofInt(btnRepeat, "Alpha", 0, 255).setDuration(showControlsDuration);
+            Animator c1Y = ObjectAnimator.ofFloat(circlesRepeat, "Fy", 1.2f, yr - .02f, yr).setDuration(showControlsDuration);
+            Animator v1Y = ObjectAnimator.ofFloat(showVideo, "Fy", 1.2f, yr - .02f - frRepeat, yr - frRepeat).setDuration(showControlsDuration);
+            Animator v1A = ObjectAnimator.ofInt(showVideo, "Alpha", 0, 255).setDuration(showControlsDuration);
+            Animator o1Y = ObjectAnimator.ofFloat(showVideoOk, "Fy", 1.2f, yr - .02f - frRepeat, yr - frRepeat).setDuration(showControlsDuration);
+            Animator o1A = ObjectAnimator.ofInt(showVideoOk, "Alpha", 0, 255).setDuration(showControlsDuration);
+            Animator b2X = ObjectAnimator.ofFloat(btnShare, "Fx", score > 0 ? new float[] { -.5f,  xShare + .02f, xShare} : new float[] { -.5f }).setDuration(showControlsDuration);
+            Animator b2A = ObjectAnimator.ofInt(btnShare, "Alpha", 0, 255).setDuration(showControlsDuration);
+            animSet = new AnimatorSet();
+            animSet.setInterpolator(new DecelerateInterpolator());
+            animSet.setDuration(showControlsDuration);
+            animSet.setStartDelay(starDuration / 4);
+            animSet.playTogether(b1Y, c1Y, b1A, v1Y, v1A, o1Y, o1A, b2X, b2A);
+            animSet.start();*/
+
+            TaskUtils.postDelayed(showControlsDuration, new Runnable() {
+                @Override
+                public void run() { circlesRepeat.start(); }
+            });
+        }
+    }
+
+    public void refreshVideoControls() {
+        if (CurrentSettings.isShowVideo) {
+            showVideo.show();
+            showVideoOk.show();
+        } else {
+            showVideo.hide();
+            showVideoOk.hide();
+        }
+    }
+
+    private static final long animDuration = 1000;
+    private boolean isOnAction = false;
+    private void animateControls() {
+        if (!isOnAction) {
+            isOnAction = true;
+            if (orden.isVisible()) {
+                ObjectAnimator oS4 = ObjectAnimator.ofFloat(orden, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration);
+                ObjectAnimator oA4 = ObjectAnimator.ofFloat(orden, "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration);
+                ObjectAnimator cS = ObjectAnimator.ofFloat(grpCrown, "Scale", 1f, .9f, 1.10f, 1f).setDuration(animDuration);
+                cS.setStartDelay(animDuration / 2);
+                AnimatorSet set = new AnimatorSet();
+                set.setStartDelay(animDuration / 2);
+                set.setInterpolator(new AccelerateDecelerateInterpolator());
+                set.playTogether(oS4, oA4, cS);
+                set.start();
+            }
+            TaskUtils.postDelayed(3 * animDuration, new Runnable() {
+                @Override
+                public void run() { isOnAction = false; }
+            });
+        }
+    }
+
+    private long hideUp() {
+        cancelAnim();
+        if (isWin) {
+            animSet = new AnimUtil()
+                    .add(resultBackStar, "Fy", -.5f)
+                    //.add(btnRating, "Fy", -.5f)
+                    .add(btnShare, "Fy", -.5f)
+                    .add(resultBack, "Fy", -.5f)
+                    .add(orden, "Fy", -.5f)
+                    .add(txtResultTitle, "Fy", -.5f)
+                    .add(txtScore, "Fy", -.5f)
+                    .add(star, "Fy", -.5f)
+                    .start(hideDuration);
+
+            /*Animator bY = ObjectAnimator.ofFloat(resultBackStar, "Fy", -.5f).setDuration(hideDuration);
+            //Animator b2Y = ObjectAnimator.ofFloat(btnRating, "Fy", -.5f).setDuration(hideDuration);
+            Animator b3Y = ObjectAnimator.ofFloat(btnShare, "Fy", -.5f).setDuration(hideDuration);
+            Animator rbY = ObjectAnimator.ofFloat(resultBack, "Fy", -.5f).setDuration(hideDuration);
+            Animator rY1 = ObjectAnimator.ofFloat(orden, "Fy", -.5f).setDuration(hideDuration);
+            Animator rtY = ObjectAnimator.ofFloat(txtResultTitle, "Fy", -.5f).setDuration(hideDuration);
+            Animator scY = ObjectAnimator.ofFloat(txtScore, "Fy", -.5f).setDuration(hideDuration);
+            Animator stY = ObjectAnimator.ofFloat(star, "Fy", -.5f).setDuration(hideDuration);
+            animSet = new AnimatorSet();
+            animSet.setDuration(hideDuration);
+            animSet.playTogether(bY, b3Y, rbY, rY1, rtY, scY, stY);
+            animSet.start();*/
+
+            if (fallingStars != null)
+                fallingStars.hide();
+        } else {
+            circlesRepeat.setPoint(xRepeat, 1.75f);
+            animSet = new AnimUtil()
+                    .add(resultBackStar, "Fy", -.5f)
+                    .add(btnRepeat, "Fy", -.5f)
+                    .add(showVideo, "Fy", -.5f)
+                    .add(showVideoOk, "Fy", -.5f)
+                    .add(btnShare, "Fy", -.5f)
+                    .add(resultBack, "Fy", -.5f)
+                    .add(orden, "Fy", -.5f)
+                    .add(txtResultTitle, "Fy", -.5f)
+                    .add(txtScore, "Fy", -.5f)
+                    .add(star, "Fy", -.5f)
+                    .start(hideDuration);
+
+            /*Animator bY = ObjectAnimator.ofFloat(resultBackStar, "Fy", -.5f).setDuration(hideDuration);
+            Animator b2Y = ObjectAnimator.ofFloat(btnRepeat, "Fy", -.5f).setDuration(hideDuration);
+            Animator v2Y = ObjectAnimator.ofFloat(showVideo, "Fy", -.5f).setDuration(hideDuration);
+            Animator o2Y = ObjectAnimator.ofFloat(showVideoOk, "Fy", -.5f).setDuration(hideDuration);
+            Animator b3Y = ObjectAnimator.ofFloat(btnShare, "Fy", -.5f).setDuration(hideDuration);
+            Animator rbY = ObjectAnimator.ofFloat(resultBack, "Fy", -.5f).setDuration(hideDuration);
+            Animator rY1 = ObjectAnimator.ofFloat(orden, "Fy", -.5f).setDuration(hideDuration);
+            Animator rtY = ObjectAnimator.ofFloat(txtResultTitle, "Fy", -.5f).setDuration(hideDuration);
+            Animator scY = ObjectAnimator.ofFloat(txtScore, "Fy", -.5f).setDuration(hideDuration);
+            Animator stY = ObjectAnimator.ofFloat(star, "Fy", -.5f).setDuration(hideDuration);
+            animSet = new AnimatorSet();
+            animSet.setDuration(hideDuration);
+            animSet.playTogether(bY, b2Y, v2Y, o2Y, b3Y, rbY, rY1, rtY, scY, stY);
+            animSet.start();*/
+        }
+
+        return hideDuration;
+    }
+
+    @Override
+    public long hide() {
+        isVisible = false;
+        grpCrown.hide();
+        //Utils.dataBaseManager.setRatingListenerOff();
+        //Utils.dataBaseManager.setUserListenerOff();
+        return hideUp();
+    }
+    //endregion
+
+    @Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+        if (fallingStars != null)
+            fallingStars.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (fallingStars != null)
+            fallingStars.recycle();
+    }
+}

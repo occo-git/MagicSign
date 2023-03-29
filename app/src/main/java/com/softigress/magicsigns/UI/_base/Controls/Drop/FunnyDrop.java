@@ -1,0 +1,640 @@
+package com.softigress.magicsigns.UI._base.Controls.Drop;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.graphics.Canvas;
+import android.os.SystemClock;
+import android.util.SparseArray;
+import android.view.animation.AccelerateDecelerateInterpolator;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageInfo;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageText;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class FunnyDrop extends DrawingBaseTouchable {
+
+    private static final float dropFd = .1333f;
+
+    public boolean isAllowMotion = false;
+
+    public static final int STATUS_10_SIMPLE = 10;
+    public static final int STATUS_11_SIMPLE_BLINK = 11;
+    public static final int STATUS_20_INTEREST = 20;
+    public static final int STATUS_21_INTEREST_BLINK = 21;
+    public static final int STATUS_30_SURPRISE = 30;
+    public static final int STATUS_40_JOKE = 40;
+    public static final int STATUS_50_LAUGH = 50;
+    public static final int STATUS_60_HAPPY = 60;
+    public static final int STATUS_61_HAPPY_BLINK = 61;
+    public static final int STATUS_70_PUNCHED = 70;
+    public static final int STATUS_80_PRO = 80;
+    public static final int STATUS_90_SLEEP = 90;
+    public static final int STATUS_100_WAIT = 100;
+    public static final int STATUS_101_WAIT_BLINK = 101;
+
+    public static final int MES_INTEREST = 20;
+    public static final int MES_SURPRISE = 30;
+    public static final int MES_JOKE = 40;
+    public static final int MES_LAUGH = 50;
+    public static final int MES_HAPPY = 60;
+    public static final int MES_PUNCHED = 70;
+    public static final int MES_PRO = 80;
+    public static final int MES_SLEEP = 90;
+    public static final int MES_WAIT = 100;
+    public static final int MES_BOMB_0 = 310;
+    public static final int MES_BOMB_1 = 311;
+    public static final int MES_BOMB_2 = 312;
+    public static final int MES_BOMB_3 = 313; // больше 2 signs взорвано
+
+    private static final int duration_01_simple = 1000;
+    private static final int duration_02_interest = 1000;
+    private static final int duration_03_surprise = 1000;
+    private static final int duration_04_joke = 1500;
+    private static final int duration_05_laugh = 1000;
+    private static final int duration_06_happy = 1000;
+    private static final int duration_07_punched = 1000;
+    private static final int duration_08_pro = 2500;
+    private static final int duration_09_sleep = 3000;
+    private static final int duration_10_wait = 1000;
+    private static final int duration_100_in = 1000;
+    private static final int duration_101_win = 2000;
+    private static final int duration_102_out = 1000;
+
+    private static final long startBlinkDuration = 7000;
+    private static final long blinkDuration = 1000;
+    private static final int busyTouches = 5; // сколько раз надо тапнуть по drop, чтобы сделать punched
+    private static final int busyDuration = 2000; // время, за которое нужно тапнуть drop столько раз, чтобы сделать ее punched
+    private static final int messageDuration = 250; // отображение / скрывание сообщения
+    private final MessageText txtMessage;
+
+    //private DrawingFrameRate frameRate;
+
+    public FunnyDrop(float fx, float fy, float fd) {
+        this(fd);
+        setPoint(fx, fy);
+    }
+    public FunnyDrop(float fx, float fy) {
+        this();
+        setPoint(fx, fy);
+    }
+
+    FunnyDrop() {
+        this(dropFd);
+    }
+
+    public FunnyDrop(float fd) {
+        super(fd);
+
+        setAlign(DrawingHAlign.CENTER, DrawingVAlign.BOTTOM);
+
+        /*setStatusBitmap(STATUS_10_SIMPLE, R.drawable.drop_10_simple);
+        setStatusBitmap(STATUS_11_SIMPLE_BLINK, R.drawable.drop_11_simple_blink);
+        setStatusBitmap(STATUS_20_INTEREST, R.drawable.drop_20_intereset);
+        setStatusBitmap(STATUS_21_INTEREST_BLINK, R.drawable.drop_21_intereset_blink);
+        setStatusBitmap(STATUS_30_SURPRISE, R.drawable.drop_30_surprise);
+        setStatusBitmap(STATUS_40_JOKE, R.drawable.drop_40_joke);
+        setStatusBitmap(STATUS_50_LAUGH, R.drawable.drop_50_laugh);
+        setStatusBitmap(STATUS_60_HAPPY, R.drawable.drop_60_happy);
+        setStatusBitmap(STATUS_61_HAPPY_BLINK, R.drawable.drop_61_happy_blink);
+        setStatusBitmap(STATUS_70_PUNCHED, R.drawable.drop_70_punched);
+        setStatusBitmap(STATUS_80_PRO, R.drawable.drop_80_pro);
+        setStatusBitmap(STATUS_90_SLEEP, R.drawable.drop_90_sleep);
+        setStatusBitmap(STATUS_100_WAIT, R.drawable.drop_100_wait);
+        setStatusBitmap(STATUS_101_WAIT_BLINK, R.drawable.drop_101_wait_blink);*/
+
+        //setStatus(FunnyDrop.STATUS_20_INTEREST);
+
+        txtMessage = new MessageText(DrawingHAlign.CENTER);
+        txtMessage.setVerticalAlign(DrawingVAlign.BOTTOM);
+        txtMessage.isPaintRect = true;
+
+        //frameRate = new DrawingFrameRate("drop", .04f, .45f);
+    }
+
+    //region statuses
+    public void loadStatuses(int[] statusIDs) {
+        for (int statusId: statusIDs)
+            loadDropStatus(null, statusId);
+    }
+
+    public void loadStatuses(BitmapManager bitmapManager, int[] statusIDs) {
+        for (int statusId: statusIDs)
+            loadDropStatus(bitmapManager, statusId);
+    }
+
+    private int getDropStatusBitmapId(int statusId) {
+        switch (statusId) {
+            case STATUS_10_SIMPLE:          return R.string.bmp_drop_10_simple;
+            case STATUS_11_SIMPLE_BLINK:    return R.string.bmp_drop_11_simple_blink;
+            case STATUS_20_INTEREST:        return R.string.bmp_drop_20_interest;
+            case STATUS_21_INTEREST_BLINK:  return R.string.bmp_drop_21_interest_blink;
+            case STATUS_30_SURPRISE:        return R.string.bmp_drop_30_surprise;
+            case STATUS_40_JOKE:            return R.string.bmp_drop_40_joke;
+            case STATUS_50_LAUGH:           return R.string.bmp_drop_50_laugh;
+            case STATUS_60_HAPPY:           return R.string.bmp_drop_60_happy;
+            case STATUS_61_HAPPY_BLINK:     return R.string.bmp_drop_61_happy_blink;
+            case STATUS_70_PUNCHED:         return R.string.bmp_drop_70_punched;
+            case STATUS_80_PRO:             return R.string.bmp_drop_80_pro;
+            case STATUS_90_SLEEP:           return R.string.bmp_drop_90_sleep;
+            case STATUS_100_WAIT:           return R.string.bmp_drop_100_wait;
+            case STATUS_101_WAIT_BLINK:     return R.string.bmp_drop_101_wait_blink;
+            default: return 0;
+        }
+    }
+
+    private void loadDropStatus(BitmapManager bitmapManager, int statusId) {
+        int bitmapId = getDropStatusBitmapId(statusId);
+        if (bitmapId != 0) {
+            if (bitmapManager == null)
+                setStatusBitmap(statusId, bitmapId);
+            else
+                setStatusBitmap(statusId, bitmapManager.getLoadedBitmap(bitmapId));
+        }
+    }
+
+    private int defaultStatusId = STATUS_20_INTEREST;
+    public void setDefaultStatusId(int statusId) {
+        defaultStatusId = statusId;
+    }
+
+    public long setMotion(DropMotionType motion) {
+        if (isAllowMotion) {
+            switch (motion) {
+                case INTEREST:  return startInterestAnim();
+                case SURPRISE:  return startSurpriseAnim();
+                case JOKE:      return startJokeAnim();
+                case LAUGH:     return startLaughAnim();
+                case HAPPY:     return startHappyAnim();
+                case PUNCHED:   return startPunchedAnim();
+                case PRO:       return startProAnim();
+                case SLEEP:     return startSleepAnim();
+                case WAIT:      return startWaitAnim();
+                case IN:        return isVisible() ? startHappyAnim() : startInAnim();
+                case WIN:       return startWinAnim();
+                case OUT:       return startOutAnim();
+            }
+        }
+        return 0;
+    }
+
+    public void setMultiplier(int multiplier) {
+        if (statusId == STATUS_70_PUNCHED)
+            startReadyAnim(); // анимация при повторении (из punched в defaultStatus)
+        else
+            setStatus(defaultStatusId);
+
+        long duration = 1000;
+        float fy0 = fy;
+        // old: float fy1 = multiplier > 0 ? .88f - .055f * multiplier : 1.2f;
+        float fy1 = multiplier > 0 ? .89f : 1.2f;
+        float dy = fy0 - fy1;
+        Animator a = ObjectAnimator.ofFloat(this, "Fy", fy0, fy1 - .1f * dy, fy1).setDuration(duration);
+        a.setInterpolator(new AccelerateDecelerateInterpolator());
+        a.start();
+    }
+
+    private void setStatus(float delay, final int statusId) {
+        TaskUtils.postDelayed((long)delay, new Runnable() {
+            @Override
+            public void run() {
+                if (isAllowMotion)
+                    setStatus(statusId);
+            }
+        });
+    }
+    //endregion
+
+    //region message
+    private int touches = 0;
+    private long touchesStartTicks = 0;
+    @Override
+    protected void onTouch() {
+        super.onTouch();
+
+        //Utils.playSound(R.raw.ui_item_click08);
+
+        touches++;
+        long ticks = SystemClock.elapsedRealtime();
+        if (touchesStartTicks == 0)
+            touchesStartTicks = ticks;
+        if (ticks - touchesStartTicks > busyDuration && touches > busyTouches && !isOnTextAnim && statusId == FunnyDrop.STATUS_20_INTEREST) {
+            setMotion(DropMotionType.LAUGH); // если несколко раз тапнуть, drop смеется
+            touches = 0;
+        } else
+            showMessage();
+    }
+
+    private int getMessageIdByStatusId(int stId) {
+        switch (stId) {
+            case STATUS_20_INTEREST:        return MES_INTEREST;
+            case STATUS_21_INTEREST_BLINK:  return MES_INTEREST;
+            case STATUS_30_SURPRISE:        return MES_SURPRISE;
+            case STATUS_40_JOKE:            return MES_JOKE;
+            case STATUS_50_LAUGH:           return MES_LAUGH;
+            case STATUS_60_HAPPY:           return MES_HAPPY;
+            case STATUS_61_HAPPY_BLINK:     return MES_HAPPY;
+            case STATUS_70_PUNCHED:         return MES_PUNCHED;
+            case STATUS_80_PRO:             return MES_PRO;
+            case STATUS_90_SLEEP:           return MES_SLEEP;
+            case STATUS_100_WAIT:           return MES_WAIT;
+            case STATUS_101_WAIT_BLINK:     return MES_WAIT;
+        }
+        return 0;
+    }
+
+    private float tfx, tfy;
+    public void setMessagePoint(float tfx, float tfy) {
+        this.tfx = tfx;
+        this.tfy = tfy;
+    }
+
+    public void setMessageFontSize(float size) {
+        txtMessage.setFontSize(size);
+    }
+
+    private SparseArray<MessageInfo[]> dMessageInfos;
+    public void addMessageTexts(String type, int statusId, int[] info) {
+        MessageInfo[] mis = MessageInfo.getMessages(type, info);
+        if (dMessageInfos == null)
+            dMessageInfos = new SparseArray<>();
+        if (mis.length > 0)
+            dMessageInfos.append(statusId, mis);
+    }
+
+    private MessageInfo getMessageInfo(int mesId) {
+        if (dMessageInfos != null && dMessageInfos.indexOfKey(mesId) > -1) {
+            MessageInfo[] mis = dMessageInfos.get(mesId);
+            if (mis != null && mis.length > 0)
+                return mis[Utils.getRandom(mis.length)];
+        }
+        return null;
+    }
+
+    private boolean isOnTextAnim = false;
+    private void onTextAnim(long duration) {
+        isOnTextAnim = true;
+        TaskUtils.postDelayed(duration, new Runnable() {
+            @Override
+            public void run() { isOnTextAnim = false; }
+        });
+    }
+    private String currentMessageType = null;
+    private void onCurrentMessageType(String type, int duration) {
+        currentMessageType = type;
+        TaskUtils.postDelayed(duration, new Runnable() {
+            @Override
+            public void run() { currentMessageType = null; }
+        });
+    }
+
+    private void showMessage() {
+        showMessage(getMessageIdByStatusId(statusId));
+    }
+    public void showMessage(long delay, int mesId) {
+        if (mesId > 0)
+            showMessage(delay, getMessageInfo(mesId));
+    }
+    public void showMessage(int mesId) {
+        if (mesId > 0)
+            showMessage(getMessageInfo(mesId));
+    }
+    public void showMessage(long delay, final MessageInfo mi) {
+        TaskUtils.postDelayed(delay, new Runnable() {
+            @Override
+            public void run() { showMessage(mi); }
+        });
+    }
+
+    private AnimatorSet textSet = null;
+    public void showMessage(MessageInfo mi) {
+        if (mi != null && mi.message != null && mi.type != currentMessageType) {
+            int duration = getMessageDuration(mi.message);
+            onCurrentMessageType(mi.type, duration);
+
+            cancelTextAnim();
+            if (txtMessage != null) {
+                txtMessage.setAlpha(0);
+                txtMessage.setPoint(tfx, tfy);
+                txtMessage.setText(mi.message);
+                txtMessage.isIdea = mi.isIdea;
+
+                float ffy = tfy - .7f * fd;
+                textSet = new AnimUtil()
+                        .add(txtMessage, "alpha", 0, 255)
+                        .add(txtMessage, "fy", tfy - .6f * fd, ffy)
+                        .startAD(messageDuration);
+
+                mi.playMessageSound(); // звук!
+
+                TaskUtils.postDelayed(duration - 1000, new Runnable() {
+                    @Override
+                    public void run() {
+                        cancelTextAnim();
+                        textSet = new AnimUtil().add(txtMessage, "alpha", 255, 0).startAD(messageDuration);
+                    }
+                });
+            }
+        }
+    }
+    private int getMessageDuration(String t) {
+        return Math.max(t.length() * 100, 2000);
+    }
+
+    private void cancelTextAnim() {
+        if (textSet != null && textSet.isStarted())
+            textSet.cancel();
+        textSet = null;
+    }
+    //endregion
+
+    //region drop anim
+    private AnimatorSet animSet;
+    private void cancelAnim() {
+        if (animSet != null && animSet.isStarted())
+            animSet.cancel();
+        animSet = null;
+    }
+
+    public boolean isOnAction = false;
+    public void onAction(long duration) {
+        isOnAction = true;
+        cancelAnim();
+        TaskUtils.postDelayed(duration, new Runnable() {
+            @Override
+            public void run() { isOnAction = false; }
+        });
+    }
+
+    public long startAnim(long duration, AnimatorSet set) {
+        onAction(duration);
+        animSet = set;
+        animSet.start();
+        return duration;
+    }
+
+    public long startAnimAD(long duration, AnimatorSet set) {
+        onAction(duration);
+        set.setInterpolator(new AccelerateDecelerateInterpolator());
+        animSet = set;
+        animSet.start();
+        return duration;
+    }
+
+    private long startInterestAnim() {
+        long duration = duration_02_interest;
+        onAction(duration);
+        setStatus(.1f * duration, STATUS_20_INTEREST);
+        return duration;
+    }
+
+    private long startInAnim() {
+        long duration = duration_100_in;
+        onAction(duration);
+        setStatus(defaultStatusId);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "fy", 1.3f, .7f, .75f)
+                .add(this, "widthScale", 1f, .95f, .975f, 1f, 1f)
+                .add(this, "heightScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                .startAD(duration);
+        return duration;
+    }
+
+    private long startWinAnim() {
+        long duration = duration_101_win;
+        onAction(duration);
+        setStatus(.1f * duration, STATUS_50_LAUGH);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, .95f, 1.05f, 1f, .95f, 1.05f, 1f, .95f, 1.05f, 1f)
+                .add(this, "heightScale", 1f, 1.1f, .9f, 1f, 1.1f, .9f, 1f, 1.1f, .9f, 1f)
+                .add(this, "fy", fy, fy - .035f, fy - .05f, fy, fy - .035f, fy - .05f, fy, fy - .035f, fy - .05f, fy)
+                .startAD(duration);
+        setStatus(.9f * duration, STATUS_80_PRO);
+        return duration;
+    }
+
+    private long startOutAnim() {
+        long duration = duration_102_out;
+        onAction(duration);
+        //setStatus(STATUS_20_INTEREST);
+        // старт анимации движения
+        float ffy = fy;
+        animSet = new AnimUtil()
+                .add(this, "fy", ffy, ffy * .9f, 1.3f)
+                .add(this, "widthScale", 1f, .95f, .975f, 1f, 1f)
+                .add(this, "heightScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                .startAD(duration);
+        setStatus(duration, STATUS_HIDDEN);
+        return duration;
+    }
+
+    private long startReadyAnim() {
+        long duration = duration_100_in;
+        onAction(duration);
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, 1.1f, 1f, 1.05f, 1f)
+                .add(this, "heightScale", 1f, .9f, 1f, .95f, 1f)
+                .startAD(duration);
+        setStatus(duration / 2, defaultStatusId);
+        //Utils.playSound(R.raw.drop01);
+        return duration;
+    }
+
+    private long startSurpriseAnim() {
+        long duration = duration_03_surprise;
+        onAction(2 * duration);
+        setStatus(.2f * duration, STATUS_30_SURPRISE);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, .95f, .975f, 1f, 1f)
+                .add(this, "heightScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                .startAD(duration);
+        setStatus(1.8f * duration, STATUS_11_SIMPLE_BLINK);
+        setStatus(2.0f * duration, defaultStatusId);
+        return duration;
+    }
+
+    private long startJokeAnim() {
+        long duration = duration_04_joke;
+        onAction(duration);
+        setStatus(.3f * duration, STATUS_40_JOKE);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, .95f, 1.05f, .975f, 1f)
+                .add(this, "heightScale", 1f, 1.1f, .9f, 1.05f, .95f, 1f)
+                .startAD(duration);
+        setStatus(.7f * duration, defaultStatusId);
+        return duration;
+    }
+
+    private long startLaughAnim() {
+        long duration = duration_05_laugh;
+        onAction(duration);
+        setStatus(.3f * duration, STATUS_50_LAUGH);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, .95f, 1.05f, 1f, .95f, 1.05f, 1f, .95f, 1.05f, 1f)
+                .add(this, "heightScale", 1f, 1.1f, .9f, 1f, 1.1f, .9f, 1f, 1.1f, .9f, 1f)
+                .startAD(duration);
+        Utils.playSound(R.raw.laugh01, duration / 2);
+        setStatus(.7f * duration, defaultStatusId);
+        return duration;
+    }
+
+    private long startHappyAnim() {
+        long duration = duration_06_happy;
+        onAction(2 * duration);
+        setStatus(.2f * duration, STATUS_60_HAPPY);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, .95f, 1.05f, 1f, .95f, 1.05f, 1f)
+                .add(this, "heightScale", 1f, 1.1f, .9f, 1f, 1.1f, .9f, 1f)
+                .add(this, "fy", fy, fy - .05f, fy, fy - .025f, fy)
+                .startAD(duration);
+        setStatus(1.4f * duration, STATUS_61_HAPPY_BLINK);
+        setStatus(1.5f * duration, STATUS_60_HAPPY);
+        setStatus(1.7f * duration, STATUS_61_HAPPY_BLINK);
+        setStatus(1.8f * duration, STATUS_60_HAPPY);
+        setStatus(2f * duration, defaultStatusId);
+        return 2 * duration;
+    }
+
+    private long startPunchedAnim() {
+        startBlinkTicks = 0;
+        long duration = duration_07_punched;
+        onAction(10 * duration);
+        setStatus(.5f * duration, STATUS_70_PUNCHED);
+        // старт анимации движения
+        float ffx = fx;
+        float ffy = fy;
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, .95f, .975f, 1f)
+                .add(this, "heightScale", 1f, 1.2f, 1.1f, 1f)
+                .add(this, "fx", ffx, ffx, ffx - .05f, ffx + .0125f, ffx)
+                .add(this, "fy", ffy, ffy, ffy + .05f, ffy - .0125f, ffy)
+                .startAD(duration);
+        return duration;
+    }
+
+    private long startProAnim() {
+        long duration = duration_08_pro;
+        onAction(duration);
+        setStatus(.05f * duration, STATUS_80_PRO);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, 1.05f, .95f, 1.05f, .975f, 1f)
+                .add(this, "heightScale", 1f,   .9f, 1.1f,   .9f, 1.05f, 1f)
+                .startAD(duration);
+        setStatus(.9f * duration, defaultStatusId);
+        return duration;
+    }
+
+    private long startSleepAnim() {
+        long duration = duration_09_sleep;
+        onAction(duration);
+        setStatus(.66f * duration, STATUS_90_SLEEP);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f,  .95f, 1.10f, 1f)
+                .add(this, "heightScale", 1f, 1.05f,  .90f, 1f)
+                .startAD(duration);
+        //setStatus((long) (.9f * duration), defaultStatusId);
+        return duration;
+    }
+
+    private long startWaitAnim() {
+        long duration = duration_10_wait;
+        onAction(duration);
+        setStatus(.1f * duration, STATUS_100_WAIT);
+        // старт анимации движения
+        animSet = new AnimUtil()
+                .add(this, "widthScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                .add(this, "heightScale", 1f, .95f, .975f, 1f, 1f)
+                .startAD(duration);
+        return duration;
+    }
+    //endregion
+
+    private long startBlinkTicks = 0;
+    @Override
+    public void calc() {
+        super.calc();
+
+        long ticks = SystemClock.elapsedRealtime();
+        if (startBlinkTicks == 0)
+            startBlinkTicks = ticks;
+        long deltaBlink = ticks - startBlinkTicks;
+        if (deltaBlink > startBlinkDuration) {
+            startBlinkTicks = 0;
+            // статусы drop, при которых есть моргание
+            if (statusId == STATUS_10_SIMPLE || statusId == STATUS_20_INTEREST || statusId == STATUS_60_HAPPY || statusId == STATUS_100_WAIT) {
+                int sID = statusId;
+                int bsID = statusId;
+                switch (sID) {
+                    case STATUS_10_SIMPLE: bsID = STATUS_11_SIMPLE_BLINK; break;
+                    case STATUS_20_INTEREST: bsID = STATUS_21_INTEREST_BLINK; break;
+                    case STATUS_60_HAPPY: bsID = STATUS_61_HAPPY_BLINK; break;
+                    case STATUS_100_WAIT: bsID = STATUS_101_WAIT_BLINK; break;
+                }
+                if (!isOnAction) {
+                    setStatus(.1f * blinkDuration, bsID);
+                    setStatus(.2f * blinkDuration, sID);
+                    setStatus(.4f * blinkDuration, bsID);
+                    setStatus(.5f * blinkDuration, sID);
+                }
+            } else if (statusId == STATUS_70_PUNCHED) {
+                long duration = duration_07_punched;
+                onAction(duration);
+                // периодическое движение в статусе punched
+                animSet = new AnimUtil()
+                        .add(this, "widthScale", 1f, 1.1f, .9f, 1f)
+                        .add(this, "heightScale", 1f, .85f, 1.1f, 1f)
+                        .startAD(duration);
+
+            } else if (statusId == STATUS_90_SLEEP) {
+                long duration = duration_09_sleep;
+                onAction(duration);
+                // периодическое движение в статусе sleep
+                animSet = new AnimUtil()
+                        .add(this, "widthScale", 1f,  .95f, 1.05f, 1f)
+                        .add(this, "heightScale", 1f, 1.05f,  .95f, 1f)
+                        .start(duration);
+            }
+        }
+    }
+
+    @Override
+    public void drawBackground(Canvas c) {
+        super.drawBackground(c);
+        if (txtMessage != null)
+            txtMessage.drawFrame(c);
+    }
+
+    /*@Override
+    public void drawFrame(Canvas c) {
+        if (frameRate != null)
+            frameRate.start();
+
+        super.drawFrame(c);
+
+        if (frameRate != null)
+            frameRate.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (frameRate != null)
+            frameRate.recycle();
+        frameRate = null;
+    }*/
+}

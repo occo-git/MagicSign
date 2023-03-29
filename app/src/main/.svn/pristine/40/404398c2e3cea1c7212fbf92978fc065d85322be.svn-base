@@ -1,0 +1,154 @@
+package com.softigress.magicsigns.UI.Rating.Dialogs;
+
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Progress.CtrlProgressBar;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserScoreInfo;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+
+public class RatingAchievement extends DrawingBase {
+
+    private AchievementType type = AchievementType.EMPTY_00;
+    private boolean isAchievementVisible = false;
+    private boolean isGroupAchievementType = false;
+    private Integer count = 0;
+    private float percent = 0f;
+
+    private final DrawingBase back;
+    private final DrawingBase halo;
+    private final DrawingText txtCount;
+    private final CtrlProgressBar progressBar;
+    private final Paint paint0;
+    private static final int maxPaintAlpha = 32;
+
+    public RatingAchievement(AchievementType type, float fd) {
+        super(fd, SignInfos.getBitmapIdByAchievementType(type));
+
+        this.type = type;
+        isGroupAchievementType = SignInfos.isGroupAchievementType(type);
+
+        back = new DrawingBase(1.25f * fd, R.string.bmp_spot_white);
+        back.setAlpha(255 / 8);
+
+        halo = new DrawingBase(fd, R.string.bmp_halo_white_out);
+        halo.setAlpha(255 / 8);
+
+        txtCount = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_xxsmall);
+        txtCount.setTextBack(4f, 32, 0, 0, 0);
+
+        progressBar = new CtrlProgressBar(fd, fd / 8f);
+        int color = SignInfos.getColorByAchievementType(type);
+        progressBar.setRGB(Color.red(color), Color.green(color), Color.blue(color));
+
+        paint0 = PaintUtils.getPaintStrokeWhite(maxPaintAlpha, PaintUtils.strokeWidth2);
+    }
+
+    public void setInfo(UserScoreInfo usi) {
+        this.isAchievementVisible = usi.isAchievementEnabled(type);
+        this.count = usi.getSignsCount(type);
+        this.percent = (float) count / (isGroupAchievementType ? CurrentSettings.potionSignsGroupCount : CurrentSettings.potionSignsCount);
+
+        if (txtCount != null)
+            txtCount.setText(count > 0 ? count.toString() : "");
+        if (progressBar != null)
+            progressBar.setPercent(this.percent);
+    }
+
+    @Override
+    public void show() {
+        super.show();
+        if (txtCount != null)
+            txtCount.show();
+        if (progressBar != null)
+            progressBar.show();
+    }
+
+    @Override
+    public long hide() {
+        super.hide();
+        if (txtCount != null)
+            txtCount.hide();
+        if (progressBar != null)
+            progressBar.hide();
+        return 0;
+    }
+
+
+    @Override
+    public void calc() {
+        super.calc();
+        if (back != null) {
+            back.setPoint(fx, fy + fd / 5f);
+            back.setAlpha(alpha / 8);
+        }
+        if (halo != null) {
+            halo.setPoint(fx, fy);
+            halo.setAlpha(alpha / 8);
+        }
+        if (txtCount != null) {
+            txtCount.setPoint(fx, fy);
+            txtCount.setAlpha(alpha);
+        }
+        if (progressBar != null) {
+            progressBar.setPoint(fx, fy + fd / 4);
+            progressBar.setAlpha(alpha);
+        }
+        int a = maxPaintAlpha * alpha / 255;
+        if (paint0 != null)
+            paint0.setAlpha(a);
+    }
+
+    @Override
+    public void drawBackground(Canvas c) {
+        super.drawBackground(c);
+
+        if (back != null)
+            back.drawFrame(c);
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        if (isVisible()) {
+            calc();
+            if (isAchievementVisible)
+                drawBitmap(c, x, y, paint);
+            else {
+                if (halo != null)
+                    halo.drawFrame(c);
+                /*if (paint0 != null) {
+                    float dd = fd * MetrixUtils.screen_metrix_height;
+                    c.drawCircle(x, y, dd / 4f, paint0);
+                }*/
+                if (txtCount != null)
+                    txtCount.drawFrame(c);
+                if (progressBar != null)
+                    progressBar.drawFrame(c);
+            }
+            //super.drawFrame(c);
+            //TextUtils.WriteSizedTextLeft(c, x + w / 4f, y, count.toString(), TextUtils.default_font_size, Typeface.DEFAULT);
+        }
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (back != null)
+            back.recycle();
+        if (halo != null)
+            halo.recycle();
+        if (txtCount != null)
+            txtCount.recycle();
+        if (progressBar != null)
+            progressBar.recycle();
+    }
+}

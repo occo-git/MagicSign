@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<items>
+	<item name="bmp_aim_ok" x="0" y="0" w="85" h="85" />
+	<item name="bmp_logo_facebook" x="85" y="0" w="85" h="85" />
+	<item name="bmp_logo_google" x="170" y="0" w="85" h="85" />
+	<item name="bmp_bonus_combo" x="255" y="0" w="85" h="85" />
+	<item name="bmp_bonus_guess" x="340" y="0" w="85" h="85" />
+	<item name="bmp_bonus_lightning" x="425" y="0" w="85" h="85" />
+	<item name="bmp_bonus_sequence" x="510" y="0" w="85" h="85" />
+	<item name="bmp_bonus_strike" x="0" y="85" w="85" h="85" />
+	<item name="bmp_glare_01" x="85" y="85" w="85" h="85" />
+	<item name="bmp_rating" x="170" y="85" w="85" h="85" />
+	<item name="bmp_star" x="255" y="85" w="85" h="85" />
+	<item name="bmp_star_gold" x="340" y="85" w="85" h="85" />
+	<item name="bmp_star_off" x="425" y="85" w="85" h="85" />
+	<item name="bmp_wave" x="510" y="85" w="85" h="85" />
+</items>

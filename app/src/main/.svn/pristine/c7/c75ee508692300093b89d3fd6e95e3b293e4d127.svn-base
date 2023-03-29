@@ -1,0 +1,59 @@
+package com.softigress.magicsigns._system.FireBase.DataBase;
+
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+
+public class UserVideoCount {
+
+    public int potion01;
+    public int potion02;
+    public int potion03;
+    public int potion04;
+    public int potion05;
+    public int groupPotion01;
+    public int groupPotion02;
+    public int groupPotion03;
+    public int groupPotion04;
+    public int groupPotion05;
+
+    public UserVideoCount() { }
+
+    public Integer getVideoCountByAchievementType(AchievementType type) {
+        switch (type) {
+            case SIMPLE_01:         return potion01;
+            case NORMAL_02:         return potion02;
+            case HARD_03:           return potion03;
+            case INSANE_04:         return potion04;
+            case CRAZY_05:          return potion05;
+            case SIMPLE_01_GROUP:   return groupPotion01;
+            case NORMAL_02_GROUP:   return groupPotion02;
+            case HARD_03_GROUP:     return groupPotion03;
+            case INSANE_04_GROUP:   return groupPotion04;
+            case CRAZY_05_GROUP:    return groupPotion05;
+            default:                return 0;
+        }
+    }
+
+    public void increaseVideoCountByAchievementType(AchievementType type, int amount) {
+        switch (type) {
+            case SIMPLE_01:         potion01 += amount; break;
+            case NORMAL_02:         potion02 += amount; break;
+            case HARD_03:           potion03 += amount; break;
+            case INSANE_04:         potion04 += amount; break;
+            case CRAZY_05:          potion05 += amount; break;
+            case SIMPLE_01_GROUP:   groupPotion01 += amount; break;
+            case NORMAL_02_GROUP:   groupPotion02 += amount; break;
+            case HARD_03_GROUP:     groupPotion03 += amount; break;
+            case INSANE_04_GROUP:   groupPotion04 += amount; break;
+            case CRAZY_05_GROUP:    groupPotion05 += amount; break;
+            default:
+        }
+    }
+
+    public boolean isPotionEnabled(AchievementType type) {
+        // определим по количеству отавшихся для просмотра видео доступность potion
+        return SignInfos.getVideoCountByAchievementType(type) - getVideoCountByAchievementType(type) <= 0;
+    }
+
+    public void recycle() { }
+}

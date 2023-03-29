@@ -1,0 +1,144 @@
+package com.softigress.magicsigns.UI._base.Controls.Crown;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingCrown extends DrawingBase {
+
+    public float scaleK = 1f;
+    private float maxFd = .5f;
+    private float fy0 = .2f;
+
+    public static final int CROWN_GOLD = 1;
+    public static final int CROWN_SILVER = 2;
+    public static final int CROWN_BRONZE = 3;
+    //public static final int CROWN_GLASS = 4;
+
+    private static final float crownK_gold = 1f;
+    private static final float crownK_silver = .95f;
+    private static final float crownK_bronze = .9f;
+    //public static final float crownK_glass = .8f;
+
+    public boolean isAnimated = true;
+
+    public DrawingCrown(float fx, float fy, float fd) {
+        super(fx, fy, fd);
+
+        maxFd = fd;
+        fy0 = fy;
+
+        setStatusBitmap(CROWN_GOLD, R.string.bmp_crown_01_gold);
+        setStatusBitmap(CROWN_SILVER, R.string.bmp_crown_02_silver);
+        setStatusBitmap(CROWN_BRONZE, R.string.bmp_crown_03_bronze);
+        //setStatusBitmap(CROWN_GLASS, R.string.bmp_crown_04_glass);
+    }
+
+    public boolean setIndex(int index) {
+        boolean res = false;
+        switch (index) {
+            case 1: setStatus(DrawingCrown.CROWN_GOLD); res = true; break;
+            case 2: setStatus(DrawingCrown.CROWN_SILVER); res = true; break;
+            case 3: setStatus(DrawingCrown.CROWN_BRONZE); res = true; break;
+            //case 4:
+            //case 5:
+            //case 6:
+            //case 7: setStatus(DrawingCrown.CROWN_GLASS); break;
+            default: hide(); break;
+        }
+        return res;
+    }
+
+    @Override
+    public void setStatus(final int newStatusId) {
+        scaleK = 0f;
+        switch (newStatusId) {
+            case CROWN_GOLD: scaleK = crownK_gold; break;
+            case CROWN_SILVER: scaleK = crownK_silver; break;
+            case CROWN_BRONZE: scaleK = crownK_bronze; break;
+            //case CROWN_GLASS: scaleK = crownK_glass; break;
+        }
+        if (newStatusId != statusId) {
+            if (statusId == STATUS_HIDDEN) {
+                setFy(-2f * maxFd);
+                setFd(maxFd * scaleK);
+                super.setStatus(newStatusId);
+                showAnim();
+            } else if (newStatusId == STATUS_HIDDEN || newStatusId == STATUS_DEFAULT) {
+                long delay = hideAnim();
+                TaskUtils.postDelayed(delay, new Runnable() {
+                    @Override
+                    public void run() {
+                        //setFd(maxFd * scaleK);
+                        DrawingCrown.super.setStatus(newStatusId);
+                    }
+                });
+            } else {
+                long delay = changeAnim(maxFd * scaleK);
+                TaskUtils.postDelayed(delay / 2, new Runnable() {
+                    @Override
+                    public void run() {
+                        setFd(maxFd * scaleK);
+                        DrawingCrown.super.setStatus(newStatusId);
+                    }
+                });
+            }
+        }
+    }
+
+    private static final long showDuration = 500;
+    private long showAnim() {
+        if (isAnimated) {
+            long duration = showDuration;
+            float ffy = fy;
+            new AnimUtil(this, "fy", ffy, 1.1f * fy0, fy0).startSimpleAD(duration);
+            /*//ObjectAnimator aW = ObjectAnimator.ofFloat(this, "fw", 0, maxFw * k1, maxFw).setDuration(duration);
+            //ObjectAnimator aH = ObjectAnimator.ofFloat(this, "fh", 0, maxFh * k1, maxFh).setDuration(duration);
+            ObjectAnimator aY = ObjectAnimator.ofFloat(this, "fy", ffy, 1.1f * fy0, fy0).setDuration(duration);
+            AnimatorSet set1 = new AnimatorSet().setDuration(duration);
+            set1.setInterpolator(new AccelerateDecelerateInterpolator());
+            //set1.playTogether(aW, aH, aY);
+            set1.playTogether(aY);
+            set1.start();*/
+            Utils.playSound(R.raw.ui_result_good01, duration / 2);
+            return duration;
+        } else
+            return 0;
+    }
+
+    private static final long hideDuration = 500;
+    private long hideAnim() {
+        if (isAnimated) {
+            long duration = hideDuration;
+            float ffd = fd;
+            new AnimUtil(this, "fd", ffd, 1.1f * ffd, 0).startSimpleAD(duration);
+            /*ObjectAnimator aD = ObjectAnimator.ofFloat(this, "fd", ffd, 1.1f * ffd, 0).setDuration(duration);
+            AnimatorSet set1 = new AnimatorSet().setDuration(duration);
+            set1.setInterpolator(new AccelerateDecelerateInterpolator());
+            set1.playTogether(aD);
+            set1.start();*/
+            //Utils.playSound(R.raw.ui_result_good01);
+            return duration;
+        } else
+            return 0;
+    }
+
+    private static final long changeDuration = 1000;
+    private long changeAnim(float newFd) {
+        if (isAnimated) {
+            long duration = changeDuration;
+            float ffd = fd;
+            new AnimUtil(this, "fd", ffd, 1.1f * ffd, .2f * ffd, 1.1f * newFd, newFd).startSimpleAD(duration);
+            /*ObjectAnimator aD = ObjectAnimator.ofFloat(this, "fd", ffd, 1.1f * ffd, .2f * ffd, 1.1f * newFd, newFd).setDuration(duration);
+            AnimatorSet set1 = new AnimatorSet().setDuration(duration);
+            set1.setInterpolator(new AccelerateDecelerateInterpolator());
+            set1.playTogether(aD);
+            set1.start();*/
+            Utils.playSound(R.raw.ui_result_good01, 2 * duration / 3);
+            return duration;
+        } else
+            return 0;
+    }
+}

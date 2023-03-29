@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<items>
+	<item name="bmp_crown_01_gold" x="0" y="0" w="200" h="200" />
+	<item name="bmp_crown_02_silver" x="200" y="0" w="200" h="200" />
+	<item name="bmp_crown_03_bronze" x="400" y="0" w="200" h="200" />
+	<item name="bmp_drop_100_wait" x="600" y="0" w="200" h="200" />
+	<item name="bmp_drop_101_wait_blink" x="800" y="0" w="200" h="200" />
+	<item name="bmp_drop_10_simple" x="1000" y="0" w="200" h="200" />
+	<item name="bmp_drop_11_simple_blink" x="0" y="200" w="200" h="200" />
+	<item name="bmp_drop_20_interest" x="200" y="200" w="200" h="200" />
+	<item name="bmp_drop_21_interest_blink" x="400" y="200" w="200" h="200" />
+	<item name="bmp_drop_30_surprise" x="600" y="200" w="200" h="200" />
+	<item name="bmp_drop_40_joke" x="800" y="200" w="200" h="200" />
+	<item name="bmp_drop_50_laugh" x="1000" y="200" w="200" h="200" />
+	<item name="bmp_drop_60_happy" x="0" y="400" w="200" h="200" />
+	<item name="bmp_drop_61_happy_blink" x="200" y="400" w="200" h="200" />
+	<item name="bmp_drop_70_punched" x="400" y="400" w="200" h="200" />
+	<item name="bmp_drop_80_pro" x="600" y="400" w="200" h="200" />
+	<item name="bmp_drop_90_sleep" x="800" y="400" w="200" h="200" />
+	<item name="bmp_hand" x="1000" y="400" w="200" h="200" />
+	<item name="bmp_potion_00_empty" x="0" y="600" w="200" h="200" />
+	<item name="bmp_potion_01_simple" x="200" y="600" w="200" h="200" />
+	<item name="bmp_potion_01_simple_group" x="400" y="600" w="200" h="200" />
+	<item name="bmp_potion_02_normal" x="600" y="600" w="200" h="200" />
+	<item name="bmp_potion_02_normal_group" x="800" y="600" w="200" h="200" />
+	<item name="bmp_potion_03_hard" x="1000" y="600" w="200" h="200" />
+	<item name="bmp_potion_03_hard_group" x="0" y="800" w="200" h="200" />
+	<item name="bmp_potion_04_insane" x="200" y="800" w="200" h="200" />
+	<item name="bmp_potion_04_insane_group" x="400" y="800" w="200" h="200" />
+	<item name="bmp_potion_05_crazy" x="600" y="800" w="200" h="200" />
+	<item name="bmp_potion_05_crazy_group" x="800" y="800" w="200" h="200" />
+	<item name="bmp_potion_10_final" x="1000" y="800" w="200" h="200" />
+</items>

@@ -1,0 +1,127 @@
+package com.softigress.magicsigns._system;
+
+import android.content.Context;
+import android.media.AudioManager;
+import android.media.SoundPool;
+import android.util.SparseIntArray;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class Audios {
+
+    private final int priority = 1;
+    private final int no_loop = 0;
+    private final int with_loop = 1;
+    private final float normal_playback_rate = 1f;
+
+    private AudioManager audioManager;
+    private SoundPool soundPool;
+    private SparseIntArray soundIds;
+
+    public Audios(Context context, AudioManager manager) {
+        this.audioManager = manager;
+        soundPool = new SoundPool(8, AudioManager.STREAM_MUSIC, 100);
+
+        int[] rawIds = new int[]{
+                R.raw.ui_item_check01,
+                R.raw.ui_item_click14,
+                R.raw.ui_item_click15,
+                R.raw.ui_dialog_show02,
+                //R.raw.ui_dialog_hide02,
+                R.raw.camera_click,
+                R.raw.restart02,
+
+                R.raw.ui_result_fail02,
+                R.raw.ui_result_good01,
+                R.raw.ui_result_out01,
+
+                R.raw.drop01,
+                R.raw.laugh01,
+                R.raw.message_down,
+                R.raw.message_ok,
+                R.raw.message_up,
+
+                R.raw.start02,
+                R.raw.wave03,
+                R.raw.wave04,
+                R.raw.inv_pick11,
+                R.raw.dna_pick04,
+                R.raw.record_break01,
+                R.raw.explode16,
+                R.raw.energy_catch02,
+                R.raw.energy_pick17,
+                R.raw.bonus08,
+                R.raw.potion19,
+                R.raw.glass06,
+                R.raw.glass08,
+                R.raw.glass_bulk05, // final potion sound
+                R.raw.virus02,
+                R.raw.plop04,
+                R.raw.punch03,
+                R.raw.plop05,
+                R.raw.lightning01,
+                R.raw.lightning02,
+                R.raw.lightning04,
+                R.raw.sign_rise08,
+
+                R.raw.activate23,
+                R.raw.miss11,
+        };
+        loadAudios(rawIds, context);
+    }
+
+    private void loadAudios(int[] rawIds, Context context) {
+        soundIds = new SparseIntArray();
+        for (int rawId : rawIds)
+            loadAudio(rawId, context);
+    }
+
+    private void loadAudio(int rawId, Context context) {
+        int id = soundPool.load(context, rawId, priority);
+        soundIds.put(rawId, id);
+    }
+
+    private float volume = 1f;
+    public void setVolume(float vol) {
+        volume = vol;
+    }
+
+    public void setVolume(boolean updown) {
+        int curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        curVolume = curVolume + (updown ? 1 : -1);
+        Utils.playSoundTap();
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, curVolume, 1);
+    }
+
+    public void playSound(int id) {
+        /*float curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        float leftVolume = curVolume / maxVolume;
+        float rightVolume = curVolume / maxVolume;*/
+
+        if (audioManager != null && soundPool != null) {
+            float curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            float maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            float leftVolume = volume * curVolume / maxVolume;
+            float rightVolume = volume * curVolume / maxVolume;
+
+            int soundId = soundIds.get(id);
+            if (soundId > 0)
+                soundPool.play(soundId, leftVolume, rightVolume, priority, no_loop, normal_playback_rate); // returns: streamId
+        }
+    }
+
+    public void Pause(int streamId) {
+        soundPool.pause(streamId);
+    }
+
+    public void recycle() {
+        if (soundIds != null)
+            soundIds.clear();
+
+        audioManager = null;
+        soundPool = null;
+        soundIds = null;
+    }
+}

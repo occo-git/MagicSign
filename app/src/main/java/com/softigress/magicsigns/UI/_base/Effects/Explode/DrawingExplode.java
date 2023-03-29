@@ -1,0 +1,64 @@
+package com.softigress.magicsigns.UI._base.Effects.Explode;
+import android.graphics.Bitmap;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingExplode extends DrawingBase {
+
+    private final float explodeFd0, explodeFd1;
+    private int maxAlpha = 255;
+    private long duration = 500;
+    //private DrawingFrameRate frameRate;
+
+    public DrawingExplode(float fx, float fy, float minFd, float maxFd, int maxAlpha, long duration, Bitmap bitmap) {
+        super(fx, fy, maxFd);
+        this.explodeFd0 = minFd;
+        this.explodeFd1 = maxFd;
+        this.maxAlpha = maxAlpha;
+        this.duration = duration;
+
+        setDefaultBitmap(bitmap);
+        hide();
+
+        //frameRate = new DrawingFrameRate("explode", .04f, .4f);
+    }
+
+    public void startAnim() {
+        setAlpha(0);
+        show();
+
+        new AnimUtil()
+                .add(this, "alpha", 0, maxAlpha, maxAlpha / 2, 0)
+                .add(this, "fd", explodeFd0, explodeFd1)
+                .startAD(duration);
+
+        Utils.vibrate(10);
+
+        TaskUtils.postDelayed(duration, new Runnable() {
+            @Override
+            public void run() { hide(); }
+        });
+    }
+
+    /*@Override
+    public void drawFrame(Canvas c) {
+        if (frameRate != null)
+            frameRate.start();
+
+        super.drawFrame(c);
+
+        if (frameRate != null)
+            frameRate.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (frameRate != null)
+            frameRate.recycle();
+        frameRate = null;
+    }*/
+}

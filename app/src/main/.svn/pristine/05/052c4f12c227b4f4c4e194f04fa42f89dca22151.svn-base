@@ -1,0 +1,148 @@
+package com.softigress.magicsigns._system.Settings;
+
+import android.content.SharedPreferences;
+
+import com.softigress.magicsigns._system.Settings._base.SettingBase;
+import com.softigress.magicsigns._system.Settings._base.SettingsBase;
+
+public class UserSettings extends SettingsBase {
+
+    //public ResultSettings resultSettings;
+    private SettingBase<Integer> sound;
+    private SettingBase<Float> soundVol;
+    private SettingBase<Integer> music;
+    private SettingBase<Float> musicVol;
+    private SettingBase<Integer> vibr;
+    private SettingBase<Integer> providerHash;
+    private SettingBase<String> userName;
+    //private SettingBase<Long> time;
+    private SettingBase<Integer> story;
+    private SettingBase<Integer> age;
+
+    public UserSettings(SharedPreferences sp, SharedPreferences.Editor editor) {
+        super(sp, editor);
+
+        //this.resultSettings = new ResultSettings(sp, editor);
+        this.sound = new SettingBase<>("user_sound", 1);
+        this.soundVol = new SettingBase<>("user_sound_vol", .75f);
+        this.music = new SettingBase<>("user_music", 1);
+        this.musicVol = new SettingBase<>("user_music_vol", .25f);
+        this.vibr = new SettingBase<>("user_vibr", 1);
+        this.providerHash = new SettingBase<>("user_provider_hash", 0);
+        this.userName = new SettingBase<>("user_name", "");
+        //this.time = new SettingBase<>("user_time", 0L);
+        this.story = new SettingBase<>("user_story", 1); // отображать заставку
+        this.age = new SettingBase<>("user_age", 0);
+    }
+
+    public long getHash() {
+    //    return resultSettings.getHash();
+        return 1;
+    }
+
+    /*public boolean containsTime() { return sp.contains(time.n); }
+    public void setTime(long t) { time.v = t; }
+    public long getTime() { return time.v; }*/
+
+    public void reset() {
+        //resultSettings.reset();
+        //sound.v = 1;
+        //music.v = 1;
+        //vibr.v = 1;
+    }
+
+    public void load() {
+        //resultSettings.load();
+        loadVals(new SettingBase[]{
+                this.sound,
+                this.soundVol,
+                this.music,
+                this.musicVol,
+                this.vibr,
+                this.providerHash,
+                this.userName,
+                //this.time,
+                this.story,
+                this.age
+        });
+    }
+
+    public void save() {
+        //resultSettings.save();
+        saveVals(new SettingBase[]{
+                this.sound,
+                this.soundVol,
+                this.music,
+                this.musicVol,
+                this.vibr,
+                this.providerHash,
+                this.userName,
+                //this.time,
+                this.story,
+                this.age
+        });
+    }
+
+    public boolean isSound() { return sound != null && sound.v == 1; }
+    public void soundOnOff(boolean onoff) { sound.v = onoff ? 1 : 0; }
+    public float getSoundVolume() { return soundVol.v; }
+    public void setSoundVolume(float vol) { soundVol.v = vol; }
+
+    public boolean isMusic() { return music != null && music.v == 1; }
+    public void musicOnOff(boolean onoff) { music.v = onoff ? 1 : 0; }
+    public float getMusicVolume() { return musicVol.v; }
+    public void setMusicVolume(float vol) { musicVol.v = vol; }
+
+    public boolean isVibr() { return vibr != null && vibr.v == 1; }
+    public void vibrOnOff(boolean onoff) { vibr.v = onoff ? 1 : 0; }
+
+    public Integer getProviderHash() { return providerHash.v; }
+    public void setProviderHash(int id) { providerHash.v = id; }
+
+    public String getUserName() { return userName.v; }
+    public void setUserName(String name) { userName.v = name; }
+
+    public boolean isStory() { return story != null && story.v == 1; }
+    public void storyOnOff(boolean onoff) { story.v = onoff ? 1 : 0; }
+
+    public Integer getAge() { return age != null ?  age.v : 0; }
+    public void setAge(int val) { age.v = val; }
+    public boolean isAdult() { return age != null && age.v >= CurrentSettings.adultAge; }
+
+    public void recycle() {
+        //if (resultSettings != null)
+        //    resultSettings.recycle();
+        if (sound != null)
+            sound.recycle();
+        if (soundVol != null)
+            soundVol.recycle();
+        if (music != null)
+            music.recycle();
+        if (musicVol != null)
+            musicVol.recycle();
+        if (vibr != null)
+            vibr.recycle();
+        if (providerHash != null)
+            providerHash.recycle();
+        if (userName != null)
+            userName.recycle();
+        //if (time != null)
+        //    time.recycle();
+        if (story != null)
+            story.recycle();
+        if (age != null)
+            age.recycle();
+
+        //resultSettings = null;
+        sound = null;
+        soundVol = null;
+        music = null;
+        musicVol = null;
+        vibr = null;
+        providerHash = null;
+        userName = null;
+        //time = null;
+        story = null;
+        age = null;
+    }
+}

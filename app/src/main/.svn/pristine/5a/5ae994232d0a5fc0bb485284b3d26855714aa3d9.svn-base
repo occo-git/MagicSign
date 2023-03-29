@@ -1,0 +1,518 @@
+package com.softigress.magicsigns.UI._base.Groups;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.Activities._base.ActivityGroupBase;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI.Rating.RatingRow.ScoreInfo;
+import com.softigress.magicsigns.UI.Rating.RatingRow.UserRatingRowInfo;
+import com.softigress.magicsigns.UI._Main.Dialogs.GameRate.GrpGameRateDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpShareDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Help.GrpHelpDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Login.GrpLoginDialog;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls.UserPhoto.UserPhoto;
+import com.softigress.magicsigns.UI._base.Effects.Circles.CirclesBase;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogListener;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogResultListener;
+import com.softigress.magicsigns.UI._Main.Dialogs.PotionVideos.GrpPotionVideosDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.PotionVideos.IGrpPotionVideosDialogListener;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.FireBase.Authentication.AuthManager;
+import com.softigress.magicsigns._system.FireBase.DataBase.IDataBaseManagerListener;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserVideoCount;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.IAsyncLoadFile;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpUserInfos extends ActivityGroupBase {
+
+    private static final float btnFd =       .075f;
+    private static final float xLogIn =      .10f, yLogIn =        .05f;
+    private static final float xPhoto =      .10f, yPhoto =        .05f, fdPhoto =        .10f;
+    private static final float xTxtLogIn =   .21f, yTxtLogIn =     .01f;
+    private static final float xBack =       .10f, yBack =         .84f, fdBack =         .075f;
+    private static final float xOptions =    .30f, yOptions =      .84f, fdOptions =      .075f;
+    private static final float xShare =      .90f, yShare =        .05f;
+    private static final float xHelp =       .90f, yHelp =         .84f, fdHelp =         .116f;
+    private static final float xViewVideo =  .90f, yViewVideo =    .15f, fdViewVideo =    .025f;
+
+    private final BtnBase btnShare;
+    protected final BtnBase btnLogIn;
+    private final DrawingText txtEnter;
+    private final CirclesBase circlesLogIn;
+
+    protected final GrpLoginDialog dlgLogin;
+    private final UserPhoto photo; // фото пользователя
+    private final CirclesBase circlesPhoto;
+    //protected final DrawingText txtLogin;
+    private BtnBase btnBack;
+    //private final BtnBase btnOptions;
+    private DrawingBaseTouchable videos;
+    private BtnBase btnVideos;
+    private DrawingBase helpHalo;
+    private BtnBase btnHelp;
+
+    //private final GrpOptionsDialog dlgOptions;
+    private final GrpShareDialog dlgShare;
+    protected final GrpGameRateDialog dlgRate;
+    private GrpHelpDialog dlgHelp;
+    protected GrpPotionVideosDialog dlgPotionVideos;
+
+    protected GrpUserInfos(boolean isUseNoConnectionDialog, boolean isBackAndOptions) {
+        super(isUseNoConnectionDialog);
+
+        //region Logged in / out + login dialog
+        btnLogIn = new BtnBase(xLogIn, yLogIn, btnFd, R.string.bmp_btn_logged_out);
+        btnLogIn.name = "btn_login";
+        btnLogIn.setLabelTextSized(R.string.dlg_Login_SignIn, TextUtils.main_login, DrawingHAlign.LEFT);
+        btnLogIn.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable e) { showDialog(dlgLogin); } });
+        addDrawingTouchable(btnLogIn);
+
+        circlesLogIn = new CirclesBase(.475f * btnFd, .85f * btnFd, 3000, false, true);
+        circlesLogIn.setPoint(xLogIn, yLogIn);
+        addDrawing(circlesLogIn);
+
+        dlgLogin = new GrpLoginDialog();
+        dlgLogin.setListener(new IGrpDialogListener() {
+            @Override
+            public void handleOnOk() { hideDialog(); }
+            @Override
+            public void handleOnCancel() { hideDialog(); }
+        });
+        addDialog(dlgLogin);
+
+        txtEnter = new DrawingText(DrawingHAlign.LEFT, TextUtils.main_login);
+        txtEnter.setPoint(xLogIn + .75f * btnFd, yLogIn);
+        txtEnter.setText(R.string.dlg_Login_SignIn);
+        //addDrawing(txtEnter);
+
+        photo = new UserPhoto(xPhoto, yPhoto, fdPhoto);
+        photo.setListener(new ITouchableListener() {
+            @Override
+            public void handelOnTouch(ITouchable item) { }
+            @Override
+            public void handelOnTouchUp(ITouchable item) {
+                circlesPhoto.start();
+                Utils.playSoundClick();
+                showDialog(dlgLogin);
+            }
+        });
+        addDrawingTouchable(photo);
+        circlesPhoto = new CirclesBase(.5f * fdPhoto, .85f * fdPhoto, 500);
+        circlesPhoto.setPoint(xPhoto, yPhoto);
+        addDrawing(circlesPhoto);
+
+        //txtLogin = new DrawingText(DrawingBase.CONST_HALIGN_LEFT, Typeface.DEFAULT, TextUtils.rating_row_name);
+        //txtLogin.setVerticalAlign(DrawingBase.CONST_VALIGN_TOP);
+        //txtLogin.setTextBackARGB(128, 0, 0, 0);
+        //txtLogin.setTextBackStrokeWidthK(2f);
+        //txtLogin.setPoint(xTxtLogIn, yTxtLogIn);
+        //addDrawing(txtLogin);
+        //endregion
+
+        //region Options dialog
+        if (isBackAndOptions) {
+            btnBack = new BtnBase(xBack, yBack, fdBack, R.string.bmp_btn_exit);
+            btnBack.name = "btn_back";
+            btnBack.setAlpha(196);
+            btnBack.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable e) { MainActivityUtils.doShowMain(); } });
+            addDrawingTouchable(btnBack);
+
+            /*btnOptions = new BtnBase(xOptions, yOptions, fdOptions, R.string.bmp_btn_options);
+            btnOptions.name = "btn_options";
+            btnOptions.setAlpha(196);
+            btnOptions.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable e) { showDialog(dlgOptions); } });
+            addDrawingTouchable(btnOptions);
+
+            dlgOptions = new GrpOptionsDialog();
+            dlgOptions.setListener(new IGrpDialogListener() {
+                @Override public void handleOnOk() { hideDialog(); }
+                @Override public void handleOnCancel() { hideDialog(); }
+            });
+            addDialog(dlgOptions);*/
+        }
+        //endregion
+
+        //region Share
+        btnShare = new BtnBase(xShare, yShare, btnFd, R.string.bmp_btn_share);
+        btnShare.name = "btn_share";
+        btnShare.setAlpha(210);
+        btnShare.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { showDialog(dlgShare); }
+        });
+        addDrawingTouchable(btnShare);
+
+        dlgShare = new GrpShareDialog();
+        dlgShare.setListener(new IGrpDialogResultListener() {
+            @Override
+            public void handleOnResult(int result) {
+                switch (result) {
+                    case GrpShareDialog.DIALOG_RESULT_SCREENSHOT:
+                        // пауза ожидания скрытия диалога, чтобы не снимать анимацию нажатия кнопки
+                        // делаем снимок экрана
+                        TaskUtils.postDelayed(3 * hideDialog(), new Runnable() { @Override public void run() { MainActivityUtils.doShareScreenshot(); }  });
+                        break;
+                    case GrpShareDialog.DIALOG_RESULT_LINK:         hideDialog(); MainActivityUtils.doShareLink(); break;
+                    case GrpShareDialog.DIALOG_RESULT_RATE:         showDialog(dlgRate); break;
+                    case GrpShareDialog.DIALOG_RESULT_OK:           hideDialog(); break;
+                }
+            }
+        });
+        dlgShare.setListener(new IGrpDialogListener() {
+            @Override
+            public void handleOnOk() { hideDialog(); }
+            @Override
+            public void handleOnCancel() { hideDialog(); }
+        });
+        addDialog(dlgShare);
+        //endregion
+
+        //region Rate
+        dlgRate = new GrpGameRateDialog();
+        dlgRate.setListener(new IGrpDialogListener() {
+            @Override
+            public void handleOnOk() {
+                int stars = dlgRate.getStars();
+                hideDialog();
+                if (stars > 0)
+                    MainActivityUtils.doRateGame(stars);
+            }
+            @Override
+            public void handleOnCancel() { hideDialog(); }
+        });
+        addDialog(dlgRate);
+        //endregion
+
+        addRepeater(15000, new Runnable() {
+            @Override
+            public void run() { animateControls100(); }
+        });
+    }
+
+    //region potion for video
+    // добавляем кнопку для вызова диалога Potion for video
+    protected void addPotionVideosButton() {
+        videos = new DrawingBaseTouchable(xViewVideo, yViewVideo, fdViewVideo * 1.75f);
+        videos.setDefaultBitmap(R.string.bmp_video);
+        videos.setAngel(-15);
+        videos.setListener(new ITouchableListener() {
+            @Override public void handelOnTouch(ITouchable item) {
+                Utils.playSoundClick();
+                showDialog(dlgPotionVideos);
+            }
+            @Override public void handelOnTouchUp(ITouchable item) { }
+        });
+        addDrawingTouchable(videos);
+
+        btnVideos = new BtnBase(xViewVideo, yViewVideo, fdViewVideo, R.string.bmp_btn_potion);
+        btnVideos.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable item) {
+                Utils.playSoundClick();
+                showDialog(dlgPotionVideos);
+            }
+        });
+        addDrawingTouchable(btnVideos);
+    }
+
+    protected void showhideVideosButton(boolean isShowHide) {
+        if (isShowHide) {
+            if (videos != null)
+                videos.show();
+            if (btnVideos != null)
+                btnVideos.show();
+        } else {
+            if (videos != null)
+                videos.hide();
+            if (btnVideos != null)
+                btnVideos.hide();
+        }
+    }
+
+    // добавляем диалог Potion for video
+    protected void addPotionVideoDialog() {
+        dlgPotionVideos = new GrpPotionVideosDialog();
+        dlgPotionVideos.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        dlgPotionVideos.setListener(new IGrpPotionVideosDialogListener() {
+            @Override
+            public void onShowVideo(AchievementType type) {
+                MainActivityUtils.doShowVideoAd(type);
+            }
+        });
+        addDialog(dlgPotionVideos);
+    }
+    //endregion
+
+    protected void addHelpItems(int[] data) {
+        //region Help
+        helpHalo = new DrawingBase(xHelp, yHelp, 2f * fdHelp);
+        helpHalo.setDefaultBitmap(R.string.bmp_halo_white_out);
+        helpHalo.setAlpha(0);
+        addDrawing(helpHalo);
+
+        btnHelp = new BtnBase(xHelp, yHelp, fdHelp, R.string.bmp_item_idea);
+        btnHelp.name = "btn_help";
+        btnHelp.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { showDialog(dlgHelp); }
+        });
+        addDrawingTouchable(btnHelp);
+
+        dlgHelp = new GrpHelpDialog();
+        dlgHelp.addItemInfos(data);
+        dlgHelp.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        addDialog(dlgHelp);
+        //endregion
+    }
+
+    //region Connection
+    @Override
+    public void onConnection(boolean isOnOff) {
+        super.onConnection(isOnOff);
+        updateDlgLogin(); // обновим информацию в диалоге логина
+    }
+    //endregion
+
+    //region SignIn
+    @Override
+    public void onAuthChanged() {
+        super.onAuthChanged();
+
+        refreshControls();
+        updateLoginInfo();
+    }
+
+    protected void updateLoginInfo() {
+        int hash = Utils.authManager.getCurrentProviderHash();
+        if (hash == 0) {
+            btnLogIn.setDefaultBitmap(R.string.bmp_btn_logged_out);
+            btnLogIn.show();
+            circlesLogIn.start();
+            Utils.dataBaseManager.setRatingListenerOff();
+            Utils.dataBaseManager.setUserListenerOff();
+            Utils.dataBaseManager.setUserVideoCountsListenerOff();
+            txtEnter.show();
+            photo.hide();
+            //txtLogin.hide();
+        } else {
+            //btnLogIn.setDefaultBitmap(R.string.bmp_btn_logged_in);
+            btnLogIn.hide();
+            circlesLogIn.stop();
+            Utils.dataBaseManager.setRatingListenerOn();
+            Utils.dataBaseManager.setUserListenerOn();
+            Utils.dataBaseManager.setUserVideoCountsListenerOn();
+            txtEnter.hide();
+            photo.show();
+            //txtLogin.show();
+        }
+        btnLogIn.refreshCurrentStatus();
+
+        //if (txtLogin != null)
+        //    txtLogin.setText(Utils.authManager.getUserName());//Utils.getSubString(Utils.authManager.getUserName().replace(' ', '/'), 17));
+
+        // при аутентификации сразу обновим информацию в диалоге логина
+        updateDlgLogin();
+        loadUserPhoto(hash);
+    }
+
+    private void updateDlgLogin() {
+        // обновим информацию в диалоге логина
+        if (dlgLogin != null)
+            dlgLogin.update();
+    }
+
+    private void loadUserPhoto(int hash) {
+        if (hash == AuthManager.PROVIDER_ID_FIREBASE)
+            setUserPhoto(Utils.getBitmap(R.string.bmp_logo_firebase));
+        else
+            Utils.authManager.getUserPhoto(new IAsyncLoadFile() {
+            @Override public void onProgress(FileInfo fileInfo, float progress) { }
+            @Override
+            public void onFinish(FileInfo fileInfo) {
+                if (fileInfo.file != null) {
+                    Bitmap b = BitmapFactory.decodeFile(fileInfo.file.getAbsolutePath());
+                    setUserPhoto(b);
+                }
+            }
+            @Override public void onError(Throwable t) {
+                setUserPhoto(null);
+            }
+        });
+    }
+
+    private void setUserPhoto(Bitmap b) {
+        if (photo != null)
+            photo.setPhoto(b);
+        if (dlgLogin != null)
+            dlgLogin.setUserPhoto(b);
+    }
+    //endregion
+
+    //region show / hide / refresh
+    @Override
+    public void show() {
+        super.show();
+
+        Utils.dataBaseManager.setListener(new IDataBaseManagerListener() {
+            @Override
+            public void onRatingChanged(ScoreInfo userScore, ArrayRecyclable<ScoreInfo> scores) {
+                setScores(userScore, scores);
+                refreshControls();
+            }
+            @Override
+            public void onTopUserInfosChanged(ArrayRecyclable<UserRatingRowInfo> topRowInfos) {
+                setTopRowInfos(topRowInfos);
+                refreshControls();
+            }
+            @Override
+            public void onCurrentUserInfoChanged(UserRatingRowInfo rowInfo) {
+                setUserRowInfo(rowInfo);
+                refreshControls();
+            }
+            @Override
+            public void onCurrentUserVideoCountsChanged(UserVideoCount uvc) {
+                setUserVideoCount(uvc);
+                refreshControls();
+            }
+        });
+        refreshControls();
+        updateLoginInfo();
+
+        AnimUtil au = new AnimUtil()
+                .add(btnShare, "scale", 0f, 1.1f, 1f)
+                .add(btnShare, "alpha", 0, 210)
+                .add(btnLogIn, "scale", 0f, 1.1f, 1f)
+                .add(btnLogIn, "alpha", 0, 255)
+                .add(txtEnter, "alpha", 0, 255)
+                .add(photo, "alpha", 0, 255);
+                //.add(txtLogin, "alpha", 0, 255);
+        if (btnBack != null)
+            au.add(btnBack, "scale", 0f, 1.1f, 1f).add(btnBack, "alpha", 0, 196);
+        au.startD(showDuration);
+    }
+
+    protected ScoreInfo userScore;
+    protected ArrayRecyclable<ScoreInfo> scores = null;
+    private void setScores(ScoreInfo userScore, ArrayRecyclable<ScoreInfo> scores) {
+        this.userScore = userScore;
+        this.scores = scores;
+    }
+
+    protected ArrayRecyclable<UserRatingRowInfo> topRowInfos = null;
+    private void setTopRowInfos(ArrayRecyclable<UserRatingRowInfo> topRowInfos) { this.topRowInfos = topRowInfos; }
+
+    protected UserRatingRowInfo userRowInfo = null;
+    private void setUserRowInfo(UserRatingRowInfo rowInfo) {
+        userRowInfo = rowInfo;
+        if (rowInfo != null)
+            Utils.dataBaseManager.currentUserScoreInfo = rowInfo.userScoreInfo;
+        else
+            Utils.dataBaseManager.currentUserScoreInfo = null;
+    }
+
+    private UserVideoCount userVideoCount;
+    private void setUserVideoCount(UserVideoCount uvc) {
+        userVideoCount = uvc;
+    }
+
+    protected void refreshControls() {
+        if (dlgShare != null)
+            dlgShare.applySettings(userVideoCount);
+        if (dlgPotionVideos != null)
+            dlgPotionVideos.applySettings(userRowInfo, userVideoCount);
+    }
+
+    protected void showhideVideos(boolean isShowHide) {
+        if (videos != null && btnVideos != null) {
+            if (isShowHide) {
+                videos.show();
+                btnVideos.show();
+            } else {
+                videos.hide();
+                btnVideos.hide();
+            }
+        }
+    }
+
+    @Override
+    public long hide() {
+        Utils.dataBaseManager.setRatingListenerOff();
+        Utils.dataBaseManager.setUserListenerOff();
+        Utils.dataBaseManager.setUserVideoCountsListenerOff();
+        super.hide();
+
+        /*Animator aShA = ObjectAnimator.ofInt(btnShare, "alpha", 255, 0).setDuration(hideDuration);
+        Animator aLA = ObjectAnimator.ofInt(btnLogIn, "alpha", 255, 0).setDuration(hideDuration);
+        Animator aTA = ObjectAnimator.ofInt(txtEnter, "alpha", 255, 0).setDuration(hideDuration);
+        Animator aPA = ObjectAnimator.ofInt(photo, "alpha", 255, 0).setDuration(hideDuration);
+        //Animator aTLA = ObjectAnimator.ofInt(txtLogin, "alpha", 255, 0).setDuration(hideDuration);
+
+        AnimatorSet set = new AnimatorSet();
+        set.setDuration(hideDuration);
+        set.setInterpolator(new DecelerateInterpolator());
+        set.playTogether(aShA, aLA, aTA, aPA);
+        set.start();*/
+
+        return hideDuration;
+    }
+    //endregion
+
+    //region reward
+    @Override
+    public void onVideoReward(AchievementType type, int reward) {
+        if (dlgPotionVideos != null && isCurrentDialog(dlgPotionVideos))
+            dlgPotionVideos.onVideoReward(type, reward);
+    }
+    //endregion
+
+    private static final long animDuration100 = 2000;
+    private boolean isOnAction100 = false;
+    private void animateControls100() {
+        if (!isOnAction100) {
+            isOnAction100 = true;
+            if (btnHelp != null && btnHelp.isVisible() && helpHalo.isVisible()) {
+                new AnimUtil()
+                        .add(btnHelp, "Scale", 1f, .85f, 1.2f, 1f)
+                        .add(helpHalo, "scale", 0f, 1f)
+                        .add(helpHalo, "alpha", 0, 64, 0)
+                        .startAD(animDuration100);
+                /*ObjectAnimator bS = ObjectAnimator.ofFloat(btnHelp, "Scale", 1f, .85f, 1.2f, 1f).setDuration(animDuration100);
+                ObjectAnimator hS = ObjectAnimator.ofFloat(helpHalo, "scale", 0f, 1f).setDuration(animDuration100);
+                ObjectAnimator hA = ObjectAnimator.ofInt(helpHalo, "alpha", 0, 64, 0).setDuration(animDuration100);
+                AnimatorSet set = new AnimatorSet();
+                set.playTogether(bS, hS, hA);
+                set.setInterpolator(new AccelerateDecelerateInterpolator());
+                set.start();*/
+            }
+            TaskUtils.postDelayed(2 * animDuration100, new Runnable() {
+                @Override
+                public void run() { isOnAction100 = false; }
+            });
+        }
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (topRowInfos != null)
+            topRowInfos.recycle();
+        topRowInfos = null;
+    }
+}

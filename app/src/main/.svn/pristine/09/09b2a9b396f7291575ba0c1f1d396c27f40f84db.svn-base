@@ -1,0 +1,636 @@
+package com.softigress.magicsigns.Story;
+
+import android.graphics.Bitmap;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.Game.Cells.Membrane.Membrane;
+import com.softigress.magicsigns.Game.Cells._base.DrawingCell;
+import com.softigress.magicsigns.Game.Puncher.DrawingPuncher;
+import com.softigress.magicsigns.Game.Puncher.IDrawingPuncherListener;
+import com.softigress.magicsigns.Game.Puncher.RaySign;
+import com.softigress.magicsigns.Game.Signs.SignHelper.SignHelper;
+import com.softigress.magicsigns.Game.Signs._base.DrawingSignCell;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.Story._base.GrpStoryLineBase;
+import com.softigress.magicsigns.Story._base.StoryLineStep;
+import com.softigress.magicsigns.UI._Main.Dialogs.Options.GrpOptionsDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Options.IGrpOptionsDialog;
+import com.softigress.magicsigns.UI._base.Controls.Drop.DropMotionType;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageInfo;
+import com.softigress.magicsigns.UI._base.Effects.BackStars.BackStars;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogHideListener;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogListener;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfo;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Settings.Infos.SignStrength;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import static com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop.MES_HAPPY;
+import static com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop.MES_PRO;
+
+public class GrpIntro extends GrpStoryLineBase {
+
+    private final static float xOptions =       .10f, yOptions =    .85f, fdOptions =      .075f;
+    private static final float xBack =          .90f, yBack =       .85f, fdBack =         .075f;
+    private static final float viralStarsFx =   .5f, viralStarsFy = .2f, viralStarsFw =    .68f, viralStarsFh = .82f;
+    private static final float xDrop =          .50f, yDrop =       .90f, fdDrop =         .166f;
+    private static final int viralStarsCount = 500;
+
+    private BtnBase btnOptions;
+    private GrpOptionsDialog dlgOptions;
+    private BtnBase btnSkipIntro;
+    private DrawingBase earthGreen, earthFire, earthIce;
+    private DrawingText txt1, txt2, txt3;
+    private Comet comet;
+    private BackStars viralStars;
+    private DrawingCell membrane;
+    private FunnyDrop drop;
+    private DrawingSignCell cell;
+    private SignHelper signHelper;
+    private DrawingPuncher puncher;
+
+    public GrpIntro() { }
+
+    @Override
+    protected boolean isStars() { return true; }
+
+    @Override
+    public void playMusic() { Utils.playMusicFile(R.raw.origin_of_life_short, true); }
+
+    @Override
+    protected int[] getBitmapIds() {
+        return new int[] {
+                R.drawable.earth_green,
+                R.drawable.earth_fire,
+                R.drawable.earth_ice,
+                //R.drawable.comet
+        };
+    }
+
+    @Override
+    public void loadResources() {
+        super.loadResources();
+
+        bitmapManager.parseBitmaps(R.drawable.bitmaps100, R.xml.bitmaps100intro);
+        bitmapManager.parseBitmaps(R.drawable.bitmaps200, R.xml.bitmaps200intro);
+
+        //region Options button
+        btnOptions = new BtnBase(xOptions, yOptions, fdOptions, getBitmap(R.string.bmp_btn_options));
+        btnOptions.name = "btn_intro_options";
+        btnOptions.setAlpha(196);
+        btnOptions.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable e) { showDialog(dlgOptions); } });
+        addDrawingTouchable(btnOptions);
+        //endregion
+
+        //region Options dialog
+        dlgOptions = new GrpOptionsDialog(bitmapManager);
+        dlgOptions.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        dlgOptions.setListener(new IGrpOptionsDialog() {
+            @Override public void musicOn() { playMusic(); }
+            @Override public void musicOff() { stopMusic(); }
+        });
+        addDialog(dlgOptions);
+        //endregion
+
+        // region Skip button
+        btnSkipIntro = new BtnBase(xBack, yBack, fdBack, getBitmap(R.string.bmp_btn_play));
+        //btnSkipIntro.setLabelTextSized(R.string.intro_skip, TextUtils.intro_skip, DrawingHAlign.RIGHT);
+        btnSkipIntro.name = "btn_skip_intro";
+        btnSkipIntro.setAlpha(196);
+        btnSkipIntro.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) {
+                MainActivityUtils.doShowMain();
+            }
+        });
+        addDrawingTouchable(btnSkipIntro);
+        //endregion
+
+        earthGreen = new DrawingBase(.3f, getBitmap(R.drawable.earth_green));
+        earthGreen.hide();
+        addDrawing(earthGreen);
+        earthFire = new DrawingBase(.3f, getBitmap(R.drawable.earth_fire));
+        earthFire.hide();
+        addDrawing(earthFire);
+        earthIce = new DrawingBase(.3f, getBitmap(R.drawable.earth_ice));
+        earthIce.hide();
+        addDrawing(earthIce);
+
+        txt1 = new DrawingText(DrawingHAlign.CENTER, TextUtils.intro_text_normal);
+        txt1.isPaintRect = true;
+        txt1.hide();
+        addDrawing(txt1);
+
+        txt2 = new DrawingText(DrawingHAlign.CENTER, TextUtils.intro_text_small);
+        //txt2.isPaintRect = true;
+        txt2.hide();
+        addDrawing(txt2);
+
+        comet = new Comet(.075f, getBitmap(R.string.bmp_spot_white));
+        comet.hide();
+        addDrawing(comet);
+
+        viralStars = new BackStars(viralStarsFx - viralStarsFw / 2f, viralStarsFy, viralStarsFw, viralStarsFh, viralStarsCount, 5000);
+        viralStars.isMoving = true;
+        addDrawing(viralStars);
+
+        txt3 = new DrawingText(DrawingHAlign.CENTER, TextUtils.intro_text_big);
+        //txt3.isPaintRect = true;
+        txt3.hide();
+        addDrawing(txt3);
+
+        float fr = Membrane.membraneFr;
+        membrane = new DrawingCell(fr, Membrane.podCount, fr / 150f, fr / 100f);
+        membrane.setPoint(Membrane.cx, Membrane.cy);
+        membrane.setAngelsDegrees(Membrane.degreesStart, Membrane.degreesEnd);
+        membrane.setPodDuration(Membrane.podDuration);
+        membrane.setWaves(Membrane.membraneWavesCount);
+        membrane.isStarted = true;
+        // disabled by default
+        membrane.setFr(fr * .8f);
+        membrane.setColor(0, 255, 255, 255);
+        membrane.setAlpha(0);
+        addDrawing(membrane);
+
+        //region Drop
+        drop = new FunnyDrop(xDrop, 1.5f, fdDrop);
+        drop.loadStatuses(
+                bitmapManager,
+                new int[]{
+                        //FunnyDrop.STATUS_10_SIMPLE,
+                        //FunnyDrop.STATUS_11_SIMPLE_BLINK,
+                        FunnyDrop.STATUS_20_INTEREST,
+                        FunnyDrop.STATUS_21_INTEREST_BLINK,
+                        //FunnyDrop.STATUS_30_SURPRISE,
+                        //FunnyDrop.STATUS_40_JOKE,
+                        FunnyDrop.STATUS_50_LAUGH,
+                        FunnyDrop.STATUS_60_HAPPY,
+                        FunnyDrop.STATUS_61_HAPPY_BLINK,
+                        //FunnyDrop.STATUS_70_PUNCHED,
+                        FunnyDrop.STATUS_80_PRO,
+                        //FunnyDrop.STATUS_90_SLEEP,
+                        //FunnyDrop.STATUS_100_WAIT,
+                        //FunnyDrop.STATUS_101_WAIT_BLINK,
+                });
+        drop.setMessagePoint(xDrop, yDrop - 1.5f * fdDrop);
+        drop.setMessageFontSize(TextUtils.main_drop_message);
+        drop.addMessageTexts(
+                "happy",
+                MES_HAPPY,
+                new int[]{
+                        0, 1, R.string.intro_frame10_msg_good1,
+                        0, 1, R.string.intro_frame10_msg_good2,
+                        0, 1, R.string.intro_frame10_msg_good3
+                });
+        drop.addMessageTexts(
+                "pro",
+                FunnyDrop.MES_PRO,
+                new int[]{
+                        0, 1, R.string.intro_frame10_msg_again1,
+                        0, 1, R.string.intro_frame10_msg_again2,
+                        0, 1, R.string.intro_frame10_msg_again3
+                });
+        drop.isAllowMotion = true;
+        addDrawingTouchable(drop);
+        //endregion
+
+        //region Sign Cell
+        SignInfo info = SignInfos.getRandomInfoByParams(SignStrength.NORMAL);
+        cell = new DrawingSignCell(info, CurrentSettings.signFr, CurrentSettings.signMaxDuration, bitmapManager);
+        cell.isHelpItem = true;
+        cell.isStarted = true;
+        addDrawing(cell);
+
+        signHelper = new SignHelper(bitmapManager);
+        addDrawing(signHelper);
+
+        puncher = new DrawingPuncher();
+        addDrawingTouchable(puncher);
+        //endregion
+    }
+
+    @Override
+    public void show() {
+        super.show();
+
+        // отключаем отображение Заставки при следующем запуске игры
+        Utils.storyOnOff(false);
+        Utils.saveSettings();
+
+        addAnim(new AnimUtil()
+                .add(btnOptions, "scale", 0f, 1.1f, 1f)
+                .add(btnOptions, "alpha", 0, 196)
+                .add(btnSkipIntro, "scale", 0f, 1.1f, 1f)
+                .add(btnSkipIntro, "alpha", 0, 196)
+        ).startD(showDuration);
+
+        initSteps();
+
+        add_F1S0(100, 25800); // earth scale
+        add_F1S1(1000, 5000); // Зеленая Земля
+        add_F1S2(3000); // Земля 2 миллиарда лет назад
+        add_F1S3(6000); // hide text
+
+        add_F2S1(8000); // Жизнь сталкивается с различными турдностями
+        add_F2S2(11000, 1000); // Земля - потепление
+        add_F2S3(11500); // Потепление
+        add_F2S4(15000); // hide text
+
+        add_F3S1(15000, 2000); // Земля - обледенение
+        add_F3S2(16500); // Обледенение
+        add_F3S3(20000); // hide text
+
+        add_F5S1(22000, 2000); // Земля - зеленая
+        add_F5S2(23000); // Однажды
+
+        add_F6S1(26000, 5000); // Земля - приближение
+        add_F6S2(28000); // Комета, пролетая мимо Земли
+        add_F6S3(28000, 5000); // комета
+
+        add_F7S1(31000, 15000); // Земля - приближение
+        add_F7S2(34000); // принесла на Землю
+        add_F7S3(35000); // Вирус - падение на Землю (старт)
+        add_F7S4(35000); // инопланетный ВИРУС
+        add_F7S5(41000); // Вирус - падение на Землю (стоп)
+        add_F7S6(41000); // hide text
+
+        add_F8S1(42000, 7000); // Мембрана
+        add_F8S2(42000); // Кто спасет Землю?
+        add_F8S3(45000); // Кто станет этим Героем?
+
+        add_F9S1(50000); // hide text
+        add_F9S2(51000, 3000); // sign cell
+        add_F9S3(52000, 3000); // drop
+        add_F9S4(53000); // Привет! Я иммунная клетка Нумми
+        add_F9S5(57000); // Я помогу тебе Мне известен сопособ уничтожения вирусных клеток!
+        add_F9S7(63000); // Если нарисовать знак правильно ДНК вирусной клетки разрушится!
+        add_F9S8(67000); // sign helper
+
+        activateSteps();
+    }
+
+    //region frame1
+    private void add_F1S0(long delay, final long duration) {
+        // Земля
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                addAnim(new AnimUtil()
+                        .add(earthGreen, "scale",    .62f, 1f)
+                        .add(earthFire,  "scale",    .62f, 1f)
+                        .add(earthIce,   "scale",    .62f, 1f)
+                        .add(earthGreen, "Fy",       .5f, .38f)
+                        .add(earthFire,  "Fy",       .5f, .38f)
+                        .add(earthIce,   "Fy",       .5f, .38f)
+                ).startAD(duration);
+            }
+        });
+    }
+    private void add_F1S1(long delay, final long duration) {
+        // Зеленая Земля
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                earthGreen.setAlpha(0);
+                earthGreen.setPoint(.5f, .5f);
+                earthGreen.show();
+                addAnim(new AnimUtil(earthGreen, "alpha", 0, 255)).startSimpleAD(duration);
+            }
+        });
+    }
+    private void add_F1S2(long delay) {
+        // Земля 2 миллиарда лет назад
+        showText(txt1, .5f, .2f, R.string.intro_frame1_txt1, delay);
+    }
+    private void add_F1S3(long delay) {
+        hideText(txt1, delay);
+    }
+    //endregion
+
+    //region frame2
+    private void add_F2S1(long delay) {
+        // ЖИЗНЬ сталкивается с различными трудностями
+        showText(txt1, .5f, .16f, R.string.intro_frame2_txt1, delay);
+    }
+    private void add_F2S2(long delay, final long duration) {
+        // Земля - потепление
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                earthFire.setAlpha(0);
+                earthFire.setPoint(.5f, .38f);
+                earthFire.show();
+                addAnim(new AnimUtil(earthFire, "alpha", 0, 255)).startSimpleAD(duration);
+            }
+        });
+    }
+    private void add_F2S3(long delay) {
+        // Потепление
+        showText(txt2, .5f, .65f, R.string.intro_frame2_txt2, delay);
+    }
+    private void add_F2S4(long delay) {
+        hideText(txt2, delay);
+    }
+    //endregion
+
+    //region frame3
+    private void add_F3S1(long delay, final long duration) {
+        // Земля - обледенение
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                earthIce.setAlpha(0);
+                earthIce.setPoint(.5f, .38f);
+                earthIce.show();
+                addAnim(new AnimUtil()
+                        .add(earthFire, "alpha", 255, 0)
+                        .add(earthIce, "alpha", 0, 255)
+                ).startAD(duration);
+            }
+        });
+    }
+    private void add_F3S2(long delay) {
+        // Обледенение
+        showText(txt2, .5f, .61f, R.string.intro_frame3_txt2, delay);
+    }
+    private void add_F3S3(long delay) {
+        hideText(txt1, delay);
+        hideText(txt2, delay);
+    }
+    //endregion
+
+    //region frame5
+    private void add_F5S1(long delay, final long duration) {
+        // Земля - зеленая
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                addAnim(new AnimUtil(earthIce, "alpha", 255, 0)).startSimpleAD(duration);
+            }
+        });
+    }
+    private void add_F5S2(long delay) {
+        // Однажды
+        showText(txt1, .5f, .15f, R.string.intro_frame5_txt1, delay);
+    }
+    //endregion
+
+    //region frame6
+    private void add_F6S1(long delay, final long duration) {
+        // Земля - приблежение
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                addAnim(new AnimUtil()
+                        .add(earthGreen,    "scale",    1f,     1.25f)
+                        .add(earthFire,     "scale",    1f,     1.25f)
+                        .add(earthIce,      "scale",    1f,     1.25f)
+                        .add(earthGreen,    "Fy",       .38f,   .62f)
+                        .add(earthFire,     "Fy",       .38f,   .62f)
+                        .add(earthIce,      "Fy",       .38f,   .62f)
+                ).startAD(duration);
+            }
+        });
+    }
+    private void add_F6S2(long delay) {
+        // Комета, пролетая мимо Земли
+        showText(txt2, .5f, .27f, R.string.intro_frame6_txt1, delay);
+    }
+    private void add_F6S3(long delay, final long duration) {
+        // Комета
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                comet.start(-.2f, .45f, .5f, .31f, 1.2f, .42f, duration);
+                //Utils.vibrate(duration);
+                Utils.vibrateWave();
+            }
+        });
+    }
+    //endregion
+
+    //region frame7
+    private void add_F7S1(long delay, final long duration) {
+        hideText(txt1, delay);
+        hideText(txt2, delay);
+        // Земля - приблежение
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                addAnim(new AnimUtil()
+                        .add(earthGreen,    "alpha",    255,    0)
+                        .add(earthGreen,    "scale",    1.25f,  5f)
+                        //.add(earthFire,     "scale",    1.25f,  5f)
+                        //.add(earthIce,      "scale",    1.25f,  5f)
+                        .add(earthGreen,    "Fy",       .62f,   1.5f)
+                        //.add(earthFire,     "Fy",       .62f,   1.5f)
+                        //.add(earthIce,      "Fy",       .62f,   1.5f)
+                ).startAD(duration);
+            }
+        });
+    }
+    private void add_F7S2(long delay) {
+        // Принесла на Землю
+        showText(txt2, .5f, .30f, R.string.intro_frame7_txt1, delay);
+    }
+    private void add_F7S3(long delay) {
+        // Вирус - падение на Землю (старт)
+        addStep(delay, new Runnable() { @Override public void run() { viralStars.start(); } });
+    }
+    private void add_F7S4(long delay) {
+        // Инопланетный ВИРУС
+        showText(txt3, .5f, .40f, R.string.intro_frame7_txt2, delay);
+    }
+    private void add_F7S5(long delay) {
+        hideText(txt2, delay);
+        // Вирус - падение на Землю (стоп)
+        addStep(delay, new Runnable() { @Override public void run() { viralStars.stop(); } });
+    }
+    private void add_F7S6(long delay) {
+        hideText(txt3, delay);
+    }
+    //endregion
+
+    //region frame8
+    private void add_F8S1(long delay, final long duration) {
+        // Мембрана
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                addAnim(new AnimUtil()
+                        .add(membrane, "fr", Membrane.membraneFr * .8f, Membrane.membraneFr)
+                        .add(membrane, "alpha", 0, 255)
+                ).startAD(duration);
+            }
+        });
+    }
+    private void add_F8S2(long delay) {
+        // Кто защитит Землю?
+        showText(txt2, .5f, .5f, R.string.intro_frame8_txt1, delay);
+    }
+    private void add_F8S3(long delay) {
+        // Кто станет этим Героем?
+        showText(txt1, .5f, .38f, R.string.intro_frame8_txt2, delay);
+    }
+    //endregion
+
+    //region frame9
+    private void add_F9S1(long delay) {
+        hideText(txt1, delay);
+        hideText(txt2, delay);
+    }
+    private void add_F9S2(long delay, final long duration) {
+        // sign cell
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                addAnim(new AnimUtil()
+                        .add(cell, "fy", -2f * CurrentSettings.signFr, 2f * CurrentSettings.signFr)
+                        .add(cell, "alpha", 0, 255)
+                ).startAD(duration);
+            };
+        });
+    }
+    private void add_F9S3(long delay, final long duration) {
+        // drop
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                drop.setPoint(xDrop, 1.3f);
+                drop.setStatus(FunnyDrop.STATUS_20_INTEREST);
+                long duration = 1000;
+                // старт анимации движения
+                drop.startAnimAD(duration,
+                        addAnim(new AnimUtil()
+                                .add(drop, "fy", 1.3f, yDrop - .02f, yDrop)
+                                .add(drop, "widthScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                                .add(drop, "heightScale", 1f, .95f, .975f, 1f, 1f)
+                        ).getAnimatorSet(duration));
+                //drop.showMessage(duration, FunnyDrop.MES_INTEREST);
+            }
+        });
+    }
+    private void add_F9S4(long delay) {
+        // Привет!
+        showMessage(R.string.intro_frame9_msg1, false, MessageInfo.MSG_TEMPER_UP, delay);
+    }
+    private void add_F9S5(long delay) {
+        // Я могу тебе помочь...
+        showMessage(R.string.intro_frame9_msg2, false, MessageInfo.MSG_TEMPER_OK, delay);
+    }
+    /*private void add_F9S6(long delay) {
+        // Мне известен сопособ/уничтожения вирусных клеток!
+        showMessage(R.string.intro_frame9_msg3, false, MessageInfo.MSG_TEMPER_UP, delay);
+    }*/
+    private void add_F9S7(long delay) {
+        // Если нарисовать/знак правильно/ДНК вирусной клетки/разрушится!
+        showMessage(R.string.intro_frame10_msg1, true, MessageInfo.MSG_TEMPER_UP, delay, R.raw.energy_pick16);
+    }
+    private void add_F9S8(long delay) {
+        // sign helper
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                signHelper.showSign(cell.getCurrentSignInfo());
+                puncher.setEnabled(true);
+                puncher.setListener(new IDrawingPuncherListener() {
+                    @Override
+                    public void handleOnRayPunch(RaySign raySign) {
+                        drop.setMessagePoint(xDrop, yDrop - fdDrop);
+                        if (cell.getPunched(raySign))
+                            startHappyAnim();
+                        else {
+                            drop.setMotion(DropMotionType.PRO);
+                            drop.showMessage(MES_PRO);
+                        }
+                    }
+                });
+            };
+        });
+    }
+    //endregion
+
+    private void startHappyAnim() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_happy_intro");
+
+        Utils.playSound(R.raw.bonus08);
+        signHelper.hide();
+        puncher.setEnabled(false);
+        drop.setMessagePoint(xDrop, yDrop - 1.1f * fdDrop);
+        drop.setMotion(DropMotionType.HAPPY);
+        drop.showMessage(MES_HAPPY);
+
+        drop.setMessagePoint(xDrop, yDrop - 1.5f * fdDrop);
+        // Стань нашим ГЕРОЕМ!
+        drop.showMessage(2000, new MessageInfo("UR hero", R.string.intro_frame11_txt1, false, MessageInfo.MSG_TEMPER_UP));
+        addStepOver(5000, new Runnable() {
+            @Override
+            public void run() {
+                Utils.playSound(R.raw.energy_pick16);
+                // С твоей помощью мы спасем ЖИЗНЬ на Земле!
+                drop.showMessage(new MessageInfo("save Earth", R.string.intro_frame11_txt2, true, MessageInfo.MSG_TEMPER_UP));
+                Utils.playSound(R.raw.start02, 500);
+            }
+        });
+
+        addStepOver(10000, new Runnable() {
+            @Override public void run() { MainActivityUtils.doShowMain(); }
+        });
+    }
+
+    //region show hide text
+    private final int showTextDuration = 1000;
+    private final int hideTextDuration = 1000;
+
+    private void showText(final DrawingText txt, final float fx, final float fy, final int txtId, long delay) {
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                txt.setPoint(fx, fy);
+                txt.setText(txtId);
+                txt.setAlpha(0);
+                txt.show();
+                addAnim(new AnimUtil(txt, "alpha", 0, 255)).startSimpleAD(showTextDuration);
+            }
+        });
+    }
+    private void hideText(final DrawingText txt, final long delay) {
+        addStep(delay, new Runnable() {
+            @Override
+            public void run() {
+                addAnim(new AnimUtil(txt, "alpha", 255, 0)).startSimpleAD(hideTextDuration);
+                //addStep(delay + hideTextDuration, new Runnable() { @Override public void run() { txt.hide(); } });
+            }
+        });
+    }
+    private void showMessage(final int txtId, final boolean isIdea, final int temperId, final long delay) {
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                drop.showMessage(new MessageInfo("intro", txtId, isIdea, temperId));
+            }
+        });
+    }
+    private void showMessage(final int txtId, final boolean isIdea, final int temperId, final long delay, final int soundId) {
+        addStep(delay, new Runnable() {
+            @Override public void run() {
+                Utils.playSound(soundId);
+                drop.showMessage(new MessageInfo("intro", txtId, isIdea, temperId));
+            }
+        });
+    }
+    //endregion
+}

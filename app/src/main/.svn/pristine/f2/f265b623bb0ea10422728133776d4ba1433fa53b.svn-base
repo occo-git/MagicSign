@@ -1,0 +1,352 @@
+package com.softigress.magicsigns.Game.Signs.SSequence;
+
+import android.graphics.Canvas;
+import android.os.SystemClock;
+
+import com.softigress.magicsigns.Activities._base.PauseInfo;
+import com.softigress.magicsigns.Game.Cells.Membrane.Membrane;
+import com.softigress.magicsigns.Game.Puncher.RaySign;
+import com.softigress.magicsigns.Game.Signs._base.IDrawingSignListener;
+import com.softigress.magicsigns.UI._base.Controls.Lightning.LightningCollection;
+import com.softigress.magicsigns.UI._base.Controls._base.Progress.CtrlWaveProgress;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfo;
+import com.softigress.magicsigns._system.Settings.Infos.SignStrength;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class SSequence implements IDrawing, ITouchable {
+
+    public int allWavesStepsCount = 0;
+    private int wavesCount = 0;
+    private ArrayRecyclableSimple<SWave> sWaves = new ArrayRecyclableSimple<>(SWave.class);
+    private final SWave[] sWaveItems;
+    private SWave lastSWaveStarted = null;
+
+    private boolean isStarted = false;
+    private long startWavePauseTicks = 0;
+    private boolean isFinished = false;
+    private final PauseInfo pauseInfo = new PauseInfo();
+
+    private boolean isOnFinish = false;
+    private static final long finishDuration = 3000;
+    private long finishTicks = 0;
+    private int finishAlpha = 255;
+
+    private CtrlWaveProgress ctrlWaveProgress;
+
+    public SSequence() {
+
+        try {
+
+            ctrlWaveProgress = new CtrlWaveProgress();
+
+            // test
+            //addWave(new SWave( 1, 10, 1, 1.5f, 1.8f,  1f,  0f,  0f, new SignStrength[] { SignStrength.SIMPLE }));
+
+            // 1 - номер волны
+            // 2 - количество шагов
+            // 3 - максимально количество signs в шаге
+            // 4 - минимальная скорость
+            // 5 - максимальная скорость
+            // 6 - процент группировок (groups)
+            // 7 - процент сжатых (collapsed)
+            // 8 - процент молний (lightning)
+            // 9 - типы signs
+            //                 1   2  3     4     5    6    7    8  9
+            addWave(new SWave( 1, 10, 1, 1.5f, 1.8f,  0f,  0f,  0f, new SignStrength[] { SignStrength.SIMPLE }));
+            addWave(new SWave( 2, 10, 1, 1.6f, 1.9f,  0f, .2f,  0f, new SignStrength[] { SignStrength.SIMPLE }));
+            addWave(new SWave( 3, 15, 1, 1.7f, 2.0f,  0f, .1f,  0f, new SignStrength[] { SignStrength.SIMPLE, SignStrength.NORMAL }));
+            addWave(new SWave( 4, 15, 2, 1.8f, 2.1f, .1f, .4f,  0f, new SignStrength[] { SignStrength.SIMPLE, SignStrength.NORMAL }));
+            addWave(new SWave( 5, 20, 2, 1.9f, 2.2f, .2f, .5f,  0f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave( 6, 20, 2, 1.8f, 2.0f, .3f, .8f,  0f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave( 7, 15, 3, 1.5f, 1.8f, .2f,  0f, .1f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave( 8, 15, 2, 1.6f, 1.9f, .4f, .4f, .2f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave( 9, 20, 1, 1.7f, 2.0f, .1f, .2f, .2f, new SignStrength[] { SignStrength.NORMAL, SignStrength.HARD }));
+            addWave(new SWave(10, 20, 2, 1.6f, 2.1f, .3f, .5f, .2f, new SignStrength[] { SignStrength.NORMAL, SignStrength.HARD }));
+            addWave(new SWave(11, 15, 1, 2.0f, 2.3f,  0f,  0f,  0f, new SignStrength[] { SignStrength.HARD }));
+            addWave(new SWave(12, 15, 2, 2.1f, 2.4f, .2f,  0f,  0f, new SignStrength[] { SignStrength.HARD }));
+            addWave(new SWave(13, 15, 2, 2.2f, 2.5f, .2f, .5f, .1f, new SignStrength[] { SignStrength.SIMPLE, SignStrength.HARD }));
+            addWave(new SWave(14, 15, 2, 1.7f, 2.0f,  0f, .2f, .4f, new SignStrength[] { SignStrength.HARD, SignStrength.INSANE }));
+            addWave(new SWave(15, 15, 1, 1.5f, 2.0f,  0f, .3f, .1f, new SignStrength[] { SignStrength.INSANE }));
+            addWave(new SWave(16, 20, 2, 1.7f, 2.1f, .3f, .3f, .3f, new SignStrength[] { SignStrength.INSANE }));
+            addWave(new SWave(17, 15, 2, 2.0f, 2.3f, .5f, .5f, .4f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave(18, 20, 2, 1.6f, 2.0f,  0f,  0f, .4f, new SignStrength[] { SignStrength.SIMPLE, SignStrength.NORMAL, SignStrength.HARD }));
+            addWave(new SWave(19, 25, 2, 1.7f, 2.1f,  0f,  0f, .5f, new SignStrength[] { SignStrength.NORMAL, SignStrength.HARD, SignStrength.INSANE }));
+            addWave(new SWave(20, 25, 1, 2.5f, 2.8f,  0f, .8f,  1f, new SignStrength[] { SignStrength.SIMPLE }));
+            addWave(new SWave(21, 15, 1, 2.3f, 2.6f, .2f, .6f, .8f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave(22, 10, 1, 2.1f, 2.4f, .4f, .4f, .6f, new SignStrength[] { SignStrength.SIMPLE, SignStrength.NORMAL, SignStrength.HARD, SignStrength.INSANE }));
+            addWave(new SWave(23,  5, 1, 1.9f, 2.2f, .6f, .2f, .4f, new SignStrength[] { SignStrength.INSANE }));
+            addWave(new SWave(24, 15, 1, 1.7f, 2.0f, .2f, .5f, .2f, new SignStrength[] { SignStrength.SIMPLE, SignStrength.CRAZY }));
+            addWave(new SWave(25, 20, 2, 2.0f, 2.3f,  0f, .2f, .2f, new SignStrength[] { SignStrength.CRAZY }));
+            addWave(new SWave(26, 20, 1, 1.6f, 2.3f, .5f,  0f, .2f, new SignStrength[] { SignStrength.HARD, SignStrength.CRAZY }));
+            addWave(new SWave(27, 20, 1, 2.0f, 2.3f, .5f, .5f, .4f, new SignStrength[] { SignStrength.INSANE, SignStrength.CRAZY }));
+            addWave(new SWave(28, 25, 1, 1.8f, 2.1f, .3f, .8f, .6f, new SignStrength[] { SignStrength.HARD, SignStrength.INSANE, SignStrength.CRAZY }));
+            addWave(new SWave(29, 15, 2, 2.0f, 2.2f, .6f, .8f, .1f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave(30, 15, 2, 2.1f, 2.3f, .4f, .6f, .1f, new SignStrength[] { SignStrength.HARD }));
+            addWave(new SWave(31, 15, 1, 2.2f, 2.4f, .8f, .2f,  1f, new SignStrength[] { SignStrength.HARD, SignStrength.INSANE, SignStrength.CRAZY }));
+            addWave(new SWave(32, 15, 2, 2.3f, 2.5f, .9f, .0f,  1f, new SignStrength[] { SignStrength.CRAZY }));
+
+            // 1 - номер волны
+            // 2 - количество шагов
+            // 3 - максимально количество signs в шаге
+            // 4 - минимальная скорость
+            // 5 - максимальная скорость
+            // 6 - процент группировок (groups)
+            // 7 - процент сжатых (collapsed)
+            // 8 - процент молний (lightning)
+            // 9 - типы signs
+            //                 1   2  3     4   5    6   7   8  9
+            /*addWave(new SWave( 1,  5, 1, 1.8f, 2f, .5f, 1f, 1f, new SignStrength[] { SignStrength.SIMPLE }));
+            addWave(new SWave( 2,  5, 2, 1.8f, 2f,  1f, 1f, 1f, new SignStrength[] { SignStrength.SIMPLE }));
+            addWave(new SWave( 3,  5, 2, 1.8f, 2f, .5f, 1f, 1f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave( 4,  5, 2, 1.8f, 2f,  1f, 1f, 1f, new SignStrength[] { SignStrength.NORMAL }));
+            addWave(new SWave( 5,  5, 2, 1.8f, 2f, .5f, 1f, 1f, new SignStrength[] { SignStrength.HARD }));
+            addWave(new SWave( 6,  5, 2, 1.8f, 2f,  1f, 1f, 1f, new SignStrength[] { SignStrength.HARD }));
+            addWave(new SWave( 7,  5, 3, 1.8f, 2f, .5f, 1f, 1f, new SignStrength[] { SignStrength.INSANE }));
+            addWave(new SWave( 8,  5, 3, 1.8f, 2f,  1f, 1f, 1f, new SignStrength[] { SignStrength.INSANE }));
+            addWave(new SWave( 9,  5, 3, 1.8f, 2f, .5f, 1f, 1f, new SignStrength[] { SignStrength.CRAZY }));
+            addWave(new SWave(10,  5, 3, 1.8f, 2f,  1f, 1f, 1f, new SignStrength[] { SignStrength.CRAZY }));
+            */
+
+        } catch (Throwable t) {
+            Utils.CrashReport("SSequence constructor", t);
+        }
+
+        sWaveItems = sWaves.getItems();
+    }
+
+    private IDrawingSignListener signListener;
+    public void setListener(IDrawingSignListener l) {
+        signListener = l;
+        //if (sWaveItems != null)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.setListener(signListener);
+    }
+
+    private ISSequenceListener listener;
+    public void setListener(ISSequenceListener l) { listener = l; }
+
+    private void addWave(SWave sWave) {
+        sWaves.add(sWave);
+        wavesCount++;
+        allWavesStepsCount += sWave.stepsCount;
+    }
+
+    //region show / hide
+    public void show() {
+        if (ctrlWaveProgress != null)
+            ctrlWaveProgress.show();
+    }
+    public void hide() {
+        if (ctrlWaveProgress != null)
+            ctrlWaveProgress.hide();
+    }
+    //endregion
+
+    //region start / finish / pause / resume
+    public void start() { isStarted = true; }
+    public void finish() { isOnFinish = true; }
+    public void pause() {
+        pauseInfo.pause();
+        //if (sWaveItems != null)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.pause();
+    }
+    public void resume() {
+        //if (sWaveItems != null)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.resume();
+
+        if (startWavePauseTicks > 0)
+            startWavePauseTicks += pauseInfo.resume(); // время паузы перед стартом волны
+        else
+            pauseInfo.resume();
+    }
+    //endregion
+
+    public SignInfo getHelpSign() {
+        if (isStarted && !isFinished && lastSWaveStarted != null)
+            return lastSWaveStarted.getHelpSign();
+        return null;
+    }
+
+    public int getPunched(RaySign raySign) {
+        int punched = 0;
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    punched += w.getPunched(raySign);
+        return punched;
+    }
+
+    public int explode() {
+        int exploded = 0;
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    exploded += w.explode();
+        return exploded;
+    }
+
+    public void checkCollision(Membrane membrane) {
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.checkCollision(membrane);
+    }
+
+    public void checkLightningHit(LightningCollection lightnings) {
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.checkLightningHit(lightnings);
+    }
+
+    //region Touch
+    public boolean onTouch(int x, int y) {
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.onTouch(x, y);
+        return true;
+    }
+
+    public boolean onTouchUp(int x, int y) {
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.onTouchUp(x, y);
+        return false;
+    }
+
+    public void onMoveTo(int x, int y) {
+        //if (sWaveItems != null
+        if (isStarted && !isFinished)
+            for (SWave w : sWaveItems)
+                if (w != null)
+                    w.onMoveTo(x, y);
+    }
+    //endregion
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    private void nextFrame() {
+        long ticks = SystemClock.elapsedRealtime();
+
+        if (isOnFinish) {
+            if (finishTicks == 0)
+                finishTicks = ticks;
+            long finishDelta = ticks - finishTicks;
+            int a = 255 - (int) (255 * (float) finishDelta / finishDuration);
+            if (a < 0)
+                isFinished = true; // завершаем последовательность
+            else
+                finishAlpha = a;
+        }
+
+        if (!pauseInfo.isPaused) {
+            if (startWavePauseTicks == 0)
+                startWavePauseTicks = ticks;
+            long startDelta = ticks - startWavePauseTicks;
+
+            boolean isPrevWaveFinished = true;
+            //if (sWaveItems != null)
+                for (SWave w : sWaveItems) {
+                    if (w != null) {
+                        if (isPrevWaveFinished && startDelta > CurrentSettings.signWaveStartDelta && !w.isStarted) {
+                            w.start();
+                            startWavePauseTicks = 0;
+                            lastSWaveStarted = w;
+                            if (ctrlWaveProgress != null)
+                                ctrlWaveProgress.nextWave();
+                            break;
+                        }
+                        isPrevWaveFinished = w.isFinished;
+                    }
+            }
+        }
+    }
+
+    public int getFinishedWavesCount() {
+        int count = 0;
+        //if (sWaveItems != null)
+            for (SWave w : sWaveItems) {
+                if (w != null) {
+                    if (w.isFinished)
+                        count++;
+                    else
+                        break;
+                }
+            }
+        return count;
+    }
+    @Override
+    public void drawFrame(Canvas c) {
+        if (ctrlWaveProgress != null)
+            ctrlWaveProgress.drawFrame(c);
+
+        //if (sWaveItems != null
+        if (isStarted && !isFinished) {
+            nextFrame();
+            if (!isFinished) {
+                if (pauseInfo.isPaused) {
+                    for (SWave w : sWaveItems) {
+                        if (w != null) {
+                            if (!w.isFinished) {
+                                if (isOnFinish)
+                                    w.setFinishAlpha(finishAlpha);
+                                w.drawFrame(c);
+                            }
+                        }
+                    }
+                } else {
+                    boolean finished = true;
+                    for (SWave w : sWaveItems) {
+                        if (w != null) {
+                            finished &= w.isFinished;
+                            if (!w.isFinished) {
+                                if (isOnFinish)
+                                    w.setFinishAlpha(finishAlpha);
+                                w.drawFrame(c);
+                            }
+                        }
+                    }
+                    isFinished = finished;
+                    // если все волны закончены
+                    if (isFinished && listener != null)
+                        listener.handleOnFinish(true); // win
+                }
+            }
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (sWaves != null)
+            sWaves.recycle();
+        sWaves = null;
+
+        if (ctrlWaveProgress != null)
+            ctrlWaveProgress.recycle();
+        ctrlWaveProgress = null;
+    }
+
+}

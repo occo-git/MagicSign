@@ -1,0 +1,75 @@
+package com.softigress.magicsigns.UI._Main;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.Activities._base.ActivityGroupBase;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpAgeDialog;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogListener;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpAgeMenu extends ActivityGroupBase {
+
+    private static final long resetDelay = 2000;
+    private static final float fxTitle = .50f,  fyTitle = .85f;
+    private final GrpAgeDialog dlgAge;
+
+    public GrpAgeMenu() {
+        super();
+
+        DrawingText txtTitle = new DrawingText(DrawingHAlign.CENTER, TextUtils.load_age_title);
+        txtTitle.setVerticalAlign(DrawingVAlign.CENTER);
+        txtTitle.setText(R.string.game_title);
+        txtTitle.setTextBack(8f, 64, 255, 255, 255);
+        txtTitle.setMultiLineInterval(.9f);
+        txtTitle.setPoint(fxTitle, fyTitle);
+        txtTitle.setAlpha(255);
+        addDrawing(txtTitle);
+
+        dlgAge = new GrpAgeDialog();
+        dlgAge.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() {
+                //Utils.playSound(R.raw.start02);
+                // сохраним локально указанный пользователем возраст
+                Utils.setUserAge(dlgAge.getAge());
+                Utils.saveSettings();
+                // инициализируем рекламу
+                MainActivityUtils.doInitAd();
+                // запускаем Заставку
+                MainActivityUtils.doShowIntro();
+            }
+            @Override public void handleOnCancel() { }
+        });
+        addDialog(dlgAge);
+    }
+
+    protected boolean isStars() { return true; }
+    protected boolean isStarsMoving() { return true; }
+
+    @Override
+    public void show() {
+        super.show();
+        showDialog(dlgAge);
+    }
+
+    private boolean isBackClicked = false;
+    @Override
+    public long back() {
+        if (isBackClicked) {
+            Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_age_exit");
+            MainActivityUtils.doExitGame();
+        } else {
+            isBackClicked = true;
+            Utils.Toast(R.string.dlg_Age_Exit);
+            TaskUtils.postDelayed(resetDelay, new Runnable() {
+                @Override public void run() { isBackClicked = false; }
+            });
+        }
+        return 0;
+    }
+}

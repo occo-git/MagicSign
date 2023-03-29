@@ -1,0 +1,552 @@
+package com.softigress.magicsigns.UI.Rating.Dialogs;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.graphics.Typeface;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI.Rating.RatingRow.UserRatingRowInfo;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Crown.DrawingCrown;
+import com.softigress.magicsigns.UI._base.Controls._base.Progress.CtrlProgressBar;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserScoreInfo;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.util.ArrayList;
+
+public class GrpUserRatingDialog extends GrpDialog {
+
+    public final static int DIALOG_RESULT_VIDEOS = 3;
+
+    private static final float dxCrown =      .500f, dyCrown =        .150f, crownFd =        .233f;
+    private static final float dxLogin =      .500f, dyLogin =        .125f;
+    private static final float dxRating =     .150f, dyRating =       .230f, fdRating =       .0433f;
+    private static final float dxIndex =      .210f, dyIndex =        .230f;
+    private static final float dxScore =      .800f, dyScore =        .230f;
+    private static final float dxStar =       .865f, dyStar =         .230f, fdStar =         .0233f;
+    private static final float dxWave =       .150f, dyWave =         .350f, fdWave =         .0433f;
+    private static final float dxWaveBar =    .590f, dyWaveBar =      .350f;
+    private static final float fwWaveBar =    .380f, fhWaveBar =      .025f;
+    private static final float dxWaves =      .210f, dyWaves =        .350f;
+    private static final float dxOrden =      .590f, dyOrden =        .350f, fdOrden =        .200f;
+    private static final float dxSingsTotal = .100f, dySingsTotal =   .885f;
+    private static final float dwSignsTotal = .075f, dhSingsTotal =   .350f;
+    private static final float dxSings =      .300f, dySings =        .570f, frSings =        .006f,  ddySigns = .07f;
+    //private static final float dxVideos =     .375f, dyVideos =      .490f, fdVideos =       .025f;
+    //private static final float dxLab =        .625f, dyLab =         .490f, fdLab =          .050f;
+    private static final float dxScreenShot = .175f, dyScreenShot =   .925f, fdScreenShot =   .050f;
+    private static final float dxVideos =     .880f, dyVideos =       .455f, fdVideos =       .025f;
+    private static final float dxLab =        .880f, dyLab =          .825f, fdLab =          .100f;
+
+    private static final float dxPotions =    .250f, dyPotions =      .575f, fdPotion =       .062f,   ddxPotions = .125f, ddyPotions = .075f;
+    private static final float dyPotion1 = dyPotions;
+    private static final float dyPotion2 = dyPotions + ddyPotions;
+    private static final float dyPotion3 = dyPotions;
+    private static final float dyPotion4 = dyPotions + ddyPotions;
+    private static final float dyPotion5 = dyPotions;
+    private static final float dyGroupPotion1 = dyPotions + 2 * ddyPotions;
+    private static final float dyGroupPotion2 = dyPotions + 3 * ddyPotions;
+    private static final float dyGroupPotion3 = dyPotions + 2 * ddyPotions;
+    private static final float dyGroupPotion4 = dyPotions + 3 * ddyPotions;
+    private static final float dyGroupPotion5 = dyPotions + 2 * ddyPotions;
+    private static final float dxPotionFinal = .5f, dyPotionFinal =  .62f, fdPotionFinal =    .2f;
+
+    private final DrawingCrown crown;
+    private final DrawingText txtLogin;
+    private final DrawingBase rating;
+    private final DrawingText txtIndex;
+    private final DrawingText txtScore;
+    private final DrawingBase star;
+    private final DrawingBase wave;
+    private final DrawingText txtWaves;
+    private final DrawingBase orden;
+    private final DialogItem itemOrden;
+    private final CtrlProgressBar ctrlProgressBarWaves;
+    /*private final CtrlSignsCounter signs01;
+    private final CtrlSignsCounter signs02;
+    private final CtrlSignsCounter signs03;
+    private final CtrlSignsCounter signs04;
+    private final CtrlSignsCounter signs05;
+    private final CtrlSignsTotal ctrlSignsTotal;*/
+    private final DialogItem potion01item;
+    private final DialogItem potion02item;
+    private final DialogItem potion03item;
+    private final DialogItem potion04item;
+    private final DialogItem potion05item;
+    private final DialogItem groupPotion01item;
+    private final DialogItem groupPotion02item;
+    private final DialogItem groupPotion03item;
+    private final DialogItem groupPotion04item;
+    private final DialogItem groupPotion05item;
+    private final DialogItem potionFinalItem;
+
+    private final DialogItem itemVideos;
+    private final DialogItem itemBtnVideos;
+    //private final DialogItem itemBtnLab;
+    private final DialogItem itemBtnScreenshot;
+
+    private UserRatingRowInfo ratingRowInfo;
+
+    public GrpUserRatingDialog() {
+        super(.8f, .68f);
+        name = "dlg_user_rating";
+
+        //region crown
+        crown = new DrawingCrown(getByDx(dxCrown),getByDy(dyCrown), crownFd);
+        crown.setAlign(DrawingHAlign.CENTER, DrawingVAlign.BOTTOM);
+        crown.isAnimated = false;
+        addDlgControl(crown, dxCrown, dyCrown);
+        //endregion
+
+        //region login
+        txtLogin = new DrawingText(DrawingHAlign.CENTER, Typeface.DEFAULT, TextUtils.dialog_login);
+        addDlgControl(txtLogin, dxLogin, dyLogin);
+        //endregion
+
+        //region index
+        rating = new DrawingBase(fdRating, R.string.bmp_rating);
+        addDlgControl(rating, dxRating, dyRating);
+        txtIndex = new DrawingText(DrawingHAlign.LEFT, TextUtils.typeface_Nano, TextUtils.dialog_text_big);
+        addDlgControl(txtIndex, dxIndex, dyIndex);
+        //endregion
+
+        //region score
+        txtScore = new DrawingText(DrawingHAlign.RIGHT, TextUtils.typeface_Nano, TextUtils.dialog_text_normal);
+        addDlgControl(txtScore, dxScore, dyScore);
+        star = new DrawingBase(fdStar, R.string.bmp_star);
+        addDlgControl(star, dxStar, dyStar);
+        //endregion
+
+        //region wave
+        wave = new DrawingBase(fdWave, R.string.bmp_wave);
+        addDlgControl(wave, dxWave, dyWave);
+        txtWaves = new DrawingText(DrawingHAlign.LEFT, TextUtils.typeface_Nano, TextUtils.dialog_text_normal);
+        addDlgControl(txtWaves, dxWaves, dyWaves);
+        float fw = fwWaveBar * MetrixUtils.screen_K_default / MetrixUtils.screen_K;
+        ctrlProgressBarWaves = new CtrlProgressBar(getByDx(dxWaveBar), getByDy(dyWaveBar), fw, fhWaveBar);
+        ctrlProgressBarWaves.setRGB(0, 255, 0);
+        ctrlProgressBarWaves.setAlign(DrawingHAlign.CENTER);
+        ctrlProgressBarWaves.isHideOnZero = false;
+        addDlgControl(ctrlProgressBarWaves, dxWaveBar, dyWaveBar);
+        //endregion
+
+        //region sings
+        /*signs01 = new CtrlSignsCounter(frSings, TextUtils.dialog_text_xsmall);
+        signs01.setSignStrength(SignStrength.CRAZY);
+        addDlgControl(signs01, dxSings, dySings);
+        signs02 = new CtrlSignsCounter(frSings, TextUtils.dialog_text_xsmall);
+        signs02.setSignStrength(SignStrength.INSANE);
+        addDlgControl(signs02, dxSings, dySings + ddySigns);
+        signs03 = new CtrlSignsCounter(frSings, TextUtils.dialog_text_xsmall);
+        signs03.setSignStrength(SignStrength.HARD);
+        addDlgControl(signs03, dxSings, dySings + 2 * ddySigns);
+        signs04 = new CtrlSignsCounter(frSings, TextUtils.dialog_text_xsmall);
+        signs04.setSignStrength(SignStrength.NORMAL);
+        addDlgControl(signs04, dxSings, dySings + 3 * ddySigns);
+        signs05 = new CtrlSignsCounter(frSings, TextUtils.dialog_text_xsmall);
+        signs05.setSignStrength(SignStrength.SIMPLE);
+        addDlgControl(signs05, dxSings, dySings + 4 * ddySigns);
+        ctrlSignsTotal = new CtrlSignsTotal(getByDx(dxSingsTotal), getByDy(dySingsTotal), dwSignsTotal * .8f, dhSingsTotal * maxFh);
+        addDlgControl(ctrlSignsTotal, dxSingsTotal, dySingsTotal);*/
+        //endregion
+
+        //region potions
+        RatingAchievement potion05 = new RatingAchievement(AchievementType.CRAZY_05, fdPotion);
+        potion05item = addDlgControl(potion05, dxPotions + 4 * ddxPotions,  dyPotion5);
+        potion05item.setHidden(true);
+        RatingAchievement potion04 = new RatingAchievement(AchievementType.INSANE_04, fdPotion);
+        potion04item = addDlgControl(potion04, dxPotions + 3 * ddxPotions,  dyPotion4);
+        potion04item.setHidden(true);
+        RatingAchievement potion03 = new RatingAchievement(AchievementType.HARD_03, fdPotion);
+        potion03item = addDlgControl(potion03, dxPotions + 2 * ddxPotions,  dyPotion3);
+        potion03item.setHidden(true);
+        RatingAchievement potion02 = new RatingAchievement(AchievementType.NORMAL_02, fdPotion);
+        potion02item = addDlgControl(potion02, dxPotions + ddxPotions,      dyPotion2);
+        potion02item.setHidden(true);
+        RatingAchievement potion01 = new RatingAchievement(AchievementType.SIMPLE_01, fdPotion);
+        potion01item = addDlgControl(potion01, dxPotions,                   dyPotion1);
+        potion01item.setHidden(true);
+        RatingAchievement groupPotion05 = new RatingAchievement(AchievementType.CRAZY_05_GROUP, fdPotion);
+        groupPotion05item = addDlgControl(groupPotion05, dxPotions + 4 * ddxPotions,  dyGroupPotion5);
+        groupPotion05item.setHidden(true);
+        RatingAchievement groupPotion04 = new RatingAchievement(AchievementType.INSANE_04_GROUP, fdPotion);
+        groupPotion04item = addDlgControl(groupPotion04, dxPotions + 3 * ddxPotions,  dyGroupPotion4);
+        groupPotion04item.setHidden(true);
+        RatingAchievement groupPotion03 = new RatingAchievement(AchievementType.HARD_03_GROUP, fdPotion);
+        groupPotion03item = addDlgControl(groupPotion03, dxPotions + 2 * ddxPotions,  dyGroupPotion3);
+        groupPotion03item.setHidden(true);
+        RatingAchievement groupPotion02 = new RatingAchievement(AchievementType.NORMAL_02_GROUP, fdPotion);
+        groupPotion02item = addDlgControl(groupPotion02, dxPotions + ddxPotions,      dyGroupPotion2);
+        groupPotion02item.setHidden(true);
+        RatingAchievement groupPotion01 = new RatingAchievement(AchievementType.SIMPLE_01_GROUP, fdPotion);
+        groupPotion01item = addDlgControl(groupPotion01, dxPotions,                   dyGroupPotion1);
+        groupPotion01item.setHidden(true);
+        /*potion05.setAngel(7);
+        potion04.setAngel(7);
+        potion03.setAngel(7);
+        potion02.setAngel(7);
+        potion01.setAngel(7);
+        groupPotion05.setAngel(7);
+        groupPotion04.setAngel(7);
+        groupPotion03.setAngel(7);
+        groupPotion02.setAngel(7);
+        groupPotion01.setAngel(7);*/
+
+        RatingAchievement potionFinal = new RatingAchievement(AchievementType.FINAL_10, fdPotionFinal);
+        potionFinalItem = addDlgControl(potionFinal,     dxPotionFinal,               dyPotionFinal);
+        potionFinalItem.setHidden(true);
+        //endregion
+
+        //region videos
+        final DrawingBaseTouchable videos = new DrawingBaseTouchable(fdVideos * 1.75f);
+        videos.setDefaultBitmap(R.string.bmp_video);
+        videos.setAngel(-15);
+        videos.setListener(new ITouchableListener() {
+            @Override public void handelOnTouch(ITouchable item) {
+                Utils.playSoundClick();
+                onResult(DIALOG_RESULT_VIDEOS);
+            }
+            @Override public void handelOnTouchUp(ITouchable item) { }
+        });
+        itemVideos = addDlgControlTouchable(videos, dxVideos, dyVideos);
+
+        final BtnBase btnVideos = new BtnBase(getByDx(dxVideos), getByDy(dyVideos), fdVideos, R.string.bmp_btn_potion);
+        btnVideos.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable item) {
+                Utils.playSoundClick();
+                onResult(DIALOG_RESULT_VIDEOS);
+            }
+        });
+        itemBtnVideos = addDlgControlTouchable(btnVideos, dxVideos, dyVideos);
+        //endregion
+
+        //region lab
+        /*final BtnBase btnLab = new BtnBase(getByDx(dxLab), getByDy(dyLab), fdLab, R.string.bmp_btn_potion);
+        btnLab.name = "btn_lab_dlg";
+        btnLab.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) {
+                MainActivityUtils.doShowLab();
+            }
+        });
+        itemBtnLab = addDlgControlTouchable(btnLab, dxLab, dyLab);*/
+        //endregion
+
+        //region screenshot
+        final BtnBase btnScreenshot = new BtnBase(getByDx(dxScreenShot), getByDy(dyScreenShot), fdScreenShot, R.string.bmp_btn_screenshot);
+        btnScreenshot.name = "btn_share_scr_dlg";
+        btnScreenshot.setLabelTextSized(R.string.dlg_ShareScreenshot, TextUtils.dialog_text_xxsmall, DrawingHAlign.LEFT);
+        btnScreenshot.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                currentUserControlsShowHide(false);
+                // пауза, чтобы не скринить анимацию нажатия кнопки
+                // делаем снимок экрана
+                TaskUtils.postDelayed(BtnBase.circlesDuration, new Runnable() {
+                    @Override public void run() {
+                        MainActivityUtils.doShareScreenshot();
+                        currentUserControlsShowHide(true);
+                    }
+                });
+            }
+        });
+        itemBtnScreenshot = addDlgControlTouchable(btnScreenshot, dxScreenShot, dyScreenShot);
+        //endregion
+
+        //region orden
+        orden = new DrawingBase(fdOrden, R.drawable.orden);
+        orden.hide();
+        itemOrden = addDlgControl(orden, dxOrden, dyOrden);
+        itemOrden.setHidden(true);
+        //endregiona
+
+        addRepeater(7000, new Runnable() { @Override public void run() { animateControls1(); } });
+        addRepeater(7000, new Runnable() { @Override public void run() { animateControls2(); } });
+        addRepeater(7000, new Runnable() { @Override public void run() { animatePotionFinal(); } });
+
+        addDlgCloseButton();
+    }
+
+    public void setInfo(UserRatingRowInfo ratingRowInfo) {
+        String userId = Utils.authManager.getUserId();
+        this.ratingRowInfo = ratingRowInfo;
+        if (ratingRowInfo != null && ratingRowInfo.userScoreInfo != null) {
+            Integer index = ratingRowInfo.index;
+            crown.setIndex(index);
+            UserScoreInfo usi = ratingRowInfo.userScoreInfo;
+            int score = usi.score;
+            int waves = usi.waves;
+            float wavesProgress = (float)waves / CurrentSettings.signWavesCount;
+            if (wavesProgress < 1)
+                ctrlProgressBarWaves.setPercent(wavesProgress);
+            else
+                ctrlProgressBarWaves.fill();
+            //itemOrden.isHidden = wavesProgress < 1;
+            if (itemOrden.isHidden()) {
+                if (wavesProgress >= 1)
+                    itemOrden.setHidden(false);
+            } else {
+                if (wavesProgress < 1)
+                    itemOrden.setHidden(true);
+            }
+            txtLogin.setText(usi.name);//.replace(' ', '/')
+            txtIndex.setFontSize(TextUtils.dialog_text_big * TextUtils.getFontSizeK(index));
+            txtIndex.setText(getString(score > 0 ? index : 0, ""));
+            txtScore.setText(getString(score, ""));
+            txtWaves.setText(getString(usi.waves, ""));
+            /*signs01.setText(getString(usi.getSigns05() + usi.getSignsGroup05(), ""));
+            signs02.setText(getString(usi.getSigns04() + usi.getSignsGroup04(), ""));
+            signs03.setText(getString(usi.getSigns03() + usi.getSignsGroup03(), ""));
+            signs04.setText(getString(usi.getSigns02() + usi.getSignsGroup02(), ""));
+            signs05.setText(getString(usi.getSigns01() + usi.getSignsGroup01(), ""));
+            ctrlSignsTotal.setInfo(usi);*/
+
+            if (!usi.isPotionFinal()) {
+                hidePotions(false);
+                updateAchievementControl(potion01item, usi);
+                updateAchievementControl(potion02item, usi);
+                updateAchievementControl(potion03item, usi);
+                updateAchievementControl(potion04item, usi);
+                updateAchievementControl(potion05item, usi);
+                updateAchievementControl(groupPotion01item, usi);
+                updateAchievementControl(groupPotion02item, usi);
+                updateAchievementControl(groupPotion03item, usi);
+                updateAchievementControl(groupPotion04item, usi);
+                updateAchievementControl(groupPotion05item, usi);
+                potionFinalItem.setHidden(true);
+            } else {
+                hidePotions(true);
+                updateAchievementControl(potionFinalItem, usi);
+                potionFinalItem.setHidden(false);
+            }
+
+            boolean isCurrentUser = ratingRowInfo.id.equals(userId);
+            currentUserControlsShowHide(isCurrentUser);
+
+        } else {
+            crown.hide();
+            txtLogin.setText("");
+            txtIndex.setText("");
+            txtScore.setText("");
+            txtWaves.setText("");
+            ctrlProgressBarWaves.setPercent(0);
+            /*signs01.setText("");
+            signs02.setText("");
+            signs03.setText("");
+            signs04.setText("");
+            signs05.setText("");
+            ctrlSignsTotal.hide();*/
+            hidePotions(true);
+            potionFinalItem.setHidden(true);
+
+            currentUserControlsShowHide(false);
+        }
+    }
+
+    private void currentUserControlsShowHide(boolean isShowHide) {
+        boolean isVideosHide = this.ratingRowInfo == null || this.ratingRowInfo.userScoreInfo == null || this.ratingRowInfo.userScoreInfo.isAllPotions();
+        itemVideos.setHidden(!isShowHide || isVideosHide);
+        itemBtnVideos.setHidden(!isShowHide || isVideosHide);
+        //itemBtnLab.setHidden(!isShowHide);
+        itemBtnScreenshot.setHidden(!isShowHide);
+    }
+
+    private void hidePotions(boolean isHide) {
+        potion01item.setHidden(isHide);
+        potion02item.setHidden(isHide);
+        potion03item.setHidden(isHide);
+        potion04item.setHidden(isHide);
+        potion05item.setHidden(isHide);
+        groupPotion01item.setHidden(isHide);
+        groupPotion02item.setHidden(isHide);
+        groupPotion03item.setHidden(isHide);
+        groupPotion04item.setHidden(isHide);
+        groupPotion05item.setHidden(isHide);
+    }
+
+    private void updateAchievementControl(DialogItem item, UserScoreInfo usi) {
+        RatingAchievement c = (RatingAchievement)item.control;
+        if (c != null) {
+            c.setInfo(usi);
+        }
+    }
+
+    public String getUserInfoId() {
+        if (this.ratingRowInfo != null)
+            return this.ratingRowInfo.id;
+        else
+            return null;
+    }
+
+    private String getString(Integer i, String ch) { return i == 0 ? ch : i.toString(); }
+
+    //region animation
+    private static final long animDuration1 = 1000;
+    private boolean isOnAction1 = false;
+    private void animateControls1() {
+        if (!isOnAction1) {
+            isOnAction1 = true;
+            ObjectAnimator cS = ObjectAnimator.ofFloat(crown, "Scale", 1f, .9f, 1.10f, 1f).setDuration(animDuration1);
+            ObjectAnimator wS = ObjectAnimator.ofFloat(wave, "Scale", 1f, .8f, 1.25f, 1f).setDuration(animDuration1);
+            ObjectAnimator oS = ObjectAnimator.ofFloat(orden, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration1);
+            ObjectAnimator oA = ObjectAnimator.ofFloat(orden, "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration1);
+            ObjectAnimator rS = ObjectAnimator.ofFloat(rating, "Scale", 1f, .8f, 1.25f, 1f).setDuration(animDuration1);
+            ObjectAnimator sS = ObjectAnimator.ofFloat(star, "Scale", 1f, .8f, 1.25f, 1f).setDuration(animDuration1);
+
+            /*ObjectAnimator stS1 = ObjectAnimator.ofFloat(signs01, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration1);
+            ObjectAnimator stS2 = ObjectAnimator.ofFloat(signs02, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration1);
+            ObjectAnimator stS3 = ObjectAnimator.ofFloat(signs03, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration1);
+            ObjectAnimator stS4 = ObjectAnimator.ofFloat(signs04, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration1);
+            ObjectAnimator stS5 = ObjectAnimator.ofFloat(signs05, "Scale", 1f, .8f, 1.10f, 1f).setDuration(animDuration1);*/
+
+            long dd = animDuration1 / 4;
+            //cS.setStartDelay(dd);
+            wS.setStartDelay(dd);
+            oS.setStartDelay(dd * 4);
+            oA.setStartDelay(dd * 4);
+            rS.setStartDelay(dd * 3);
+            sS.setStartDelay(dd * 6);
+
+            /*stS4.setStartDelay(dd);
+            stS3.setStartDelay(dd * 2);
+            stS2.setStartDelay(dd * 3);
+            stS1.setStartDelay(animDuration1);*/
+
+            AnimatorSet set = new AnimatorSet();
+            set.setInterpolator(new AccelerateDecelerateInterpolator());
+            set.playTogether(rS, sS, cS, wS, oS, oA);//, stS1, stS2, stS3, stS4, stS5);
+            set.start();
+            TaskUtils.postDelayed(3 * animDuration1, new Runnable() {
+                @Override
+                public void run() { isOnAction1 = false; }
+            });
+        }
+    }
+
+    private static final long animDuration2 = 1500;
+    private boolean isOnAction2 = false;
+    private void animateControls2() {
+        if (!isOnAction2) {
+            isOnAction2 = true;
+            float ddy = fdPotion / 10f;
+            float ddy2 = 2 * ddy;
+            ArrayList<Animator> anims = new ArrayList<>();
+            /*
+            ObjectAnimator aYP1 = ObjectAnimator.ofFloat(potion01item, "dy", dyPotion1, dyPotion1 - ddy2, dyPotion1 + ddy, dyPotion1).setDuration(animDuration2);
+            ObjectAnimator aYP2 = ObjectAnimator.ofFloat(potion02item, "dy", dyPotion2, dyPotion2 - ddy2, dyPotion2 + ddy, dyPotion2).setDuration(animDuration2);
+            ObjectAnimator aYP3 = ObjectAnimator.ofFloat(potion03item, "dy", dyPotion3, dyPotion3 - ddy2, dyPotion3 + ddy, dyPotion3).setDuration(animDuration2);
+            ObjectAnimator aYP4 = ObjectAnimator.ofFloat(potion04item, "dy", dyPotion4, dyPotion4 - ddy2, dyPotion4 + ddy, dyPotion4).setDuration(animDuration2);
+            ObjectAnimator aYP5 = ObjectAnimator.ofFloat(potion05item, "dy", dyPotion5, dyPotion5 - ddy2, dyPotion5 + ddy, dyPotion5).setDuration(animDuration2);
+            ObjectAnimator aYGP1 = ObjectAnimator.ofFloat(groupPotion01item, "dy", dyGroupPotion1, dyGroupPotion1 - ddy2, dyGroupPotion1 + ddy, dyGroupPotion1).setDuration(animDuration2);
+            ObjectAnimator aYGP2 = ObjectAnimator.ofFloat(groupPotion02item, "dy", dyGroupPotion2, dyGroupPotion2 - ddy2, dyGroupPotion2 + ddy, dyGroupPotion2).setDuration(animDuration2);
+            ObjectAnimator aYGP3 = ObjectAnimator.ofFloat(groupPotion03item, "dy", dyGroupPotion3, dyGroupPotion3 - ddy2, dyGroupPotion3 + ddy, dyGroupPotion3).setDuration(animDuration2);
+            ObjectAnimator aYGP4 = ObjectAnimator.ofFloat(groupPotion04item, "dy", dyGroupPotion4, dyGroupPotion4 - ddy2, dyGroupPotion4 + ddy, dyGroupPotion4).setDuration(animDuration2);
+            ObjectAnimator aYGP5 = ObjectAnimator.ofFloat(groupPotion05item, "dy", dyGroupPotion5, dyGroupPotion5 - ddy2, dyGroupPotion5 + ddy, dyGroupPotion5).setDuration(animDuration2);
+            */
+
+            ObjectAnimator aYP1 = ObjectAnimator.ofFloat(getRatingAchievement(potion01item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYP2 = ObjectAnimator.ofFloat(getRatingAchievement(potion02item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYP3 = ObjectAnimator.ofFloat(getRatingAchievement(potion03item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYP4 = ObjectAnimator.ofFloat(getRatingAchievement(potion04item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYP5 = ObjectAnimator.ofFloat(getRatingAchievement(potion05item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYGP1 = ObjectAnimator.ofFloat(getRatingAchievement(groupPotion01item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYGP2 = ObjectAnimator.ofFloat(getRatingAchievement(groupPotion02item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYGP3 = ObjectAnimator.ofFloat(getRatingAchievement(groupPotion03item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYGP4 = ObjectAnimator.ofFloat(getRatingAchievement(groupPotion04item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+            ObjectAnimator aYGP5 = ObjectAnimator.ofFloat(getRatingAchievement(groupPotion05item), "angel", 0, 5, -5, 2, -2, 0).setDuration(animDuration2);
+
+            long dd = animDuration2 / 10;
+            aYGP1.setStartDelay(dd);
+            aYGP2.setStartDelay(dd * 2);
+            aYGP3.setStartDelay(dd * 3);
+            aYGP4.setStartDelay(dd * 4);
+            aYGP5.setStartDelay(dd * 5);
+            aYP2.setStartDelay(dd * 6);
+            aYP3.setStartDelay(dd * 7);
+            aYP4.setStartDelay(dd * 8);
+            aYP5.setStartDelay(dd * 9);
+
+            if (!potion01item.isHidden())
+                anims.add(aYP1);
+            if (!potion02item.isHidden())
+                anims.add(aYP2);
+            if (!potion03item.isHidden())
+                anims.add(aYP3);
+            if (!potion04item.isHidden())
+                anims.add(aYP4);
+            if (!potion05item.isHidden())
+                anims.add(aYP5);
+
+            if (!groupPotion01item.isHidden())
+                anims.add(aYGP1);
+            if (!groupPotion02item.isHidden())
+                anims.add(aYGP2);
+            if (!groupPotion03item.isHidden())
+                anims.add(aYGP3);
+            if (!groupPotion04item.isHidden())
+                anims.add(aYGP4);
+            if (!groupPotion05item.isHidden())
+                anims.add(aYGP5);
+
+            AnimatorSet set1 = new AnimatorSet();
+            set1.setInterpolator(new AccelerateDecelerateInterpolator());
+            set1.playTogether(anims);
+            set1.start();
+            TaskUtils.postDelayed(3 * animDuration2, new Runnable() {
+                @Override
+                public void run() { isOnAction2 = false; }
+            });
+        }
+    }
+
+    private RatingAchievement getRatingAchievement(DialogItem item) {
+        return (RatingAchievement)item.control;
+    }
+
+    private static final long animDurationFinal = 1500;
+    private boolean isOnActionFinal = false;
+    private void animatePotionFinal() {
+        if (!isOnActionFinal) {
+            isOnActionFinal = true;
+            float ddy = fdPotionFinal / 20f;
+            float ddy2 = 2 * ddy;
+            ObjectAnimator.ofFloat(potionFinalItem, "dy", dyPotionFinal, dyPotionFinal - ddy2, dyPotionFinal + ddy, dyPotionFinal).setDuration(animDurationFinal).start();
+            TaskUtils.postDelayed(3 * animDurationFinal, new Runnable() {
+                @Override
+                public void run() { isOnActionFinal = false; }
+            });
+        }
+    }
+    //endregion
+
+    @Override
+    public long hide() {
+        ctrlProgressBarWaves.reset();
+        return super.hide();
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+
+        if (txtLogin != null)
+            txtLogin.setMaxWidth(getW() * .8f);
+    }
+}

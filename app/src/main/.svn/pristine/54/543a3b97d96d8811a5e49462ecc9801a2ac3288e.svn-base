@@ -1,0 +1,120 @@
+package com.softigress.magicsigns.UI._Main.Dialogs;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDropOnExit;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpExitDialog extends GrpDialog {
+
+    public final static int DIALOG_RESULT_RATE = 3;
+
+    private static final float dxMsg1 =      .50f, dyMsg1 =      .50f;
+    private static final float dxOk1 =       .25f, dyOk1 =       .75f;
+    private static final float dxCancel =    .75f, dyCancel1 =   .75f;
+    private static final float dxRate =      .50f, dyRate =      .125f, fdRate =     .1f;
+    private static final float dxDrop =      .50f, dyDrop1 =     .350f, dyDrop2 =    .62f;
+    private static final float btnFd1 =      .1f;
+
+    private final DrawingText txtMessage;
+    private final BtnBase btnOk;
+    private final BtnBase btnCancel;
+    private final BtnBase btnRate;
+    private final DialogItem itemMessage;
+    private final DialogItem itemOk;
+    private final DialogItem itemCancel;
+    private final DialogItem itemDrop;
+
+    private boolean isRateVisible = false;
+
+    private final FunnyDropOnExit drop;
+    //private final GrpGameRateDialog dlgRate;
+
+    public GrpExitDialog() {
+        super(.8f, .62f);
+        name = "dlg_exit";
+
+        //region Message
+        txtMessage = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_big);
+        txtMessage.setTextBack(4f, 64, 0, 0, 0);
+        txtMessage.setText(Utils.getRes(R.string.dlg_Exit_ExitTheGame));
+        itemMessage = addDlgControl(txtMessage, dxMsg1, dyMsg1);
+        //endregion
+
+        //region Ok
+        btnOk = new BtnBase(getByDx(dxOk1), getByDy(dyOk1), btnFd1, R.string.bmp_btn_exit);
+        btnOk.name = "btn_ok_exit";
+        btnOk.setLabelText(R.string.dlg_Exit);
+        btnOk.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnOk();
+            }
+        });
+        itemOk = addDlgControlTouchable(btnOk, dxOk1, dyOk1);
+        //endregion
+
+        //region Cancel
+        btnCancel = new BtnBase(getByDx(dxCancel), getByDy(dyCancel1), btnFd1, R.string.bmp_btn_play);
+        btnCancel.name = "btn_cancel_exit";
+        btnCancel.setLabelText(R.string.dlg_Play);
+        btnCancel.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (listener != null)
+                    listener.handleOnCancel();
+            }
+        });
+        itemCancel = addDlgControlTouchable(btnCancel, dxCancel, dyCancel1);
+        //endregion
+
+        //region Rate
+        btnRate = new BtnBase(getByDx(dxRate), getByDy(dyRate), fdRate, R.string.bmp_btn_rate);
+        btnRate.name = "btn_rate_game";
+        btnRate.setLabelText(R.string.dlg_Share_Rate);
+        btnRate.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { onResult(DIALOG_RESULT_RATE); }
+        });
+        addDlgControlTouchable(btnRate, dxRate, dyRate);
+        //endregion
+
+        drop = new FunnyDropOnExit();
+        itemDrop = addDlgControlTouchable(drop, dxDrop, dyDrop1);
+
+        addDlgCloseButton();
+    }
+
+    @Override
+    public void show() {
+        super.show();
+
+        isRateVisible = CurrentSettings.isRateVisible(); //Utils.getRandomBoolean();
+        if (isRateVisible) {
+            //itemMessage.setDxDyPoint(dxMsg1, dyMsg1); //dyMsg2
+            itemMessage.hide();
+            itemOk.setDxDyPoint(dxOk1, dyOk1); // dyOk2
+            itemCancel.setDxDyPoint(dxCancel, dyCancel1); //dyCancel2
+            btnRate.show();
+            itemDrop.setDxDyPoint(dxDrop, dyDrop2);
+            drop.doMotion();
+            //drop.hide();
+        } else {
+            itemMessage.setDxDyPoint(dxMsg1, dyMsg1);
+            itemMessage.show();
+            itemOk.setDxDyPoint(dxOk1, dyOk1);
+            itemCancel.setDxDyPoint(dxCancel, dyCancel1);
+            btnRate.hide();
+            itemDrop.setDxDyPoint(dxDrop, dyDrop1);
+            drop.doMotion();
+        }
+    }
+}

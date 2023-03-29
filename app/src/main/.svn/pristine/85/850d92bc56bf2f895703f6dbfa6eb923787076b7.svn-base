@@ -1,0 +1,459 @@
+package com.softigress.magicsigns.UI._Main.Dialogs.Login;
+
+import android.graphics.Bitmap;
+import android.graphics.Typeface;
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnImageLabel;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageText;
+import com.softigress.magicsigns.UI._base.Controls.UserPhoto.UserPhoto;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.DialogItem;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.FireBase.Authentication.AuthManager;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpLoginDialog extends GrpDialog {
+
+    private static final float dxFirebase =   .5f, dyFirebase =   .140f;
+    private static final float dxGoogle =     .5f, dyGoogle0 =    .295f, dyGoogle1 =       .55f;
+    private static final float dxFacebook =   .5f, dyFacebook0 =  .450f, dyFacebook1 =     .73f;
+    private static final float dxPolicy =     .2f, dyPolicy =     .920f, fdPolicy =        .04f;
+    //private static final float dxTwitter =  .5f, dyTwitter =    .680f;
+    private static final float dxLogo =       .5f, dyLogo =       .100f, fdLogo =          .08333f;
+    private static final float dxLogount =    .2f, dyLogout =     .600f, fdLogout =        .116f;
+    private static final float dxPhoto =      .5f, dyPhoto =      .220f, fdPhoto =         .1333f;
+    private static final float dxLogin =      .5f, dyLogin =      .395f;
+    private static final float dxAction =     .5f, dyAction =     .380f, dyActionAnim =    .43f;
+    private static final float dxMessage =    .5f, dyMessage0 =   .640f, dyMessage1 =      .580f;//.72f;
+    private static final float dxNoConnectionDrop =       .5f, dyNoConnectionDrop =        .38f, fdNoConnectionDrop = .166f;
+    private static final float dxNoConnectionMessage =    .5f, dyNoConnectionMessage =     .475f;
+    private static final float dxNoConnectionIdea =       .5f, dyNoConnectionIdea =        .66f;
+
+    private final BtnImageLabel btnFirebase;
+    private final BtnImageLabel btnGoogle;
+    private final BtnImageLabel btnFacebook;
+    //private final BtnImageLabel btnTwitter;
+    //private final BtnBase btnLogout;
+    //private final DialogItem itemPolicy;
+    private final DialogItem itemGoogle;
+    private final DialogItem itemFacebook;
+
+    private final DrawingBase networkLogo;
+    private final UserPhoto photo;
+    private final BtnBase btnPolicy;
+    private final DrawingText txtLogin;
+    private final DrawingText txtAction;
+    private final MessageText txtLoginMessage;
+    private final MessageText txtLogedMessage;
+    private final DrawingBase dropNoConnection;
+    private final MessageText txtNoConnectionMessage;
+    private final MessageText txtNoConnectionIdea;
+
+    private final DrawingText txtActionAnim0;
+    private final DrawingText txtActionAnim1;
+    private final DrawingText txtActionAnim2;
+    private final DialogItem txtActionItem0;
+    private final DialogItem txtActionItem1;
+    private final DialogItem txtActionItem2;
+
+    private static final int LOGO_ID_FIREBASE = 1;
+    private static final int LOGO_ID_GOOGLE =   2;
+    private static final int LOGO_ID_FACEBOOK = 3;
+
+    public GrpLoginDialog() {
+        super(.8f, .62f);//, R.string.bmp_btn_play
+        name = "dlg_login";
+
+        //showDuration = 750;
+        //hideDuration = 750;
+
+        networkLogo = new DrawingBase(fdLogo);
+        networkLogo.setStatusBitmap(LOGO_ID_FIREBASE, R.string.bmp_logo_firebase);
+        networkLogo.setStatusBitmap(LOGO_ID_GOOGLE, R.string.bmp_logo_google);
+        networkLogo.setStatusBitmap(LOGO_ID_FACEBOOK, R.string.bmp_logo_facebook);
+        //addDlgControl(networkLogo, dxLogo, dyLogo);
+
+        photo = new UserPhoto(getByDx(dxPhoto), getByDy(dyPhoto), fdPhoto);
+        addDlgControl(photo, dxPhoto, dyPhoto);
+
+        txtLogin = new DrawingText(DrawingHAlign.CENTER, Typeface.DEFAULT, TextUtils.dialog_login);
+        txtLogin.setTextBack(4f, 64, 0, 0, 0);
+        txtLogin.setPoint(getByDx(dxLogin), getByDy(dyLogin));
+        addDlgControl(txtLogin, dxLogin, dyLogin);
+
+        //region action
+        txtAction = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_normal);
+        addDlgControl(txtAction, dxAction, dyAction);
+        txtActionAnim0 = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_normal);
+        txtActionAnim0.setText(".");
+        txtActionItem0 = addDlgControl(txtActionAnim0, dxAction - .05f, dyActionAnim);
+        txtActionAnim1 = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_normal);
+        txtActionAnim1.setText(".");
+        txtActionItem1 = addDlgControl(txtActionAnim1, dxAction, dyActionAnim);
+        txtActionAnim2 = new DrawingText(DrawingHAlign.CENTER, TextUtils.dialog_text_normal);
+        txtActionAnim2.setText(".");
+        txtActionItem2 = addDlgControl(txtActionAnim2, dxAction + .05f, dyActionAnim);
+        //endregion
+
+        txtLoginMessage = new MessageText(DrawingHAlign.CENTER);
+        txtLoginMessage.setVerticalAlign(DrawingVAlign.TOP);
+        txtLoginMessage.setFontSize(TextUtils.dialog_text_small);
+        txtLoginMessage.setTextBack(4f, 64, 0, 0, 0);
+        txtLoginMessage.isPaintRect = true;
+        txtLoginMessage.isIdea = true;
+        txtLoginMessage.setText(R.string.dlg_Login_Message);
+        addDlgControl(txtLoginMessage, dxMessage, dyMessage0);
+
+        txtLogedMessage = new MessageText(DrawingHAlign.CENTER);
+        txtLogedMessage.setVerticalAlign(DrawingVAlign.TOP);
+        txtLogedMessage.setFontSize(TextUtils.dialog_text_small);
+        txtLogedMessage.setTextBack(4f, 64, 0, 0, 0);
+        txtLogedMessage.isPaintRect = true;
+        //txtLogedMessage.isIdea = true;
+        txtLogedMessage.setText(R.string.dlg_Loged_Message);
+        addDlgControl(txtLogedMessage, dxMessage, dyMessage1);
+
+        //region no connection
+        dropNoConnection = new DrawingBase(fdNoConnectionDrop);
+        dropNoConnection.setAlign(DrawingHAlign.CENTER, DrawingVAlign.BOTTOM);
+        dropNoConnection.setDefaultBitmap(R.string.bmp_drop_90_sleep);
+        addDlgControl(dropNoConnection, dxNoConnectionDrop, dyNoConnectionDrop);
+
+        txtNoConnectionMessage = new MessageText(DrawingHAlign.CENTER);
+        txtNoConnectionMessage.setVerticalAlign(DrawingVAlign.BOTTOM);
+        txtNoConnectionMessage.setFontSize(TextUtils.dialog_text_big);
+        txtNoConnectionMessage.setText(R.string.dlg_NoConnection_Message);
+        txtNoConnectionMessage.hide();
+        addDlgControl(txtNoConnectionMessage, dxNoConnectionMessage, dyNoConnectionMessage);
+
+        txtNoConnectionIdea = new MessageText(DrawingHAlign.CENTER);
+        txtNoConnectionIdea.setVerticalAlign(DrawingVAlign.TOP);
+        txtNoConnectionIdea.isIdea = true;
+        txtNoConnectionIdea.isPaintRect = true;
+        txtNoConnectionIdea.setFontSize(TextUtils.dialog_text_small);
+        txtNoConnectionIdea.setText(R.string.dlg_NoConnection_Idea);
+        txtNoConnectionIdea.hide();
+        addDlgControl(txtNoConnectionIdea, dxNoConnectionIdea, dyNoConnectionIdea);
+        //endregion
+
+        float btnFw = .62f * MetrixUtils.screen_K_default / MetrixUtils.screen_K;
+
+        //region Firebase
+        btnFirebase = new BtnImageLabel(getByDx(dxFirebase), getByDy(dyFirebase), btnFw, .075f);
+        btnFirebase.setBitmap(R.string.bmp_logo_firebase);
+        btnFirebase.name = "btn_firebase_login";
+        btnFirebase.setLabelText(Utils.getRes(R.string.dlg_Login_SingIn_with_Firebase), Typeface.DEFAULT, TextUtils.dialog_login_button_label);
+        btnFirebase.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                // ввод имени пользователя
+                MainActivityUtils.doGetName(new IGetNameListener() {
+                    @Override
+                    public void handleGetName(String name) {
+                        onLogingIn();
+                        Utils.authManager.singInAnonymously(name);
+                    }
+                });
+            }
+        });
+        addDlgControlTouchable(btnFirebase, dxFirebase, dyFirebase);
+        //endregion
+
+        //region Google
+        btnGoogle = new BtnImageLabel(getByDx(dxGoogle), getByDy(dyGoogle0), btnFw, .075f);
+        btnGoogle.setBitmap(R.string.bmp_logo_google);
+        btnGoogle.name = "btn_google_login";
+        btnGoogle.setLabelText(Utils.getRes(R.string.dlg_Login_SingIn_with_Google), Typeface.DEFAULT, TextUtils.dialog_login_button_label);
+        btnGoogle.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                onLogingIn();
+                Utils.authManager.singInGoogle();
+            }
+        });
+        itemGoogle = addDlgControlTouchable(btnGoogle, dxGoogle, dyGoogle0);
+        //endregion
+
+        //region Facebook
+        btnFacebook = new BtnImageLabel(getByDx(dxFacebook), getByDy(dyFacebook0), btnFw, .075f);
+        btnFacebook.setBitmap(R.string.bmp_logo_facebook);
+        btnFacebook.name = "btn_facebook_login";
+        btnFacebook.setLabelText(Utils.getRes(R.string.dlg_Login_SingIn_with_Facebook), Typeface.DEFAULT, TextUtils.dialog_login_button_label);
+        btnFacebook.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                onLogingIn();
+                Utils.authManager.singInFacebook();
+            }
+        });
+        itemFacebook = addDlgControlTouchable(btnFacebook, dxFacebook, dyFacebook0);
+        //endregion
+
+        //region Twitter
+        /*btnTwitter = new BtnImageLabel(getByDx(dxTwitter), getByDy(dyTwitter), .6f, .075f);
+        btnTwitter.setBitmap(R.drawable.logo_twitter);
+        btnTwitter.name = "btn_twitter_login_dialog_login";
+        btnTwitter.setLabelText(Utils.getRes(R.string.dlg_Login_SingIn_with_Twitter), Typeface.DEFAULT, TextUtils.dialog_login_button_label);
+        btnTwitter.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) {
+                onLogingIn();
+                Utils.networkManager.singInTwitter();
+            }
+        });
+        addDlgControlTouchable(btnTwitter, dxTwitter, dyTwitter);*/
+        //endregion
+
+        //region Policy
+        btnPolicy = new BtnBase(getByDx(dxPolicy), getByDy(dyPolicy), fdPolicy, R.string.bmp_btn_play);
+        btnPolicy.name = "btn_policy";
+        btnPolicy.setLabelTextSized(R.string.dlg_Login_SingIn_Policy, TextUtils.dialog_text_xsmall, DrawingHAlign.LEFT);
+        btnPolicy.setLabelAlignK(1f); // интервал между кнопкой и ее подписью
+        btnPolicy.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) {
+                MainActivityUtils.doBrowseUrl(Utils.remoteConfigManager.getPolicyUrl());
+            } });
+        addDlgControlTouchable(btnPolicy, dxPolicy, dyPolicy);
+        //endregion
+
+        //region Logout
+        /*btnLogout = new BtnBase(getByDx(dxLogount), getByDy(dyLogout), fdLogout, R.string.bmp_btn_log_out);
+        btnLogout.name = "btn_logout";
+        btnLogout.setLabelText(R.string.dlg_Login_SignOut, DrawingBase.CONST_HALIGN_LEFT);
+        btnLogout.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) {
+                onLogingOut();
+                Utils.authManager.signOut();
+            }
+        });
+        addDlgControlTouchable(btnLogout, dxLogount, dyLogout);*/
+        //endregion
+
+        addDlgCloseButton();
+
+        addRepeater(5000, new Runnable() { @Override public void run() { animateControls(); } });
+        addRepeater(7000, new Runnable() { @Override public void run() { animateDrop(); } });
+    }
+
+    @Override
+    protected void loadSettings() {
+        actionShowHide(false);
+
+        if (Utils.authManager.isConnected()) {
+            int hash = Utils.authManager.getCurrentProviderHash();
+            networkLogoShowHide(hash);
+            loginShowHide(hash);
+            providersShowHide(hash);
+            noConnectionShowHide(false);
+        } else {
+            networkLogo.hide();
+            photo.hide();
+            txtLogin.hide();
+            txtLoginMessage.hide();
+            txtLogedMessage.hide();
+            btnFirebase.hide();
+            btnGoogle.hide();
+            btnFacebook.hide();
+            //btnTwitter.hide();
+            btnPolicy.hide();
+            noConnectionShowHide(true);
+        }
+    }
+
+    private void onLogingIn() {
+        photo.hide();
+        btnFirebase.hide();
+        btnGoogle.hide();
+        btnFacebook.hide();
+        //btnTwitter.hide();
+        btnPolicy.hide();
+        networkLogo.hide();
+        //btnLogout.hide();
+        txtLogin.hide();
+        txtLoginMessage.hide();
+        txtLogedMessage.hide();
+        //txtMessageNoConnection.hide();
+
+        txtAction.setText(R.string.dlg_LogingIn);
+        actionShowHide(true);
+    }
+
+    /*private void onLogingOut() {
+        photo.hide();
+        btnFirebase.hide();
+        btnGoogle.hide();
+        btnFacebook.hide();
+        //btnTwitter.hide();
+        btnPolicy.hide();
+        networkLogo.hide();
+        //btnLogout.hide();
+        txtLogin.hide();
+        txtLoginMessage.hide();
+        txtLogedMessage.hide();
+        //txtMessageNoConnection.hide();
+
+        txtAction.setText(R.string.dlg_LogingOut);
+        actionShowHide(true);
+    }*/
+
+    //region update controls
+    public void update() {
+        loadSettings();
+    }
+
+    private void actionShowHide(boolean showhide) {
+        if (showhide) {
+            txtAction.show();
+            txtActionAnim0.show();
+            txtActionAnim1.show();
+            txtActionAnim2.show();
+        } else {
+            txtAction.hide();
+            txtActionAnim0.hide();
+            txtActionAnim1.hide();
+            txtActionAnim2.hide();
+        }
+    }
+
+    private void providersShowHide(int hash) {
+        if (hash == 0) {
+            btnFirebase.show();
+            itemGoogle.setDxDyPoint(dxGoogle, dyGoogle0);
+            btnGoogle.show();
+            itemFacebook.setDxDyPoint(dxFacebook, dyFacebook0);
+            btnFacebook.show();
+            //btnTwitter.show();
+            btnPolicy.show();
+        } else if (hash == AuthManager.PROVIDER_ID_FIREBASE) {
+            btnFirebase.hide();
+            itemGoogle.setDxDyPoint(dxGoogle, dyGoogle1);
+            btnGoogle.show();
+            itemFacebook.setDxDyPoint(dxFacebook, dyFacebook1);
+            btnFacebook.show();
+            //btnTwitter.show();
+            btnPolicy.show();
+        } else {
+            btnFirebase.hide();
+            btnGoogle.hide();
+            btnFacebook.hide();
+            //btnTwitter.hide();
+            btnPolicy.show();//hide();
+        }
+    }
+
+    private void loginShowHide(int hash) {
+        // для firebase получаем имя пользователя из настроек
+        String userName = hash == AuthManager.PROVIDER_ID_FIREBASE ? Utils.getUserName() : Utils.authManager.getUserName();
+
+        if (hash == 0)
+            photo.hide();
+        else if (hash == AuthManager.PROVIDER_ID_FIREBASE)
+            photo.setDefaultBitmap(R.string.bmp_logo_firebase);
+
+        if (userName != null) {
+            txtLogin.setText(userName);
+            txtLogin.show();
+            //btnLogout.show();
+        } else {
+            txtLogin.setText("");
+            txtLogin.hide();
+            //btnLogout.hide();
+        }
+
+        if (hash != 0) {
+            txtLoginMessage.hide();
+            if (hash == AuthManager.PROVIDER_ID_FIREBASE)
+                txtLogedMessage.hide();
+            else {
+                txtLogedMessage.show();
+                btnPolicy.show();
+            }
+        } else {
+            txtLoginMessage.show();
+            txtLogedMessage.hide();
+        }
+    }
+
+    public void setUserPhoto(Bitmap b) {
+        // отображаем фото
+        photo.setPhoto(b);
+    }
+
+    private void networkLogoShowHide(int hash) {
+        networkLogo.hide();
+        switch (hash) {
+            case AuthManager.PROVIDER_ID_FIREBASE: networkLogo.setStatus(LOGO_ID_FIREBASE); break;
+            case AuthManager.PROVIDER_ID_GOOGLE: networkLogo.setStatus(LOGO_ID_GOOGLE); break;
+            case AuthManager.PROVIDER_ID_FACEBOOK: networkLogo.setStatus(LOGO_ID_FACEBOOK); break;
+        }
+        if (hash != 0)
+            networkLogo.show();
+    }
+
+    private void noConnectionShowHide(boolean showhide) {
+        if (showhide) {
+            dropNoConnection.show();
+            txtNoConnectionMessage.show();
+            txtNoConnectionIdea.show();
+        } else {
+            dropNoConnection.hide();
+            txtNoConnectionMessage.hide();
+            txtNoConnectionIdea.hide();
+        }
+    }
+    //endregion
+
+    private void animateControls() {
+        if (txtActionAnim0 != null && txtActionAnim1 != null && txtActionAnim2 != null) {
+            txtActionItem0.setDx(dxAction - .05f);
+            txtActionItem2.setDx(dxAction + .05f);
+            new AnimUtil()
+                    .add(txtActionItem0, "dx", dxAction - .05f, dxAction - .04f, dxAction - .25f, dxAction - .04f, dxAction - .05f)
+                    .add(txtActionItem2, "dx", dxAction + .05f, dxAction + .04f, dxAction + .25f, dxAction + .04f, dxAction + .05f)
+                    .startAD(3000);
+
+            /*ObjectAnimator aDX0 = ObjectAnimator.ofFloat(txtActionItem0, "dx", dxAction - .05f, dxAction - .04f, dxAction - .25f, dxAction - .04f, dxAction - .05f);
+            ObjectAnimator aDX2 = ObjectAnimator.ofFloat(txtActionItem2, "dx", dxAction + .05f, dxAction + .04f, dxAction + .25f, dxAction + .04f, dxAction + .05f);
+            AnimatorSet set = new AnimatorSet();
+            set.playTogether(aDX0, aDX2);
+            set.setDuration(3000);
+            set.setInterpolator(new AccelerateDecelerateInterpolator());
+            set.start();*/
+        }
+    }
+
+    private void animateDrop() {
+        new AnimUtil()
+                .add(dropNoConnection, "widthScale",  1f,  .95f, 1.05f, 1f)
+                .add(dropNoConnection, "heightScale", 1f, 1.05f,  .95f, 1f)
+                .start(3000);
+
+        /*int duration = 3000;
+        ObjectAnimator sWS = ObjectAnimator.ofFloat(dropNoConnection, "widthScale",  1f,  .95f, 1.05f, 1f).setDuration(duration);
+        ObjectAnimator sHS = ObjectAnimator.ofFloat(dropNoConnection, "heightScale", 1f, 1.05f,  .95f, 1f).setDuration(duration);
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(sWS, sHS);
+        set.setDuration(duration);
+        //set.setInterpolator(new DecelerateInterpolator());
+        set.start();*/
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+
+        if (txtLogin != null)
+            txtLogin.setMaxWidth(getW() * .8f);
+    }
+}

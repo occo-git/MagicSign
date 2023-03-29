@@ -1,0 +1,125 @@
+package com.softigress.magicsigns._system.FireBase.Storage;
+
+import android.content.Context;
+import android.os.Environment;
+
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfoJpg;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.DownloadType;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.IAsyncLoadFile;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.LoadFileByUrlAsync;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.LoadFireBaseFileAsync;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.io.File;
+import java.io.FileFilter;
+
+public class StorageManager {
+
+    public static final String SCREENSHOT_FILENAME_PREFIX = "magicsings_";
+
+    private final Context context;
+    private final StorageReference fbStorageRef;
+
+    public StorageManager(Context c) {
+        this.context = c;
+        this.fbStorageRef = FirebaseStorage.getInstance().getReference();
+
+        // удаляем файлы скриншотов при старте
+        deleteFilesInDir(SCREENSHOT_FILENAME_PREFIX);
+    }
+
+    //region external storage
+    // внешнее хранилище доступно для записи
+    private boolean isExternalStorageWritable() { return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()); }
+    // внешнее хранилище доступно только для чтения
+    private boolean isExternalStorageReadOnly() { return Environment.MEDIA_MOUNTED_READ_ONLY.equals(Environment.getExternalStorageState()); }
+    // получить директорию для файлов во во внешнем хранилище
+    private File getExternalStorageDir(FileInfo fileInfo) {
+        File dir = context.getExternalFilesDir(fileInfo.getExternalStorageSubDir());//Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);//
+        if (dir != null && !dir.exists())
+            dir.mkdirs();
+        return dir;
+    }
+
+    // пролучаем ссылку на файл во внешней памяти
+    public File getExternalStorageFile(FileInfo fileInfo) {
+        // проверям внешнюю память на доступность и возможность записи
+        if (!isExternalStorageWritable() || isExternalStorageReadOnly())
+            return null; // доступа к файлу нет
+        else {
+            // если доступ есть, то создаем файл в ExternalStorage
+            File dir = getExternalStorageDir(fileInfo);
+            return dir != null ? new File(dir, fileInfo.fileName) : null;
+        }
+    }
+
+    private void deleteFilesInDir(final String fileNamePrefix) {
+        // получить директорию для файлов (pix) во во внешнем хранилище
+        File dir = getExternalStorageDir(new FileInfoJpg(""));
+        if (dir != null) {
+            for (File file : dir.listFiles(
+                    new FileFilter() {
+                        @Override
+                        public boolean accept(File pathname) { return pathname.getName().startsWith(fileNamePrefix); }
+                    }))
+                file.delete();
+        }
+    }
+    //endregion
+
+    // получим ссылку на файла в FireBase Storage
+    public StorageReference getFireBaseStorageFileRef(FileInfo fileInfo) {
+        if (fileInfo != null && fbStorageRef != null)
+            return fbStorageRef.child(fileInfo.getFireBaseStoragePath());
+        return null;
+    }
+
+    // скачать файл по прямой ссылке URL
+    public void downloadFileDirectly(FileInfo fileInfo, IAsyncLoadFile listener) {
+        downloadFile(fileInfo, listener, DownloadType.DIRECT);
+    }
+
+    // скачать файл с FireBase Storage по типу и имени
+    public void downloadFireBaseFile(int fileInfoId, IAsyncLoadFile listener) {
+        FileInfo fileInfo = Utils.remoteConfigManager.getFileInfo(fileInfoId);
+        downloadFile(fileInfo, listener, DownloadType.FIREBASE);
+    }
+
+    private void downloadFile(FileInfo fileInfo, IAsyncLoadFile listener, DownloadType downloadType) {
+        if (fileInfo != null) {
+            File f = getExternalStorageFile(fileInfo);
+            fileInfo.file = f;
+            if (f != null && f.exists()) {
+                if (f.length() == fileInfo.size || fileInfo.id == 0) {
+                    Utils.downloadQueue.setProgress(fileInfo, 1f); // finish download
+                    if (listener != null)
+                        listener.onFinish(fileInfo);
+                    return;
+                } else
+                    if (Utils.downloadQueue.isNotContains(fileInfo.id)) // еще не начато скачивание
+                        f.delete(); // удаляем, если файл не соответствует размеру
+            }
+            if (Utils.downloadQueue.isNotContains(fileInfo.id)) { // еще не начато скачивание
+                //Utils.Toast("id:" + fileInfo.id);
+                Utils.downloadQueue.setProgress(fileInfo, 0f); // start download
+                startDownloadFileTask(fileInfo, listener, downloadType);
+            }
+        }
+    }
+
+    // запускаем задание скачивания файла (передаем тип скачиваиня: по прямой ссылке (URL) или по типу и названию (FireBase Storage))
+    private void startDownloadFileTask(FileInfo fileInfo, IAsyncLoadFile listener, DownloadType downloadType) {
+        if (downloadType == DownloadType.DIRECT)
+            new LoadFileByUrlAsync(listener).execute(fileInfo); // скачиваем файл по прямой ссылке
+        else if (downloadType == DownloadType.FIREBASE)
+            new LoadFireBaseFileAsync(listener).execute(fileInfo); // скачиваем файл с FireBase Storage
+    }
+
+    public void recycle() {
+        // удаляем файлы скриншотов при завершении
+        deleteFilesInDir(SCREENSHOT_FILENAME_PREFIX);
+    }
+}

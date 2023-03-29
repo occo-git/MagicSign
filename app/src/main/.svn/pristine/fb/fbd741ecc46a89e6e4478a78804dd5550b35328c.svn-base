@@ -1,0 +1,798 @@
+package com.softigress.magicsigns.UI.Lab;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import androidx.annotation.Keep;
+import android.util.SparseArray;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._Main.Dialogs.Help.HelpItemInfo;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Drop.DropMotionType;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.MessageText;
+import com.softigress.magicsigns.UI._base.Effects.Stars.FallingStars.FallingStars;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns.UI._base.Groups.GrpUserInfos;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IMoveListener;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchableListener;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+import java.util.ArrayList;
+
+public class GrpLab extends GrpUserInfos {
+
+    private static final float xCaption =      .50f, yCaption =        .08f;
+    private static final float xComment =      .50f, yComment =        .41f;
+    private static final float xDropWait =     .50f, yDropWait =       .62f, fdDropWait =      .133f;
+    private static final float yLabItem1 =     .20f, yLabItem2 =       .30f, yLabItem3 =       .40f;
+    private static final float yLabIndex1 =    .55f, yLabIndex2 =      .65f;
+    private static final float xPlus =         .10f, yPlus =           .25f;
+    private static final float xEquals =       .10f, yEquals =         .35f;
+    private static final float xFinalComment = .50f, yFinalComment =   .70f;
+    private static final float xPotionFinal =  .50f, yPotionFinal =    .33f, fdPotionFinal =  .320f;
+
+    private final DrawingText txtPlus;
+    private final DrawingText txtEquals;
+    private final FunnyDrop dropWait;
+    private final MessageText txtSignInComment;
+
+    private final DrawingBase potionSpot;
+    private final DrawingBase potionHalo;
+    private final DrawingBase potionEmpty;
+    private final MessageText txtFinalComment;
+    private final LabFinalItem potionFinal;
+    private final FallingStars fallingStars;
+
+    private final ArrayList<LabItem> labItems = new ArrayList<>();
+    private final ArrayList<LabIndex> labIndices = new ArrayList<>();
+    //private final ArrayList<DrawingBase> labFinalItems = new ArrayList<>();
+    private final SparseArray<DrawingBase> labFinalItems = new SparseArray<>();
+
+    public GrpLab() {
+        super(true, true); // super(R.drawable.back_32, false // NoConnectionDialog OFF, true // OptionsDialog ON
+        // отключаем выдачу сообщения при отсутствии связи
+
+        if (btnLogIn.isVisible())
+            btnLogIn.setLabelAlign(DrawingHAlign.CENTER);
+
+        //region Caption
+        DrawingText txtCaption = new DrawingText(DrawingHAlign.CENTER, TextUtils.lab_caption);
+        txtCaption.setPoint(xCaption, yCaption);
+        txtCaption.setTextBack(6f, 32, 255, 255, 255);
+        txtCaption.setText(R.string.lab_caption);
+        addDrawing(txtCaption);
+        //endregion
+
+        //region Comment
+        txtSignInComment = new MessageText(DrawingHAlign.CENTER);
+        txtSignInComment.setVerticalAlign(DrawingVAlign.BOTTOM);
+        txtSignInComment.setFontSize(TextUtils.lab_comment);
+        txtSignInComment.isPaintRect = true;
+        txtSignInComment.isIdea = true;
+        txtSignInComment.setTextBack(4f, 32, 0, 0, 0);
+        txtSignInComment.setText(R.string.lab_comment);
+        txtSignInComment.setPoint(xComment, yComment);
+        txtSignInComment.hide();
+        addDrawing(txtSignInComment);
+        //endregion
+
+        //region Drop
+        dropWait = new FunnyDrop(fdDropWait);
+        dropWait.loadStatuses(new int[] {
+                //FunnyDrop.STATUS_10_SIMPLE,
+                //FunnyDrop.STATUS_11_SIMPLE_BLINK,
+                FunnyDrop.STATUS_20_INTEREST,
+                FunnyDrop.STATUS_21_INTEREST_BLINK,
+                //FunnyDrop.STATUS_30_SURPRISE,
+                //FunnyDrop.STATUS_40_JOKE,
+                //FunnyDrop.STATUS_50_LAUGH,
+                //FunnyDrop.STATUS_60_HAPPY,
+                //FunnyDrop.STATUS_61_HAPPY_BLINK,
+                //FunnyDrop.STATUS_70_PUNCHED,
+                //FunnyDrop.STATUS_80_PRO,
+                FunnyDrop.STATUS_90_SLEEP,
+                FunnyDrop.STATUS_100_WAIT,
+                FunnyDrop.STATUS_101_WAIT_BLINK,
+        });
+        dropWait.setMessageFontSize(TextUtils.rating_drop_message);
+        dropWait.addMessageTexts(
+                "progressSleep",
+                FunnyDrop.MES_SLEEP,
+                new int[] {
+                    0, 0, R.string.message_drop_sleep_01,
+                    0, 0, R.string.message_drop_sleep_02,
+                    1, 0, R.string.message_drop_sleep_03,
+                });
+        dropWait.setMessagePoint(xDropWait, yDropWait - .8f * fdDropWait);
+        dropWait.setListener(new ITouchableListener() {
+                                 @Override
+                                 public void handelOnTouch(ITouchable item) {
+                                     if (dropWait.statusId != FunnyDrop.STATUS_90_SLEEP)
+                                        showDialog(dlgLogin);
+                                 }
+                                 @Override
+                                 public void handelOnTouchUp(ITouchable item) { }
+                             });
+        dropWait.setPoint(xDropWait, yDropWait);
+        dropWait.isAllowMotion = true;
+        dropWait.hide();
+        addDrawingTouchable(dropWait);
+        //endregion
+
+        //region Items
+        float fx1 = .2f;
+        float fxItemStep = .6f / 5f;
+
+        addLabItem(3, AchievementType.SIMPLE_01_GROUP,  fx1, yLabItem3);
+        addLabItem(0, AchievementType.NORMAL_02_GROUP,  fx1 + fxItemStep, yLabItem3);
+        addLabItem(9, AchievementType.HARD_03_GROUP,    fx1 + 2f * fxItemStep, yLabItem3);
+        addLabItem(7, AchievementType.INSANE_04_GROUP,  fx1 + 3f * fxItemStep, yLabItem3);
+        addLabItem(1, AchievementType.SIMPLE_01,        fx1 + 4f * fxItemStep, yLabItem3);
+        addLabItem(2, AchievementType.CRAZY_05_GROUP,   fx1 + 5f * fxItemStep, yLabItem3);
+
+        addLabItem(1, AchievementType.SIMPLE_01,    fx1, yLabItem2);
+        addLabItem(5, AchievementType.NORMAL_02,    fx1 + fxItemStep, yLabItem2);
+        addLabItem(4, AchievementType.HARD_03,      fx1 + 2f * fxItemStep, yLabItem2);
+        addLabItem(8, AchievementType.INSANE_04,    fx1 + 3f * fxItemStep, yLabItem2);
+        addLabItem(5, AchievementType.NORMAL_02,    fx1 + 4f * fxItemStep, yLabItem2);
+        addLabItem(6, AchievementType.CRAZY_05,     fx1 + 5f * fxItemStep, yLabItem2);
+
+        addLabItem(1, AchievementType.SIMPLE_01,    fx1, yLabItem1);
+        addLabItem(5, AchievementType.NORMAL_02,    fx1 + fxItemStep, yLabItem1);
+        addLabItem(4, AchievementType.HARD_03,      fx1 + 2f * fxItemStep, yLabItem1);
+        addLabItem(8, AchievementType.INSANE_04,    fx1 + 3f * fxItemStep, yLabItem1);
+        addLabItem(5, AchievementType.NORMAL_02,    fx1 + 4f * fxItemStep, yLabItem1);
+        addLabItem(6, AchievementType.CRAZY_05,     fx1 + 5f * fxItemStep, yLabItem1);
+
+        txtPlus = new DrawingText(DrawingHAlign.CENTER, TextUtils.lab_math);
+        txtPlus.setPoint(xPlus, yPlus);
+        txtPlus.setTextBack(6f, 32, 255, 255, 255);
+        txtPlus.setText("+");
+        addDrawing(txtPlus);
+
+        txtEquals = new DrawingText(DrawingHAlign.CENTER, TextUtils.lab_math);
+        txtEquals.setPoint(xEquals, yEquals);
+        txtEquals.setTextBack(6f, 32, 255, 255, 255);
+        txtEquals.setText("=");
+        addDrawing(txtEquals);
+        //endregion
+
+        //region Indices
+        float fx0 = .2f;
+        float fxIndexStep = .6f / 4f;
+
+        addLabIndex(6, fx0, yLabIndex2);
+        addLabIndex(7, fx0 + fxIndexStep, yLabIndex2);
+        addLabIndex(8, fx0 + 2 * fxIndexStep, yLabIndex2);
+        addLabIndex(9, fx0 + 3 * fxIndexStep, yLabIndex2);
+        addLabIndex(0, fx0 + 4 * fxIndexStep, yLabIndex2);
+        addLabIndex(1, fx0, yLabIndex1);
+        addLabIndex(2, fx0 + fxIndexStep, yLabIndex1);
+        addLabIndex(3, fx0 + 2 * fxIndexStep, yLabIndex1);
+        addLabIndex(4, fx0 + 3 * fxIndexStep, yLabIndex1);
+        addLabIndex(5, fx0 + 4 * fxIndexStep, yLabIndex1);
+        //endregion
+
+        //region Final Potions
+        potionEmpty = new DrawingBase(xPotionFinal, yPotionFinal, LabFinalItem.fdItem);
+        potionEmpty.setDefaultBitmap(R.string.bmp_potion_00_empty);
+        potionEmpty.hide();
+        addDrawing(potionEmpty);
+
+        addFinalPotion(1, fx0, yLabIndex1);
+        addFinalPotion(2, fx0 + fxIndexStep, yLabIndex1);
+        addFinalPotion(3, fx0 + 2 * fxIndexStep, yLabIndex1);
+        addFinalPotion(4, fx0 + 3 * fxIndexStep, yLabIndex1);
+        addFinalPotion(5, fx0 + 4 * fxIndexStep, yLabIndex1);
+        addFinalPotion(6, fx0, yLabIndex2);
+        addFinalPotion(7, fx0 + fxIndexStep, yLabIndex2);
+        addFinalPotion(8, fx0 + 2 * fxIndexStep, yLabIndex2);
+        addFinalPotion(9, fx0 + 3 * fxIndexStep, yLabIndex2);
+        addFinalPotion(0, fx0 + 4 * fxIndexStep, yLabIndex2);
+
+        /*if (CurrentSettings.isTestMode) {
+            DrawingButton btnFinish = new DrawingButton(.75f, .05f, .05f, R.drawable.star);
+            btnFinish.setListener(new IClickListener() {
+                @Override
+                public void handleOnClick(ITouchable item) {
+                    Utils.playSoundClick();
+                    // сохраняем в БД признак наличия Лекарства от всех болезней
+                    Utils.dataBaseManager.updatePotionFinal(false);
+                    for (LabItem i : labItems)
+                        i.setCurrentIndex(i.getCurrentIndex());
+                }
+            });
+            addDrawingTouchable(btnFinish);
+        }*/
+
+        //region Comment
+        txtFinalComment = new MessageText(DrawingHAlign.CENTER);
+        txtFinalComment.setVerticalAlign(DrawingVAlign.BOTTOM);
+        txtFinalComment.setFontSize(TextUtils.lab_comment);
+        txtFinalComment.isPaintRect = true;
+        txtFinalComment.isIdea = true;
+        txtFinalComment.setTextBack(4f, 32, 0, 0, 0);
+        txtFinalComment.setText(R.string.lab_final_comment);
+        txtFinalComment.setPoint(xFinalComment, yFinalComment);
+        txtFinalComment.hide();
+        addDrawing(txtFinalComment);
+        //endregion
+
+        potionFinal = new LabFinalItem(xPotionFinal, yPotionFinal);
+        potionFinal.setListener(new ITouchableListener() {
+            @Override public void handelOnTouch(ITouchable item) { Utils.playSound(R.raw.glass08); }
+            @Override public void handelOnTouchUp(ITouchable item) { }
+        });
+        potionFinal.hide();
+        addDrawingTouchable(potionFinal);
+
+        potionSpot = new DrawingBase(xPotionFinal, yPotionFinal + LabFinalItem.fdItem / 7f, LabFinalItem.fdItem);
+        potionSpot.setDefaultBitmap(R.string.bmp_spot_orange);
+        potionSpot.hide();
+        addDrawing(potionSpot);
+        potionHalo = new DrawingBase(xPotionFinal, yPotionFinal + LabFinalItem.fdItem / 7f, 2f * LabFinalItem.fdItem);
+        potionHalo.setDefaultBitmap(R.string.bmp_halo_white_out);
+        potionHalo.hide();
+        addDrawing(potionHalo);
+
+        fallingStars = new FallingStars(0f, .16f, 1f, .5f, 25);
+        addDrawing(fallingStars);
+        //endregion
+
+        //region Help
+        addHelpItems(
+                new int[]{
+                        0, HelpItemInfo.TYPE_SECRET,    R.string.dlg_Help_201_formula_title, R.string.dlg_Help_201_formula_text,
+                        1, HelpItemInfo.TYPE_BOTTLE,    R.string.dlg_Help_202_bottle_title, R.string.dlg_Help_202_bottle_text,
+                        2, HelpItemInfo.TYPE_POTION,    R.string.dlg_Help_203_potion_title, R.string.dlg_Help_203_potion_text,
+                        3, HelpItemInfo.TYPE_MARKER,    R.string.dlg_Help_204_marker_title, R.string.dlg_Help_204_marker_text,
+                });
+        //endregion
+
+        //region Potion Videos
+        addPotionVideosButton();
+        addPotionVideoDialog();
+        //endregion
+
+        addRepeater(7000, new Runnable() { @Override public void run() { animateControls1(); } });
+        addRepeater(5000, new Runnable() { @Override public void run() { animateControls2(); } });
+        addRepeater(7000, new Runnable() { @Override public void run() { animatePotionFinal(); } });
+    }
+
+    @Override
+    protected boolean isStars() { return true; }
+    @Override
+    protected boolean isStarsMoving() { return false; }
+
+    //region add
+    private void addLabItem(int index, AchievementType type, float fx, float fy) {
+        LabItem i = new LabItem(index, type, fx, fy);
+        i.setListener(new ITouchableListener() {
+            @Override public void handelOnTouch(ITouchable item) {
+                LabItem labItem = (LabItem)item;
+                if (labItem.isEnabled())
+                    selectItems(labItem);
+                else
+                    showDialog(dlgPotionVideos);
+            }
+            @Override public void handelOnTouchUp(ITouchable item) { }
+        });
+        i.setListener(new IMoveListener() {
+            @Override public void handelOnMoveIn(ITouchable item) {
+                LabItem labItem = (LabItem)item;
+                if (labItem != null)
+                    Utils.playSound(labItem.isEnabled() ? R.raw.glass08 : R.raw.glass06);
+            }
+            @Override public void handelOnMoveOut(ITouchable item) { }
+        });
+        i.hide();
+        labItems.add(i);
+        addDrawingTouchable(i);
+    }
+
+    private void addLabIndex(int index, float fx, float fy) {
+        LabIndex i = new LabIndex(index, fx, fy);
+        i.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable item) { selectIndex((LabIndex)item); }
+        });
+        i.hide();
+        labIndices.add(i);
+        addDrawingTouchable(i);
+    }
+
+    private void addFinalPotion(int index, float fx, float fy) {
+        DrawingBase f = new DrawingBase(fx, fy - LabItem.fdItem / 7f, LabItem.fdItem);
+        f.hide();
+        labFinalItems.append(index, f);
+        addDrawing(f);
+    }
+    //endregion
+
+    //region select
+    private void selectItems(LabItem labItem) {
+        if (!labItem.isSelected()) {
+            if (labItem.isEnabled())
+                Utils.playSoundClick();
+            else
+                Utils.playSound(R.raw.glass06);
+        }
+        for (LabItem i : labItems)
+            i.select(i.realIndex == labItem.realIndex);
+    }
+
+    private void selectIndex(LabIndex labIndex) {
+        AchievementType newType = AchievementType.NONE;
+        LabItem selectedItem = null; // выбранный item в ребусе
+        for (LabItem i : labItems)
+            if (i.isSelected()) {
+                newType = i.getAchievementType();
+                i.setCurrentIndex(labIndex.index);
+                selectedItem = i;
+            } else {
+                if (i.getCurrentIndex() == labIndex.index)
+                    i.setCurrentIndex(null);
+            }
+
+        for (LabIndex i : labIndices) {
+            boolean isEqual = i.getAchievementType() == newType;
+            // для нажатого индекса устанавливаем выбранный item
+            if (i.index == labIndex.index)
+                i.setItem(isEqual ? AchievementType.NONE : newType);
+            else if (isEqual)
+                i.setItem(AchievementType.NONE);
+        }
+
+        if (selectedItem != null)
+            Utils.playSound(selectedItem.isEnabled() ? R.raw.glass08 : R.raw.glass06);
+
+        // check items
+        int correctItemsCount = 0;
+        for (LabItem i : labItems)
+            correctItemsCount += i.isCorrect() ? 1 : 0;
+        if (correctItemsCount == labItems.size())
+            solved();
+    }
+    //endregion
+
+    @Override
+    protected int getMusicId() { return 3004; } // the_potion
+
+    //region pause / resume
+    @Override
+    public void onPauseGroup(GrpDialog dlg) {
+        if (dlg != null || !isCurrentDialog(dlgPotionVideos))
+            showDialog(dlg);
+    }
+    //@Override
+    //public void onResumeGroup() { }
+    //endregion
+
+    //region connection
+    @Override
+    public void onConnectionOn() {
+        super.onConnectionOn();
+        refreshControls();
+    }
+    @Override
+    public void onConnectionOff() {
+        super.onConnectionOff();
+        showhideLabItems(false);
+        //animateDropSleep();
+    }
+    //endregion
+
+    //region show / hide
+    @Override
+    public void show() {
+        super.show();
+        isOnFinalAnim = false;
+        showhideLabItems(false);
+        //animateDropWait();
+    }
+
+    private void showhideLabItems(boolean isShowHide) {
+        if (isShowHide) {
+            for (LabIndex i: labIndices)
+                i.show();
+            for (LabItem i : labItems)
+                i.show();
+            if (txtPlus != null)
+                txtPlus.show();
+            if (txtEquals != null)
+                txtEquals.show();
+        } else {
+            for (LabIndex i: labIndices)
+                i.hide();
+            for (LabItem i : labItems)
+                i.hide();
+            if (txtPlus != null)
+                txtPlus.hide();
+            if (txtEquals != null)
+                txtEquals.hide();
+            showhideVideos(false);
+        }
+    }
+
+    private void showhideFinalItems(boolean showhide) {
+        for (int i = 0; i < labFinalItems.size(); i++) {
+            DrawingBase item = labFinalItems.valueAt(i);
+            if (showhide)
+                item.show();
+            else
+                item.hide();
+        }
+    }
+
+    private void showhidePotionFinal(boolean isShowHide) {
+        if (isShowHide) {
+            potionFinal.show();
+            fallingStars.show();
+            txtFinalComment.show();
+        } else {
+            potionFinal.hide();
+            fallingStars.hide();
+            txtFinalComment.hide();
+        }
+    }
+    //endregion
+
+    //region show/hide sign in comment
+    private void showSignInComment() {
+        if (txtSignInComment != null)
+            txtSignInComment.show();
+    }
+    private void hideSignInComment() {
+        if (txtSignInComment != null)
+            txtSignInComment.hide();
+    }
+    //endregion
+
+    //region drop wait animation
+    private void animateDropSleep() {
+        if (dropWait != null) {
+            if (dropWait.statusId != FunnyDrop.STATUS_90_SLEEP)
+                dropWait.setMotion(DropMotionType.SLEEP);
+        }
+    }
+    private void animateDropWait() {
+        if (dropWait != null) {
+            if (dropWait.statusId != FunnyDrop.STATUS_100_WAIT && dropWait.statusId != FunnyDrop.STATUS_101_WAIT_BLINK)
+                dropWait.setMotion(DropMotionType.WAIT);
+        }
+    }
+    private void hideDropWait() {
+        if (dropWait != null)
+            dropWait.hide();
+    }
+    //endregion
+
+    //region drop received animation
+    private boolean isOnAction = false;
+    private AnimatorSet animSet;
+    private void cancelAnim() {
+        if (animSet != null && animSet.isStarted())
+            animSet.cancel();
+    }
+    private void onAction(long duration) {
+        isOnAction = true;
+        cancelAnim();
+        TaskUtils.postDelayed(duration, new Runnable() { @Override public void run() { isOnAction = false; } });
+    }
+    private void animateDropReceived() {
+        if (!isOnAction) {
+            cancelAnim();
+            //float ffy = 1f + 2f * fdDropProgress;
+            //dropProgress.setPoint(xDropProgress, ffy);
+            //dropProgress.setMotion(FunnyDrop.MOTION_HAPPY);
+            long duration = 5000;
+            onAction(duration);
+            // старт анимации движения
+            //ObjectAnimator sY = ObjectAnimator.ofFloat(dropProgress, "fy", ffy, yDropProgress, yDropProgress, yDropProgress, ffy).setDuration(duration);
+            //ObjectAnimator sWS = ObjectAnimator.ofFloat(dropProgress, "widthScale", 1f, .975f, 1.1f, .975f, 1f).setDuration(duration);
+            //ObjectAnimator sHS = ObjectAnimator.ofFloat(dropProgress, "heightScale", .95f, 1.05f, .975f, 1.05f, .95f).setDuration(duration);
+            //animSet = new AnimatorSet();
+            //animSet.playTogether(sY, sWS, sHS);
+            //animSet.setDuration(duration);
+            //animSet.setInterpolator(new AccelerateInterpolator());
+            //animSet.start();
+        }
+    }
+    //endregion
+
+    //region anim controls
+    private static final long animDurationLabItems = 1500;
+    private boolean isOnActionLabItems = false;
+    private void animateControls1() {
+        if (!isOnActionLabItems) {
+            isOnActionLabItems = true;
+
+            float dfy = LabItem.fdItem / 20f;
+            float dfy2 = 2 * dfy;
+            long dd = animDurationLabItems / 18;
+            int i = 0;
+            ArrayList<Animator> anims = new ArrayList<>();
+            for (LabItem item : labItems) {
+                i++;
+                float fy = item.getFy();
+                ObjectAnimator a = ObjectAnimator.ofFloat(item, "fy", fy, fy - dfy2, fy + dfy, fy).setDuration(animDurationLabItems);
+                a.setStartDelay(dd * i);
+                anims.add(a);
+            }
+            new AnimUtil().startAD(anims);
+            /*AnimatorSet set1 = new AnimatorSet();
+            set1.setInterpolator(new AccelerateDecelerateInterpolator());
+            set1.playTogether(anims);
+            set1.start();*/
+
+            TaskUtils.postDelayed(3 * animDurationLabItems, new Runnable() {
+                @Override public void run() { isOnActionLabItems = false; }
+            });
+        }
+    }
+
+    private static final long animDurationLabIndices = 2000;
+    private boolean isOnActionLabIndices = false;
+    private void animateControls2() {
+        if (!isOnActionLabIndices) {
+            isOnActionLabIndices = true;
+
+            float ffd = LabIndex.fdIndex;
+            long dd = animDurationLabIndices / 10;
+            int i = 0;
+            ArrayList<Animator> anims = new ArrayList<>();
+            for (LabIndex index : labIndices) {
+                i++;
+                ObjectAnimator a = ObjectAnimator.ofFloat(index, "fd", ffd, .95f * ffd, 1.1f * ffd, ffd).setDuration(animDurationLabIndices);
+                a.setStartDelay(dd * i);
+                anims.add(a);
+            }
+            new AnimUtil().startAD(anims);
+            /*AnimatorSet set1 = new AnimatorSet();
+            set1.setInterpolator(new AccelerateDecelerateInterpolator());
+            set1.playTogether(anims);
+            set1.start();*/
+
+            TaskUtils.postDelayed(3 * animDurationLabIndices, new Runnable() {
+                @Override public void run() { isOnActionLabIndices = false; }
+            });
+        }
+    }
+
+    private static final long animDurationFinal = 1500;
+    private boolean isOnActionFinal = false;
+    private void animatePotionFinal() {
+        if (!isOnActionFinal && potionFinal.isVisible()) {
+            isOnActionFinal = true;
+
+            float ddy = fdPotionFinal / 20f;
+            float ddy2 = 2 * ddy;
+            ObjectAnimator.ofFloat(potionFinal, "fy", yPotionFinal, yPotionFinal - ddy2, yPotionFinal + ddy, yPotionFinal).setDuration(animDurationFinal).start();
+            Utils.playSound(R.raw.glass_bulk04, animDurationFinal / 3);
+            TaskUtils.postDelayed(3 * animDurationFinal, new Runnable() {
+                @Override
+                public void run() { isOnActionFinal = false; }
+            });
+        }
+    }
+    //endregion
+
+    //region solved
+    private void solved() {
+        isOnFinalAnim = true;
+        // сохраняем в БД признак наличия Лекарства от всех болезней
+        Utils.dataBaseManager.updatePotionFinal(true);
+        // запускаем анимацию final potion
+        finalAnimation();
+    }
+
+    private boolean isOnFinalAnim = false;
+    private void finalAnimation() {
+        //region сбрасываем выделение items
+        for (LabItem i : labItems)
+            i.select(false);
+        //endregion
+        //region переносим из labIndex установленный potions в labFinalItem
+        for (LabIndex index : labIndices) {
+            AchievementType type = index.getAchievementType();
+            if (type != null) {
+                int bitmapId = SignInfos.getBitmapIdByAchievementType(type);
+                DrawingBase finalItem = labFinalItems.get(index.index);
+                if (finalItem != null) {
+                    finalItem.setDefaultBitmap(bitmapId);
+                    finalItem.refreshCurrentStatus();
+                }
+            }
+            index.setItem(AchievementType.NONE);
+        }
+        //endregion
+        //region анимация flash
+        potionSpot.setAlpha(0);
+        potionSpot.setPoint(xPotionFinal, yLabItem2);
+        potionSpot.show();
+
+        new AnimUtil()
+                .add(potionSpot, "alpha", 0, 128, 0)
+                .add(potionSpot, "scale", 0f, 7f)
+                .startAD(750);
+
+        /*Animator aPA = ObjectAnimator.ofInt(potionSpot, "alpha", 0, 128, 0);
+        Animator aPS = ObjectAnimator.ofFloat(potionSpot, "scale", 0f, 7f);
+        AnimatorSet s0 = new AnimatorSet();
+        s0.playTogether(aPA, aPS);
+        s0.setDuration(750);
+        s0.setInterpolator(new AccelerateDecelerateInterpolator());
+        s0.start();*/
+
+        //Utils.playSound(R.raw.dna_pick04, 100);
+        //endregion
+        //region скрываем контролы
+        ObjectAnimator.ofInt(this, "ItemsAlpha", 255, 0).setDuration(1000).start();
+        //Utils.playSound(R.raw.ui_dialog_hide02);
+        //endregion
+        //region отображаем final items
+        setFinalItemsAlpha(0);
+        showhideFinalItems(true);
+        ObjectAnimator.ofInt(this, "FinalItemsAlpha", 0, 255).setDuration(1000).start();
+        Utils.playSound(R.raw.ui_dialog_show02, 500);
+        //endregion
+        //region анимация final potions
+        TaskUtils.postDelayed(1100, new Runnable() {
+            @Override public void run() {
+                for (LabItem i : labItems)
+                    i.hide();
+                for (LabIndex i : labIndices)
+                    i.hide();
+
+                potionEmpty.setAlpha(0);
+                potionEmpty.show();
+                ObjectAnimator.ofInt(potionEmpty, "alpha", 0, 255).setDuration(1000).start();
+
+                ArrayList<Animator> animList = new ArrayList<>();
+                float cx = .5f, cy = .4f + LabFinalItem.fdItem / 7f, r = .38f;
+                int delay = 0;
+                for (int i = 0; i < 10; i++) {
+                    int key = (i == 9) ? 0 : (i + 1);
+                    DrawingBase finalItem = labFinalItems.get(key);
+                    if (finalItem != null) {
+                        float fx0 = finalItem.getFx();
+                        float fy0 = finalItem.getFy();
+                        float degrees = -135f + i * 90f / 9f;
+                        double angel = Math.PI * degrees / 180f;
+                        float fx1 = cx + (float) (r * Math.cos(angel) / MetrixUtils.screen_K);
+                        float fy1 = cy + (float) (r * Math.sin(angel));
+                        Animator aX = ObjectAnimator.ofFloat(finalItem, "fx", fx0, fx1, xPotionFinal);
+                        aX.setStartDelay(delay);
+                        Animator aY = ObjectAnimator.ofFloat(finalItem, "fy", fy0, fy1, yPotionFinal);
+                        aY.setStartDelay(delay);
+                        Animator aA = ObjectAnimator.ofInt(finalItem, "alpha", 255, 255, 255, 0);
+                        aA.setStartDelay(delay);
+                        TaskUtils.onAnimEnd(aX, new Runnable() { @Override public void run() { Utils.playSound(R.raw.glass06); } });
+                        animList.add(aX);
+                        animList.add(aY);
+                        animList.add(aA);
+                        delay += 250;
+                    }
+                }
+                AnimatorSet set = new AnimatorSet();
+                set.playTogether(animList);
+                set.setInterpolator(new AccelerateDecelerateInterpolator());
+                set.setDuration(2000);
+                TaskUtils.onAnimEnd(set, new Runnable() {
+                    @Override
+                    public void run() {
+                        showhideFinalItems(false);
+                        potionSpot.setAlpha(0);
+                        potionSpot.setPoint(xPotionFinal, yPotionFinal + LabFinalItem.fdItem / 7f);
+                        potionSpot.show();
+                        potionHalo.setAlpha(0);
+                        potionHalo.show();
+                        potionFinal.setAlpha(0);
+                        potionFinal.show();
+                        new AnimUtil()
+                                .add(potionSpot, "alpha", 0, 64, 0)
+                                .add(potionSpot, "scale", 1f, .5f)
+                                .add(potionHalo, "alpha", 0, 64, 0)
+                                .add(potionHalo, "scale", 0f, 1f)
+                                .add(potionEmpty, "alpha", 255, 0)
+                                .add(potionFinal, "alpha", 0, 0, 255)
+                                .add(potionFinal, "scale", 1f, .85f, 1.2f, 1f)
+                                .startAD(2000);
+
+                        Utils.playSound(R.raw.bonus08, 100);
+                        Utils.playSound(R.raw.explode16, 1000);
+                        Utils.playSound(R.raw.ui_result_good01, 1500);
+
+                        TaskUtils.postDelayed(2100, new Runnable() {
+                            @Override
+                            public void run() {
+                                showhideLabItems(false);
+                                showhidePotionFinal(true);
+                                txtFinalComment.show();
+                                isOnFinalAnim = false;
+                            }
+                        });
+                    }
+                });
+                set.start();
+            }
+        });
+        //endregion
+    }
+    @Keep
+    private void setItemsAlpha(int a) {
+        txtPlus.setAlpha(a);
+        txtEquals.setAlpha(a);
+        for (LabItem i : labItems)
+            i.setAlpha(a);
+        for (LabIndex i : labIndices)
+            i.setAlpha(a);
+    }
+    @Keep
+    private void setFinalItemsAlpha(int a) {
+        for (int i = 0; i < labFinalItems.size(); i++) {
+            DrawingBase item = labFinalItems.valueAt(i);
+            item.setAlpha(a);
+        }
+    }
+    @Keep
+    private void setFinalItemsFy(float fy) {
+        for (int i = 0; i < labFinalItems.size(); i++) {
+            DrawingBase item = labFinalItems.valueAt(i);
+            item.setFy(fy);
+        }
+    }
+    //endregion
+
+    @Override
+    protected void refreshControls() {
+        super.refreshControls();
+
+        // не обновляем контролы, если идет анимация final potion
+        if (isOnFinalAnim)
+            return;
+
+        String userId = Utils.authManager.getUserId();
+        if (userId == null) {
+            showhidePotionFinal(false);
+            showhideLabItems(false);
+            showhideVideos(false);
+            if (userRowInfo == null)
+                animateDropWait();
+            showSignInComment(); // отображаем комментарий о необходимости залогиниться
+        } else {
+            if (userRowInfo != null && userRowInfo.userScoreInfo != null) {
+                hideDropWait();
+                hideSignInComment();
+                showhideVideos(!userRowInfo.userScoreInfo.isAllPotions()); // кнопка диалога Эликсир за видео, если не все еще potion получены
+
+                if (userRowInfo.userScoreInfo.isPotionFinal()) {
+                    showhideLabItems(false);
+                    showhidePotionFinal(true); // отображаем лекарство от всех болезней
+                } else {
+                    showhidePotionFinal(false);
+                    showhideLabItems(true);
+                    setItemsAlpha(255);
+                    for (LabItem i : labItems) {
+                        AchievementType type = i.getAchievementType();
+                        boolean isEnabled = userRowInfo.userScoreInfo.isAchievementEnabled(type);
+                        i.setEnabled(isEnabled);
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,130 @@
+package com.softigress.magicsigns.Story._base;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.os.SystemClock;
+import com.softigress.magicsigns.Activities._base.ActivityGroupBase;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpStoryLineBase extends ActivityGroupBase {
+
+    protected BitmapManager bitmapManager;
+    protected ArrayRecyclableSimple<StoryLineStep> steps;
+    private StoryLineStep[] stepItems;
+    private long startActiveTicks;
+    private boolean isActiveSteps = false;    private ArrayRecyclable<AnimUtil> animUtils = new ArrayRecyclable<>();
+
+    public GrpStoryLineBase() { }
+
+    @Override
+    public long hide() {
+        disableSteps();
+        stopAnim();
+        return super.hide();
+    }
+
+    //region Bitmaps
+    protected int[] getBitmapIds() { return new int[] {}; }
+
+    protected Bitmap getBitmap(int bitmapId) { return bitmapManager.getLoadedBitmap(bitmapId); }
+    //endregion
+
+    //region Steps
+    protected void initSteps() {
+        steps = new ArrayRecyclableSimple<>(StoryLineStep.class);
+        stepItems = null;
+    }
+
+    protected void addStep(long delay, Runnable runnable) {
+        if (steps != null)
+            steps.add(new StoryLineStep(delay, runnable));
+    }
+
+    protected synchronized void addStepOver(long delay, Runnable runnable) {
+        if (steps != null) {
+            steps.add(new StoryLineStep(delta + delay, runnable));
+            stepItems = steps.getItems();
+        }
+    }
+
+    protected synchronized void checkSteps(long delta) {
+        if (stepItems != null)
+            for (StoryLineStep step: stepItems)
+                if (step != null)
+                    step.check(delta);
+    }
+
+    protected void activateSteps() {
+        if (steps != null)
+            stepItems = steps.getItems();
+        if (!isActiveSteps)
+            isActiveSteps = true;
+    }
+
+    protected void disableSteps() {
+        if (isActiveSteps) {
+            isActiveSteps = false;
+            startActiveTicks = 0;
+        }
+    }
+
+    protected void recycleSteps() {
+        if (steps != null)
+            steps.recycle();
+        steps = null;
+        if (stepItems != null)
+            Utils.recycleArray(stepItems);
+        stepItems = null;
+    }
+
+    protected long delta = 0;
+    @Override
+    public void drawItems(Canvas c) {
+        if (isActiveSteps) {
+            long ticks = SystemClock.elapsedRealtime();
+            if (startActiveTicks == 0)
+                startActiveTicks = ticks;
+            delta = ticks - startActiveTicks;
+            checkSteps(delta);
+        }
+        super.drawItems(c);
+    }
+    //endregion
+
+    //region AnimUtils
+    protected AnimUtil addAnim(AnimUtil au) {
+        animUtils.add(au);
+        return au;
+    }
+
+    protected void stopAnim() {
+        for (AnimUtil au: animUtils)
+            au.stop();
+    }
+
+    private void recycleAnims() {
+        animUtils.recycle();
+    }
+    //endregion
+
+    //region Resources
+    @Override
+    protected void loadResources() {
+        super.loadResources();
+        bitmapManager = new BitmapManager();
+        bitmapManager.loadBitmaps(getBitmapIds());
+    }
+    @Override
+    public void recycleResources() {
+        super.recycleResources();
+        recycleSteps();
+        recycleAnims();
+        recycleItems();
+        bitmapManager.recycle();
+    }
+    //endregion
+}

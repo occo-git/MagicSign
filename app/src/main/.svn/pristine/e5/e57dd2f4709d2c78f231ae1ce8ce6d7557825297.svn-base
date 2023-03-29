@@ -1,0 +1,11 @@
+package com.softigress.magicsigns.Activities.MainActivity;
+
+public enum ActivityGroupType {
+    NONE,
+    LOAD,
+    INTRO,
+    MAIN,
+    RATING,
+    LAB,
+    GAME
+}

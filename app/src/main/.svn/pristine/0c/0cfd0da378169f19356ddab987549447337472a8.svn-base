@@ -1,0 +1,30 @@
+package com.softigress.magicsigns._system.Tasks.Repeaters;
+
+import android.os.SystemClock;
+
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+
+public class RunnableRepeaters {
+
+    private ArrayRecyclableSimple<RunnableRepeater> repeaters = new ArrayRecyclableSimple<>(RunnableRepeater.class);
+    private RunnableRepeater[] repeaterItems;
+
+    public void addRepeater(long duration, Runnable run) {
+        repeaters.add(new RunnableRepeater(duration, run));
+        repeaterItems = repeaters.getItems();
+    }
+
+    public void nextStep() {
+        long ticks = SystemClock.elapsedRealtime();
+        if (repeaterItems != null)
+            for (RunnableRepeater r: repeaterItems)
+                r.nextStep(ticks);
+    }
+
+    public void recycle() {
+        if (repeaters != null)
+            repeaters.recycle();
+        repeaters = null;
+    }
+}

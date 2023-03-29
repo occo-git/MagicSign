@@ -1,0 +1,120 @@
+package com.softigress.magicsigns.UI.Lab;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+
+public class LabIndex extends BtnBase {
+
+    public static final float fdIndex = .07f;
+    public Integer index = 0;
+    private AchievementType type;
+
+    private final Paint paint0;
+    private final Paint paint1;
+    private final DrawingText txtIndex;
+    private final DrawingBase item;
+    private int bitmapId;
+
+    private static final int maxBackAlpha = 128;
+
+    public LabIndex(Integer index, float fx, float fy) {
+        super(fx, fy, fdIndex, R.string.bmp_btn_empty);
+
+        this.index = index;
+
+        txtIndex = new DrawingText(DrawingHAlign.CENTER, TextUtils.lab_index);
+        txtIndex.setVerticalAlign(DrawingVAlign.CENTER);
+        txtIndex.setTextBack(4f, 32, 0, 0, 0);
+        txtIndex.setText(index.toString());
+
+        item = new DrawingBase(fdIndex / 2f);
+
+        paint0 = PaintUtils.getPaintStrokeWhite(255, PaintUtils.strokeWidth2);
+        paint1 = PaintUtils.getPaintWhite(maxBackAlpha);
+
+        setPoint(fx, fy);
+    }
+
+    public void setItem(AchievementType type) {
+        if (item != null) {
+            this.type = type;
+            this.bitmapId = SignInfos.getBitmapIdByAchievementType(type);
+            item.setDefaultBitmap(bitmapId);
+            item.refreshCurrentStatus();
+        }
+    }
+
+    public AchievementType getAchievementType() { return type; }
+
+    @Override
+    public void show() {
+        super.show();
+        if (txtIndex != null)
+            txtIndex.show();
+        if (item != null)
+            item.show();
+    }
+    @Override
+    public long hide() {
+        super.hide();
+        if (txtIndex != null)
+            txtIndex.hide();
+        if (item != null)
+            item.hide();
+        return 0;
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+        int aa = maxBackAlpha * alpha / 255;
+        if (paint1 != null)
+            paint1.setAlpha(aa);
+        if (paint0 != null) {
+            paint0.setAlpha(alpha);
+            paint0.setStrokeWidth(PaintUtils.strokeWidth2);
+        }
+        if (txtIndex != null) {
+            txtIndex.setAlpha(alpha);
+            txtIndex.setPoint(fx, fy);
+        }
+        if (item != null) {
+            item.setAlpha(alpha);
+            item.setPoint(fx + fdIndex  * .5f, fy - fdIndex * .5f);
+        }
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+
+        if (isVisible()) {
+            //if (paint1 != null)
+            //    c.drawCircle(x, y, h * .5f, paint1);
+            //if (paint0 != null)
+            //    c.drawCircle(x, y, h * .5f, paint0);
+            if (txtIndex != null)
+                txtIndex.drawFrame(c);
+            if (item != null)
+                item.drawFrame(c);
+        }
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (txtIndex != null)
+            txtIndex.recycle();
+    }
+}

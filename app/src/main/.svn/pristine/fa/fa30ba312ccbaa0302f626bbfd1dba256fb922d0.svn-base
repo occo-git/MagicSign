@@ -1,0 +1,60 @@
+package com.softigress.magicsigns.Game.Puncher;
+
+import android.graphics.Point;
+import android.graphics.PointF;
+
+public class RaySign {
+
+    private final Point[] coords;
+    private int coordsCount;
+    private int minX, minY, maxX, maxY;
+    private final int sizeX, sizeY;
+
+    public RaySign(Point[] coords) {
+        this.coords = coords;
+
+        getMinMax();
+        sizeX = maxX - minX;
+        sizeY = maxY - minY;
+    }
+
+    private void getMinMax() {
+        Point p0 = coords[0];
+        if (coords.length == 0 || p0 == null)
+            return;
+        int minX = p0.x;
+        int minY = p0.y;
+        int maxX = p0.x;
+        int maxY = p0.y;
+        for (Point c : coords)
+            if (c != null) {
+                minX = Math.min(minX, c.x);
+                minY = Math.min(minY, c.y);
+                maxX = Math.max(maxX, c.x);
+                maxY = Math.max(maxY, c.y);
+                coordsCount++;
+            } else
+                break;
+        this.minX = minX;
+        this.minY = minY;
+        this.maxX = maxX;
+        this.maxY = maxY;
+    }
+
+    public PointF[] getPoints(float x0, float y0, float kx, float ky) {
+        int i = 0;
+        PointF[] points = new PointF[coordsCount];
+        for (Point c : coords)
+            if (c != null && i < coordsCount)
+                points[i++] = new PointF(kx * (c.x - minX) / sizeX + x0, ky * (c.y - minY) / sizeY + y0);
+        return points;
+    }
+
+    /*public ArrayList<PointF> getPoints() {
+        ArrayList<PointF> points = new ArrayList<>();
+        for (Point c : coords)
+            if (c != null)
+                points.add(new PointF((c.x - minX) / sizeX, (c.y - minY) / sizeY));
+        return points;
+    }*/
+}

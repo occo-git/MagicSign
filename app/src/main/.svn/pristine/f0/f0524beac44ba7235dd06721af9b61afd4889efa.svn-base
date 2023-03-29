@@ -1,0 +1,80 @@
+package com.softigress.magicsigns.UI._base.Controls._base.Counters;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import com.softigress.magicsigns.R;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+
+public class CtrlStarsCounter extends CtrlCounterBase {
+
+    private static final float starFx  = .95f;
+    public static final float starFy  = .035f;
+    public static final float starFd = .035f;
+    //private DrawingFrameRate frameRate;
+
+    public CtrlStarsCounter() {
+        super(starFx, starFy, starFd, R.string.bmp_star);
+        setMaxAlpha(255);
+        setAlpha(0);
+        setTextAlign(DrawingHAlign.RIGHT);
+        addItemDelay = CurrentSettings.signStarPickDelay;
+        //frameRate = new DrawingFrameRate("stars counter", .04f, .3f);
+    }
+
+    //region show hide
+    @Override
+    public void show() {
+        super.show();
+        new AnimUtil()
+                //.add(this, "Fx", locationFx - .2f, locationFx + .015f, locationFx)
+                .add(this, "Fy", locationFy - .2f, locationFy + .015f, locationFy)
+                .add(this, "alpha", 0, maxAlpha)
+                .start(showDuration);
+        /*//Animator a1 = ObjectAnimator.ofFloat(this, "Fx", locationFx - .2f, locationFx + .015f, locationFx).setDuration(showDuration);
+        Animator a2 = ObjectAnimator.ofFloat(this, "Fy", locationFy - .2f, locationFy + .015f, locationFy).setDuration(showDuration);
+        Animator a3 = ObjectAnimator.ofInt(this, "alpha", 0, maxAlpha).setDuration(showDuration);
+        AnimatorSet set = new AnimatorSet().setDuration(showDuration);
+        set.playTogether(a2, a3);
+        set.start();*/
+    }
+
+    @Override
+    public long hide() {
+        new AnimUtil()
+                //.add(this, "Fx", locationFx, locationFx + .015f, locationFx - .2f)
+                .add(this, "Fy", locationFy, locationFy + .015f, locationFy - .2f)
+                .add(this, "alpha", maxAlpha, 0)
+                .start(hideDuration);
+        /*//Animator a1 = ObjectAnimator.ofFloat(this, "Fx", locationFx, locationFx + .015f, locationFx - .2f).setDuration(hideDuration);
+        Animator a2 = ObjectAnimator.ofFloat(this, "Fy", locationFy, locationFy + .015f, locationFy - .2f).setDuration(hideDuration);
+        Animator a3 = ObjectAnimator.ofInt(this, "alpha", maxAlpha, 0).setDuration(hideDuration);
+        AnimatorSet set = new AnimatorSet().setDuration(hideDuration);
+        set.playTogether(a2, a3);
+        set.start();*/
+        return super.hide(hideDuration);
+    }
+    //endregion
+
+    /*@Override
+    public void drawFrame(Canvas c) {
+        if (frameRate != null)
+            frameRate.start();
+
+        super.drawFrame(c);
+
+        if (frameRate != null)
+            frameRate.drawFrame(c);
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (frameRate != null)
+            frameRate.recycle();
+        frameRate = null;
+    }*/
+}

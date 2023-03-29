@@ -1,0 +1,68 @@
+package com.softigress.magicsigns.UI._base.Controls.Lightning;
+
+import android.graphics.Canvas;
+import com.softigress.magicsigns.Game.Signs._base.DrawingSignCell;
+//import com.softigress.magicsigns._Base._Drawing.DrawingFrameRate;
+import com.softigress.magicsigns._Base._Drawing._interfaces.IDrawing;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class LightningCollection implements IDrawing {
+
+    private static final int lightningCount = 20;
+    private DrawingLightning[] lightnings;
+    private int addIndex = 0;
+
+    //private DrawingFrameRate frameRate;
+
+    public LightningCollection() {
+        lightnings = new DrawingLightning[lightningCount];
+        //frameRate = new DrawingFrameRate("lightning", .04f, .25f);
+    }
+
+    public void addLightning(int duration, float fd, float strokeWidth1, float strokeWidth2, float cx, float cy, double angel) {
+            DrawingLightning l = new DrawingLightning(fd, strokeWidth1, strokeWidth2);
+            l.setPathK(cx * MetrixUtils.screen_metrix_width, cy * MetrixUtils.screen_metrix_height, angel);
+            l.start(duration);
+            addIndex++;
+            if (addIndex >= lightningCount)
+                addIndex = 0;
+        lightnings[addIndex] = l;
+    }
+
+    public boolean checkCollision(DrawingSignCell sign) {
+        for (DrawingLightning l : lightnings)
+            if (l != null && l.isVisible() && l.checkCollision(sign))
+                return true;
+        return false;
+    }
+
+    //region IDrawing
+    @Override
+    public int getLayer() { return 0; }
+
+    @Override
+    public void calc() { }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        //if (frameRate != null)
+        //    frameRate.start();
+
+        for (DrawingLightning l: lightnings)
+            if (l != null)
+                l.drawFrame(c);
+
+        //if (frameRate != null)
+        //    frameRate.drawFrame(c);
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        Utils.recycleArray(lightnings);
+        lightnings = null;
+        //if (frameRate != null)
+        //    frameRate.recycle();
+    }
+}

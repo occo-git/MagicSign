@@ -1,0 +1,178 @@
+package com.softigress.magicsigns.UI._Main.Dialogs.Options;
+
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.CheckerBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Progress.CtrlProgressBar;
+import com.softigress.magicsigns.UI._base.Controls._base.Sliders.ISliderListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Sliders.SliderBase;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpOptionsDialog extends GrpDialog {
+
+    private static final float dyStart = 1f / 5f;
+    private static final float dxChecker = .2f;
+    private static final float dyChecker = (1f - 2f * dyStart) / 2f;
+    private static final float fdChecker = .075f;
+    private static final float fwSlider = .38f;
+    private static final float fhSlider = .03f;
+    private static final float fwProgress = .38f;
+    private static final float fhProgress = .02f;
+
+    private final CheckerBase chSound;
+    private final SliderBase sliderSoundVol;
+    private final CheckerBase chMusic;
+    private final SliderBase sliderMusicVol;
+    private final CtrlProgressBar ctrlProgressBarMusic;
+    private final CheckerBase chVibr;
+
+    public GrpOptionsDialog() {
+        super(.8f, .5f);
+        name = "dlg_options";
+
+        //showDuration = 700;
+        //hideDuration = 700;
+        //setCaptionText(Utils.getRes(R.string.dlg_Options));
+
+        //region Sound
+        chSound = new CheckerBase(getByDx(dxChecker), getByDy(dyStart), fdChecker);
+        chSound.name = "checker_sound_dialog_options";
+        chSound.setLabelText(R.string.dlg_Sound);
+        chSound.setLabelTextVerticalAlignment(DrawingVAlign.TOP);
+        chSound.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (sliderSoundVol != null)
+                    sliderSoundVol.setEnabled(chSound.isChecked());
+            }
+        });
+        addDlgControlTouchable(chSound, dxChecker, dyStart);
+
+        sliderSoundVol = new SliderBase(getByDx(dxChecker + fdChecker), getByDy(dyStart + .68f * fdChecker), fwSlider, fhSlider);
+        sliderSoundVol.setListener(new ISliderListener() {
+            @Override
+            public void onVolumeChanged(float vol) { }
+            @Override
+            public void onRelease() {
+                // меняем уровень громкости звуков при отпускании slider
+                Utils.setSoundVolume(sliderSoundVol.getVolume());
+                Utils.playSoundClick();
+            }
+        });
+        addDlgControlTouchable(sliderSoundVol, dxChecker + fdChecker, dyStart + .68f * fdChecker);
+        //endregion
+
+        //region Music
+        chMusic = new CheckerBase(getByDx(dxChecker), getByDy(dyStart + dyChecker), fdChecker);
+        chMusic.name = "checker_music_dialog_options";
+        chMusic.setLabelText(R.string.dlg_Music);
+        chMusic.setLabelTextVerticalAlignment(DrawingVAlign.TOP);
+        chMusic.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                Utils.musicOnOff(chMusic.isChecked());
+                if (listener != null) {
+                    if (Utils.isMusic())
+                        listener.musicOn(); // Utils.MusicPlayDefault();
+                    else
+                        listener.musicOff(); // Utils.MusicStop();
+                }
+                if (sliderMusicVol != null)
+                    sliderMusicVol.setEnabled(chMusic.isChecked());
+            }
+        });
+        addDlgControlTouchable(chMusic, dxChecker, dyStart + dyChecker);
+
+        float dxMusicSlider =  dxChecker + fdChecker;
+        float dyMusicSlider =  dyStart + dyChecker + .68f * fdChecker;
+        float dxProgress = dxMusicSlider;
+        float dyProgress = dyMusicSlider + 2f * fhProgress;
+        float fwwProgress = fwProgress * MetrixUtils.screen_K_default / MetrixUtils.screen_K;
+
+        ctrlProgressBarMusic = new CtrlProgressBar(getByDx(dxProgress), getByDy(dyProgress), fwwProgress, fhProgress);
+        ctrlProgressBarMusic.setRGB(255, 255, 255);
+        ctrlProgressBarMusic.isHideOnFinished = true;
+        ctrlProgressBarMusic.setAlign(DrawingHAlign.LEFT);
+        addDlgControl(ctrlProgressBarMusic, dxProgress, dyProgress);
+
+        sliderMusicVol = new SliderBase(getByDx(dxMusicSlider), getByDy(dyMusicSlider), fwSlider, fhSlider);
+        sliderMusicVol.setListener(new ISliderListener() {
+            @Override
+            public void onVolumeChanged(float vol) { Utils.applyMusicVolume(vol); } // меняем уровень громкости музыки сразу при изменении slider
+            @Override
+            public void onRelease() { }
+        });
+        addDlgControlTouchable(sliderMusicVol, dxMusicSlider, dyMusicSlider);
+        //endregion
+
+        //region vibrate
+        chVibr = new CheckerBase(getByDx(dxChecker), getByDy(dyStart + dyChecker * 2f), fdChecker);
+        chVibr.name = "checker_vibration_dialog_options";
+        chVibr.setLabelText(R.string.dlg_Vibr);
+        addDlgControlTouchable(chVibr, dxChecker, dyStart + dyChecker * 2f);
+        //endregion
+
+        addDlgCloseButton();
+    }
+
+    private IGrpOptionsDialog listener;
+    public void setListener(IGrpOptionsDialog l) { this.listener = l; }
+
+    public void startLoadMusic(int musicId) {
+        if (ctrlProgressBarMusic != null)
+            ctrlProgressBarMusic.setFileId(musicId);
+    }
+
+    public void setMusicProgress(FileInfo fileInfo, float p) {
+        if (p < 0f) p = 0f;
+        if (p > 1f) p = 1f;
+        if (ctrlProgressBarMusic != null && ctrlProgressBarMusic.fileId == fileInfo.id) {
+            //ctrlProgressBarMusic.setIndexText(fileInfo.fileName);
+            ctrlProgressBarMusic.setPercent(p);
+        }
+    }
+
+    @Override
+    protected void loadSettings() {
+        super.loadSettings();
+        chSound.setChecked(Utils.isSound());
+        sliderSoundVol.setVolume(Utils.getSoundVolume());
+        sliderSoundVol.setEnabled(Utils.isSound());
+
+        chMusic.setChecked(Utils.isMusic());
+        sliderMusicVol.setVolume(Utils.getMusicVolume());
+        sliderMusicVol.setEnabled(Utils.isMusic());
+
+        chVibr.setChecked(Utils.isVibr());
+    }
+
+    @Override
+    protected void saveSettings() {
+        boolean isSound = chSound.isChecked();
+        Float soundVol = sliderSoundVol.getVolume();
+        boolean isMusic = chMusic.isChecked();
+        Float musicVol = sliderMusicVol.getVolume();
+        boolean isVibr = chVibr.isChecked();
+
+        Utils.SetUserProperty(AnalyticsManager.MS_UP_SOUND, isSound);
+        Utils.SetUserProperty(AnalyticsManager.MS_UP_SOUND_VOL, soundVol);
+        Utils.SetUserProperty(AnalyticsManager.MS_UP_MUSIC, isMusic);
+        Utils.SetUserProperty(AnalyticsManager.MS_UP_MUSIC_VOL, musicVol);
+        Utils.SetUserProperty(AnalyticsManager.MS_UP_VIBR, isVibr);
+
+        Utils.soundOnOff(isSound);
+        Utils.setSoundVolume(soundVol);
+        Utils.musicOnOff(isMusic);
+        Utils.setMusicVolume(musicVol);
+        Utils.vibrOnOff(isVibr);
+        Utils.saveSettings();
+        super.saveSettings();
+    }
+}

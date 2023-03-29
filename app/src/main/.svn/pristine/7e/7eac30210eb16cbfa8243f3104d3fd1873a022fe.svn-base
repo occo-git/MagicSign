@@ -1,0 +1,90 @@
+package com.softigress.magicsigns.UI._base.Controls.Drop;
+
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.softigress.magicsigns._system.Tasks.Repeaters.RunnableRepeaters;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+
+public class FunnyDropOnExit extends FunnyDrop {
+
+    private static final float dropExitFr = .1666f;
+    private static final long startMotionDuration = 7000;
+    private static final long motionDuration = 2000;
+
+    private RunnableRepeaters repeaters = new RunnableRepeaters();
+
+    public FunnyDropOnExit() {
+        super(dropExitFr);
+
+        loadStatuses(new int[] {
+                //FunnyDrop.STATUS_10_SIMPLE,
+                //FunnyDrop.STATUS_11_SIMPLE_BLINK,
+                //FunnyDrop.STATUS_20_INTEREST,
+                //FunnyDrop.STATUS_21_INTEREST_BLINK,
+                //FunnyDrop.STATUS_30_SURPRISE,
+                //FunnyDrop.STATUS_40_JOKE,
+                //FunnyDrop.STATUS_50_LAUGH,
+                //FunnyDrop.STATUS_60_HAPPY,
+                //FunnyDrop.STATUS_61_HAPPY_BLINK,
+                //FunnyDrop.STATUS_70_PUNCHED,
+                FunnyDrop.STATUS_80_PRO,
+                //FunnyDrop.STATUS_90_SLEEP,
+                //FunnyDrop.STATUS_100_WAIT,
+                //FunnyDrop.STATUS_101_WAIT_BLINK,
+        });
+        setDefaultStatusId(FunnyDrop.STATUS_80_PRO);
+
+        repeaters.addRepeater(startMotionDuration, new Runnable() {
+            @Override
+            public void run() { animate(); }
+        });
+    }
+
+    private void animate() {
+        if (statusId == STATUS_80_PRO) {
+            long duration = motionDuration;
+            // старт повторяющейся анимации движения
+            new AnimUtil()
+                    .add(this, "widthScale", 1f, 1.1f, .9f, 1.05f, .95f, 1f)
+                    .add(this, "heightScale", 1f, .85f, 1.1f, .9f, 1.05f, 1f)
+                    .startAD(duration);
+
+            /*ObjectAnimator sWS = ObjectAnimator.ofFloat(this, "widthScale", 1f, 1.1f, .9f, 1.05f, .95f, 1f).setDuration(duration);
+            ObjectAnimator sHS = ObjectAnimator.ofFloat(this, "heightScale", 1f, .85f, 1.1f, .9f, 1.05f, 1f).setDuration(duration);
+            AnimatorSet set = new AnimatorSet();
+            set.playTogether(sWS, sHS);
+            set.setDuration(duration);
+            set.setInterpolator(new AccelerateDecelerateInterpolator());
+            set.start();*/
+        }
+    }
+
+    @Override
+    public void calc() {
+        super.calc();
+
+        if (repeaters != null)
+            repeaters.nextStep();
+    }
+
+    public void doMotion() {
+        isAllowMotion = true;
+        setMotion(DropMotionType.PRO);
+    }
+
+    @Override
+    public long hide() {
+        isAllowMotion = false;
+        return super.hide();
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (repeaters != null)
+            repeaters.recycle();
+        repeaters = null;
+    }
+}

@@ -1,0 +1,107 @@
+package com.softigress.magicsigns._system.FireBase.RemoteConfig;
+
+import android.app.Activity;
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
+import com.softigress.magicsigns.BuildConfig;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileTypes;
+
+public class RemoteConfigManager {
+
+    private static final String APP_URL_key = "app_url";
+    private static final String APP_RATE_MARKET_key = "app_rate_market_url";
+    private static final String APP_RATE_URL_key = "app_rate_url";
+    private static final String APP_SUPPORT_URL_key = "app_support_url";
+    private static final String APP_POLICY_URL_key = "app_policy_url";
+    private static final String APP_SUPPORT_EMAIL_key = "app_support_email";
+    private static final String MP3_count_key = "MP3_count";
+    private static final String JPG_count_key = "JPG_count";
+
+    private final Activity activity;
+    private long cacheExpiration = 3600; // 1 hour
+    private final FirebaseRemoteConfig remoteConfig;
+
+    private ArrayRecyclable<FileInfo> fInfos = new ArrayRecyclable<>();
+
+    public RemoteConfigManager(Activity activity) {
+        this.activity = activity;
+        this.remoteConfig = FirebaseRemoteConfig.getInstance();
+
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build();
+        remoteConfig.setConfigSettings(configSettings); //setConfigSettingsAsync
+        remoteConfig.setDefaults(R.xml.remote_config_defaults); //setDefaultsAsync
+        loadFileInfos();
+
+        if (remoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled())
+            cacheExpiration = 0;
+        onComplete(remoteConfig.fetch(cacheExpiration));
+    }
+
+    private void onComplete(Task<Void> task) {
+        if (task != null) {
+            task.addOnCompleteListener(activity, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    //if (task != null) {
+                        if (task.isSuccessful()) {
+                            remoteConfig.activateFetched();
+                            loadFileInfos();
+                        }
+                        //else
+                        //    Utils.Toast(task.getException().getMessage());
+                    //}
+                }
+            });
+        }
+    }
+
+    //region load
+    private synchronized void loadFileInfos() {
+        if (fInfos != null)
+            //synchronized (fInfos) {
+                fInfos = new ArrayRecyclable<>();
+
+                int mp3Count = (int) remoteConfig.getLong(MP3_count_key);
+                if (mp3Count > 0)
+                    for (Integer i = 0; i < mp3Count; i++)
+                        fInfos.add(new FileInfo(FileTypes.Mp3, i, remoteConfig));
+
+                int jpgCount = (int) remoteConfig.getLong(JPG_count_key);
+                if (jpgCount > 0)
+                    for (Integer i = 0; i < jpgCount; i++)
+                        fInfos.add(new FileInfo(FileTypes.Jpg, i, remoteConfig));
+            //}
+    }
+    //endregion
+
+    //region get
+    public String getAppUrl() { return remoteConfig.getString(APP_URL_key); }
+    public String getRateGameMarketUrl() { return remoteConfig.getString(APP_RATE_MARKET_key); }
+    public String getRateGameUrl() { return remoteConfig.getString(APP_RATE_URL_key); }
+    public String getSupportUrl() { return remoteConfig.getString(APP_SUPPORT_URL_key); }
+    public String getPolicyUrl() { return remoteConfig.getString(APP_POLICY_URL_key); }
+    public String getSupportEmail() { return remoteConfig.getString(APP_SUPPORT_EMAIL_key); }
+
+    public FileInfo getFileInfo(int id) {
+        if (fInfos != null)
+            for (FileInfo info : fInfos)
+                if (info != null && info.id == id)
+                    return info;
+        return null;
+    }
+    //endregion
+
+    public void recycle() {
+        if (fInfos != null)
+            fInfos.recycle();
+    }
+}

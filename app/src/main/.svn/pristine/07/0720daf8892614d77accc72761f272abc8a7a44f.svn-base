@@ -1,0 +1,169 @@
+package com.softigress.magicsigns.UI._base.Controls._base.Buttons;
+
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.graphics.Bitmap;
+
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBaseTouchable;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class DrawingChecker extends DrawingBaseTouchable {
+
+    private static final int CHECKER_STATUS_DISABLED = -1;
+    private static final int CHECKER_STATUS_UNCHECKED = 0;
+    private static final int CHECKER_STATUS_UNCHECKED_PRESSED = 1;
+    private static final int CHECKER_STATUS_CHECKED = 2;
+    private static final int CHECKER_STATUS_CHECKED_PRESSED = 3;
+
+    public String name;
+    int clickSoundId = 0;
+    private IClickListener listener;
+
+    DrawingChecker(float fx, float fy, float fd,
+                   int disabledId, int uncheckedId, int checkedId,
+                   BitmapManager bitmapManager) {
+        super(fx, fy, fd);
+
+        if (bitmapManager == null) {
+            setStatusBitmap(CHECKER_STATUS_DISABLED, disabledId);
+            setStatusBitmap(CHECKER_STATUS_UNCHECKED, uncheckedId);
+            setStatusBitmap(CHECKER_STATUS_UNCHECKED_PRESSED, uncheckedId);
+            setStatusBitmap(CHECKER_STATUS_CHECKED, checkedId);
+            setStatusBitmap(CHECKER_STATUS_CHECKED_PRESSED, checkedId);
+        } else {
+            Bitmap disabled = bitmapManager.getLoadedBitmap(disabledId);
+            Bitmap unchecked = bitmapManager.getLoadedBitmap(uncheckedId);
+            Bitmap checked = bitmapManager.getLoadedBitmap(checkedId);
+            setStatusBitmap(CHECKER_STATUS_DISABLED, disabled);
+            setStatusBitmap(CHECKER_STATUS_UNCHECKED, unchecked);
+            setStatusBitmap(CHECKER_STATUS_UNCHECKED_PRESSED, unchecked);
+            setStatusBitmap(CHECKER_STATUS_CHECKED, checked);
+            setStatusBitmap(CHECKER_STATUS_CHECKED_PRESSED, checked);
+        }
+        setStatus(CHECKER_STATUS_UNCHECKED);
+    }
+
+    public void setListener(IClickListener l) {
+        this.listener = l;
+    }
+
+    public void enable() { setStatus(CHECKER_STATUS_UNCHECKED); }
+    public void disable() { setStatus(CHECKER_STATUS_DISABLED); }
+
+    public boolean isChecked() { return statusId == CHECKER_STATUS_CHECKED; }
+    public void setChecked(boolean isChecked) {
+        if (statusId != CHECKER_STATUS_DISABLED) {
+            if (isChecked)
+                setStatus(CHECKER_STATUS_CHECKED);
+            else
+                setStatus(CHECKER_STATUS_UNCHECKED);
+        }
+    }
+
+    @Override
+    protected void onTouch() {
+        super.onTouch();
+        if (statusId != CHECKER_STATUS_DISABLED) {
+            if (statusId == CHECKER_STATUS_UNCHECKED)
+                setStatus(CHECKER_STATUS_UNCHECKED_PRESSED);
+            else if (statusId == CHECKER_STATUS_CHECKED)
+                setStatus(CHECKER_STATUS_CHECKED_PRESSED);
+        }
+    }
+
+    @Override
+    protected void onTouchUp() {
+        super.onTouchUp();
+        if (statusId != CHECKER_STATUS_DISABLED) {
+            if (statusId == CHECKER_STATUS_UNCHECKED_PRESSED)
+                setStatus(CHECKER_STATUS_CHECKED);
+            else if (statusId == CHECKER_STATUS_CHECKED_PRESSED)
+                setStatus(CHECKER_STATUS_UNCHECKED);
+            onClick();
+        }
+    }
+
+    private AnimatorSet clickAnimatorSet;
+    protected void applyClickAnimatorSet(AnimatorSet set) {
+        clickAnimatorSet = set;
+        clickAnimatorSet.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {}
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                handleOnClick();
+            }
+            @Override
+            public void onAnimationCancel(Animator animation) {}
+            @Override
+            public void onAnimationRepeat(Animator animation) {}
+        });
+    }
+
+    private Animator clickAnimator;
+    protected void applyClickAnimator(Animator anim) {
+        clickAnimator = anim;
+        clickAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {}
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                handleOnClick();
+            }
+            @Override
+            public void onAnimationCancel(Animator animation) {}
+            @Override
+            public void onAnimationRepeat(Animator animation) {}
+        });
+    }
+
+    private boolean isOnClick = false;
+    private void onClick() {
+        if (!isOnClick) {
+            isOnClick = true;
+            if (clickSoundId != 0)
+                Utils.playSound(clickSoundId);
+            if (clickAnimatorSet != null) {
+                clickAnimatorSet.cancel();
+                clickAnimatorSet.start();
+            } else if (clickAnimator != null) {
+                clickAnimator.cancel();
+                clickAnimator.start();
+            } else
+                handleOnClick();
+        }
+    }
+
+    private void handleOnClick() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_CHECKER_CLICK, name);
+        if (listener != null)
+            listener.handleOnClick(this);
+        isOnClick = false;
+    }
+
+    @Override
+    protected void onMoveOut() {
+        super.onMoveOut();
+        if (statusId != CHECKER_STATUS_DISABLED) {
+            if (statusId == CHECKER_STATUS_UNCHECKED_PRESSED)
+                setStatus(CHECKER_STATUS_UNCHECKED);
+            else if (statusId == CHECKER_STATUS_CHECKED_PRESSED)
+                setStatus(CHECKER_STATUS_CHECKED);
+        }
+    }
+
+    @Override
+    public void recycle() {
+        super.recycle();
+        if (clickAnimatorSet != null) {
+            clickAnimatorSet.removeAllListeners();
+            clickAnimatorSet = null;
+        }
+        if (clickAnimator != null) {
+            clickAnimator.removeAllListeners();
+            clickAnimator = null;
+        }
+    }
+}

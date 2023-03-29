@@ -1,0 +1,48 @@
+package com.softigress.magicsigns._system.Utils;
+
+import android.os.Bundle;
+import com.google.ads.mediation.admob.AdMobAdapter;
+import com.google.android.gms.ads.AdRequest;
+import static com.google.android.gms.ads.RequestConfiguration.MAX_AD_CONTENT_RATING_G;
+
+public abstract class AdUtils {
+
+    // Test Ads: https://developers.google.com/admob/android/test-ads
+    public static final String banner_ad_test_id = "ca-app-pub-3940256099942544/6300978111"; // тестовый ID баннера
+    public static final String page_ad_test_id = "ca-app-pub-3940256099942544/1033173712"; // тестовый ID межстраничного объявления
+    public static final String video_ad_test_id = "ca-app-pub-3940256099942544/8691691433"; // тестовый ID видео
+    public static final String rewarded_video_ad_test_id = "ca-app-pub-3940256099942544/5224354917"; // тестовый ID видео с вознараждением
+    //public static String no_rewarded_video_ad_id = "ca-app-pub-1702248074145406/9611782205";
+    //Native Advanced	ca-app-pub-3940256099942544/2247696110
+    //Native Advanced Video	ca-app-pub-3940256099942544/1044960115
+
+    public static AdRequest getRequest() {
+        Bundle extras = new Bundle();
+        extras.putBoolean("is_designed_for_families", true);
+        AdRequest.Builder builder = new AdRequest.Builder().setIsDesignedForFamilies(true);
+
+        // устанавливаем ограничения для детей
+        if (!Utils.isUserAdult()) {
+            extras.putString("max_ad_content_rating", "G");
+            builder.setMaxAdContentRating("G").tagForChildDirectedTreatment(true);
+        }
+
+        return builder
+                .addNetworkExtrasBundle(AdMobAdapter.class, extras)
+                .addTestDevice("94D060614854E084FF1DBBD32CE32AC3") // ID Xiaomi Redmi Note4 для отображения тестового баннера
+                .addTestDevice("4FC408A671C2073046D48B2BE7DE72E7") // эмулятор MIT Droid4X-WIN
+                .addTestDevice("6DF97194C8D4665C180A3E258C193F59") // планшет Oyster T72X
+                .addTestDevice(AdRequest.DEVICE_ID_EMULATOR)
+                .build();
+    }
+
+    public static String getRequestErrorString(int errorCode) {
+        switch (errorCode) {
+            case AdRequest.ERROR_CODE_INTERNAL_ERROR: return "Something happened internally; for instance, an invalid response was received from the ad server."; // 0
+            case AdRequest.ERROR_CODE_INVALID_REQUEST: return "The ad request was invalid; for instance, the ad unit ID was incorrect."; // 1
+            case AdRequest.ERROR_CODE_NETWORK_ERROR: return "The ad request was unsuccessful due to network connectivity."; // 2
+            case AdRequest.ERROR_CODE_NO_FILL: return "The ad request was successful, but no ad was returned due to lack of ad inventory."; // 3
+            default: return "";
+        }
+    }
+}

@@ -1,0 +1,316 @@
+package com.softigress.magicsigns.Activities._base;
+import android.graphics.Canvas;
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpAgeDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpNoConnectionDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpPauseMenuDialog;
+import com.softigress.magicsigns.UI._base.Controls.Achievements.AchievementType;
+import com.softigress.magicsigns.UI._base.Grounds.GroundBase;
+import com.softigress.magicsigns.UI._base.Grounds.GroundFitType;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogHideListener;
+import com.softigress.magicsigns._Base.ArrayRecyclableSimple;
+import com.softigress.magicsigns._Base._Drawing.DrawingGroup;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class ActivityGroupBase extends DrawingGroup {
+
+    private final static long backDuration = 1000;
+
+    private int backgroundId;
+    private GroundBase backGround;
+    protected boolean isDrawDialogs = true;
+    private ArrayRecyclableSimple<GrpDialog> dialogs = new ArrayRecyclableSimple<>(GrpDialog.class);
+    private GrpDialog[] dialogItems;
+    protected GrpDialog currentDialog;
+    private GrpNoConnectionDialog dlgNoConnection;
+
+    //private DrawingFrameRate frameRate1, frameRate2, frameRate3;
+
+    protected ActivityGroupBase() {
+        super();
+    }
+    protected ActivityGroupBase(boolean isUseNoConnectionDialog) {
+        super();
+
+        if (isUseNoConnectionDialog) {
+            dlgNoConnection = new GrpNoConnectionDialog();
+            dlgNoConnection.setListener(new IGrpDialogHideListener() {
+                @Override public void handleOnHide() { MainActivityUtils.doResume(); }
+            });
+            addDialog(dlgNoConnection);
+        }
+
+        //frameRate1 = new DrawingFrameRate("GROUP background", .01f, .6f);
+        //frameRate2 = new DrawingFrameRate("GROUP items", .01f, .65f);
+        //frameRate3 = new DrawingFrameRate("GROUP dialogs", .01f, .7f);
+    }
+    public ActivityGroupBase(int backgroundId, boolean isUseNoConnectionDialog) {
+        this(isUseNoConnectionDialog);
+        this.backgroundId = backgroundId;
+    }
+
+    protected boolean isStars() { return false; }
+    protected boolean isStarsMoving() { return false; }
+
+    protected void addDialog(GrpDialog dialog) {
+        dialogs.add(dialog);
+        dialogItems = dialogs.getItems();
+    }
+
+    //region Music
+    public void playMusic() {
+        int musicId = getMusicId();
+        if (musicId > 0)
+            Utils.playMusic(musicId);
+    }
+
+    public void stopMusic() { Utils.stopMusic(); }
+
+    protected int getMusicId() { return 0; }
+    //endregion
+
+    //region SignIn
+    public void onAuthChanged() { }
+    //endregion
+
+    //region show-hide-back
+    public void show() {
+        super.show();
+        loadResources();
+        playMusic();
+    }
+    public long hide() {
+        hideDialog();
+        return super.hide();
+    }
+    public long back() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_back");
+        //Utils.PlayClick();
+
+        // если диалог не открыт
+        if (isDialogOff()) {
+            MainActivityUtils.doShowMain(); // по умолчанию возвращаемся на главный экран
+            return backDuration;
+        } else if (currentDialog.isUserCanHide())
+            return hideDialog();
+        else
+            return 0;
+    }
+    //endregion
+
+    //region show-hide Dialog
+    public long showDialog(GrpDialog dlgToShow) {
+        return hideDialog(dlgToShow);
+    }
+
+    public long hideDialog() { return hideDialog(null); }
+
+    private long hideDialog(final GrpDialog dlgToShow) {
+        long duration = 0;
+        if (isDialogOff())
+            setCurrentDialog(dlgToShow);
+        else {
+            if (!currentDialog.isOnShowHide() && currentDialog != dlgToShow && currentDialog.isUserCanHide()) {
+                duration = currentDialog.hide();
+                TaskUtils.postDelayed(duration, // скрываем текущий диалог
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                // отображем новый диалог после того как закроется предыдущий
+                                setCurrentDialog(dlgToShow);
+                            }
+                        });
+            }
+        }
+        return duration;
+    }
+
+    private void setCurrentDialog(GrpDialog dlgToShow) {
+        if (dlgToShow != null)
+            dlgToShow.show();
+        currentDialog = dlgToShow;
+    }
+
+    protected boolean isCurrentDialog(GrpDialog dlg) { return currentDialog == dlg; }
+
+    public boolean isCurrentDialog(Class<?> c) { return currentDialog != null && currentDialog.getClass() == c; }
+    public boolean isNotCurrentDialog(Class<?> c) { return currentDialog != null && currentDialog.getClass() != c; }
+
+    public boolean isDialogOff() { return currentDialog == null; } // если не открыт никакой Диалог
+    //endregion
+
+    // получение награды за просмотренное видео
+    public void onVideoReward(AchievementType type, int reward) { }
+    public void onSharedLink(AchievementType type, boolean isAchievementEnabled) { }
+    public void onSharedScreenshot(AchievementType type, boolean isAchievementEnabled) { }
+
+    //region pause/resume
+    public void onPauseGroup(GrpDialog dlg) { showDialog(dlg); }
+    public void onResumeGroup() { }
+    //endregion
+
+    //region Connection Dialog
+    public void onConnectionOff() {
+        showConnectionDialog();
+    }
+    public void onConnectionOn() {
+        if (CurrentSettings.isUseNoConnectionDialog && isCurrentDialog(dlgNoConnection))
+            hideDialog();
+        // start music on connection
+        playMusic();
+    }
+    public void onConnection(boolean isOnOff) {
+        if (!isOnOff) // no connection
+            showConnectionDialog();
+    }
+    private void showConnectionDialog() {
+        if (CurrentSettings.isUseNoConnectionDialog && !isCurrentDialog(dlgNoConnection))
+            // если не открыт Диалог, либо это НЕ диалог Паузы или Возраста
+            if (isDialogOff() || isNotCurrentDialog(GrpPauseMenuDialog.class) || isNotCurrentDialog(GrpAgeDialog.class))
+                MainActivityUtils.doPause(dlgNoConnection);
+    }
+    //endregion
+
+    //region Touch
+    public boolean onTouch(int x, int y) {
+        boolean isOnTouch = false;
+        // если не открыт никакой Диалог
+        if (isDialogOff())
+            isOnTouch = super.onTouch(x, y);
+        else if (currentDialog.onTouchItems(x, y))
+            isOnTouch = true;
+        else if (!currentDialog.inBounds(x, y)) {
+            if (currentDialog.isUserCanHide())
+                hideDialog();
+        } else if (currentDialog.onTouch(x, y))
+            isOnTouch = true;
+        return isOnTouch;
+    }
+    public boolean onTouchUp(int x, int y) {
+        boolean isOnTouchUp = false;
+        // если не открыт никакой Диалог
+        if (isDialogOff())
+            isOnTouchUp = super.onTouchUp(x, y);
+        else if (currentDialog.onTouchUpItems(x, y))
+            isOnTouchUp = true;
+        else if (currentDialog.onTouchUp(x, y))
+            isOnTouchUp = true;
+        return isOnTouchUp;
+    }
+    public void onMoveTo(int x, int y) {
+        // если не открыт никакой Диалог
+        if (isDialogOff())
+            super.onMoveTo(x, y);
+        else
+            currentDialog.onMoveTo(x, y);
+    }
+    //endregion
+
+    //region Draw
+    @Override
+    public synchronized void calc() {
+        //int step = 0;
+        try {
+            //step = 1;
+            if (backGround != null)
+                backGround.calc();
+            //step = 2;
+            super.calc();
+            //step = 3;
+            if (dialogItems != null)
+                for (GrpDialog d : dialogItems)
+                    if (d != null)
+                        d.calc();
+            //step = 4;
+        }
+        catch (Throwable t) {
+            //Utils.CrashReport("ActivityGroupBase.calc [step=" + step + "] [" + toString() + "]", t);
+            Utils.CrashReport("ActivityGroupBase.calc [" + toString() + "]", t);
+            //throw t;
+        }
+    }
+
+    @Override
+    public synchronized void drawFrame(Canvas c) {
+        //Integer step = 0;
+        try {
+            //step = 1;
+            //if (frameRate1 != null)
+            //    frameRate1.start();
+            if (backGround != null)
+                backGround.drawFrame(c);
+            //if (frameRate1 != null)
+            //    frameRate1.drawFrame(c);
+
+            //step = 2;
+            //if (frameRate2 != null)
+            //    frameRate2.start();
+            super.drawFrame(c);
+            //if (frameRate2 != null)
+            //    frameRate2.drawFrame(c);
+
+            //step = 3;
+            if (isDrawDialogs) {
+                drawDialogs(c);
+                //step = 4;
+            }
+            //step = 5;
+        }
+        catch (Throwable t) {
+            //Utils.CrashReport("ActivityGroupBase.drawFrame [step=" + step + "] [" + toString() + "]", t);
+            Utils.CrashReport("ActivityGroupBase.drawFrame [" + toString() + "]", t);
+            //throw t;
+        }
+    }
+
+    public void drawDialogs(Canvas c) {
+        //if (frameRate3 != null)
+        //    frameRate3.start();
+
+        if (dialogItems != null)
+            for (GrpDialog d : dialogItems)
+                if (d != null)
+                    d.drawFrame(c);
+
+        //if (frameRate3 != null)
+        //    frameRate3.drawFrame(c);
+    }
+    //endregion
+
+    //region Resources
+    protected void loadResources() {
+        if (backGround == null) {
+            backGround = new GroundBase(backgroundId, GroundFitType.ONE, isStars(), isStarsMoving());
+            backGround.refresh();
+        }
+    }
+    public void recycleResources() {
+        if (backGround != null) {
+            backGround.recycle();
+            backGround = null;
+        }
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        if (backGround != null)
+            backGround.recycle();
+        super.recycle();
+        if (dialogs != null)
+            dialogs.recycle();
+        /*if (frameRate1 != null)
+            frameRate1.recycle();
+        if (frameRate2 != null)
+            frameRate2.recycle();
+        if (frameRate3 != null)
+            frameRate3.recycle();*/
+
+        backGround = null;
+        dialogs = null;
+    }
+}

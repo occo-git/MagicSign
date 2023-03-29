@@ -1,0 +1,955 @@
+package com.softigress.magicsigns.UI._Main;
+
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.Game.Cells._base.DrawingCell;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpExitDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpMenuDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Help.HelpItemInfo;
+import com.softigress.magicsigns.UI._Main.Dialogs.Options.GrpOptionsDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Options.IGrpOptionsDialog;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls.Drop.DropMotionType;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop;
+import com.softigress.magicsigns.UI._base.Controls._base.Progress.CtrlProgressBar;
+import com.softigress.magicsigns.UI._base.Controls._base.Texts.DrawingText;
+import com.softigress.magicsigns.UI._base.Effects.Glares.Glares;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogListener;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogResultListener;
+import com.softigress.magicsigns.UI._base.Groups.GrpCrown;
+import com.softigress.magicsigns.UI._base.Groups.GrpUserInfos;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingHAlign;
+import com.softigress.magicsigns._Base._Drawing._base.Alignment.DrawingVAlign;
+import com.softigress.magicsigns._Base._Drawing._base.DrawingBase;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserScoreInfo;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Settings.Infos.SignInfos;
+import com.softigress.magicsigns._system.Settings.Infos.SignStrength;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.MetrixUtils;
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpMainMenu extends GrpUserInfos {
+
+    //private static final float xTitle =      .90f, yTitle =      .85f;
+    //private static final float xTitle =        .50f, yTitle =      .194f;
+    private static final float xComment =      .50f, yComment =    .175f;
+    private static final float xCrown =        .50f, yCrown =      .194f, fdCrown =    .333f;
+    private static final float xDrop =         .17f, yDrop =       .60f, fdDrop =     .133f;
+    //private static final float xDrop =         .50f, yDrop =       .270f, fdDrop =     .155f;
+    private static final float xScore =        .50f, yScore =      .58f, fdStar =     .030f;
+    //private static final float xScore =        .50f, yScore =      .352f, fdStar =     .050f;
+
+    private static final float xStart =        .50f, yStart =      .28f;
+    //private static final float xStart =        .50f, yStart =      .62f;
+
+    private static final float xWaveBar =      .50f, yWaveBar =    .690f;
+    private static final float fwWaveBar =     .62f, fhWaveBar =   .025f, fdWave =        .0333f;
+    private static final float xWave =         .50f, yWave =       yWaveBar - fdWave;
+    private static final float xOrden =        .50f, yOrden =      yWaveBar, fdOrden =   .233f;
+    /*
+    private static final float xWaveBar =      .50f, yWaveBar =    .420f;
+    private static final float fwWaveBar =     .62f, fhWaveBar =   .025f;
+    private static final float xWave =         .50f, yWave =       .450f, fdWave =     .0333f;
+    private static final float xOrden =        .50f, yOrden =      .4175f, fdOrden =   .266f;
+    */
+
+    private static final float xMenu =         .10f, yMenu =       .850f, fdMenu =      .075f;
+    private static final float xRating =       .633f, yRating =     .850f, fdRating =    .075f;
+    private static final float xLab =          .366f, yLab =        .840f, fdLab =       .115f;
+    //private static final float xLab =          .84f, yLab =        .500f, fdLab =      .115f;
+    //private static final float xRating =       .16f, yRating =     .500f, fdRating =   .095f;
+
+    //private final DrawingText txtTitle;
+    private final DrawingText txtComment;
+    private final GrpCrown grpCrown;
+    private final FunnyDrop drop;
+    private final DrawingBase wave;
+    private final CtrlProgressBar ctrlProgressBarWaves;
+    private final DrawingBase orden;
+    //private final DrawingText txtIndex; // место пользователя в рейтинге
+    private final DrawingText txtScore; // счет пользователя в рейтинге
+    private final DrawingBase star;
+    private final DrawingCell cell;
+    private final DrawingBase startHalo;
+    private final BtnBase btnStart;
+    //private final CirclesBase circlesStart;
+    private final DrawingBase showVideo;
+    private final DrawingBase showVideoOk;
+    private final BtnBase btnRating;
+    private final BtnBase btnLab;
+    //private final Glares labGlares;
+    private final BtnBase btnMenu;
+
+    //private final BackStars startStars;
+    private final GrpMenuDialog dlgMenu;
+    private final GrpExitDialog dlgExit;
+    private final GrpDialog dlgReset;
+    private final GrpOptionsDialog dlgOptions;
+
+    private boolean isOnBusy = false;
+
+    /*private FunnyDrop drop;
+    private BtnBase b1, b2, b3, b4, b100, b101;*/
+
+    public GrpMainMenu() {
+        super(false, false); // R.drawable.back_10, false // NoConnectionDialog OFF, false // OptionsDialog OFF
+        // отключаем выдачу сообщения при отсутствии связи
+
+        //region Title
+        /*
+        float backD = .3f;
+        titleBack = new DrawingBase(xTitle, yTitle, backD);
+        titleBack.setDefaultBitmap(R.drawable.item_back);
+        titleBack.setAlpha(160);
+        addDrawing(titleBack);
+
+        txtTitle = new DrawingText(Paint.Align.CENTER, TextUtils.main_caption);
+        txtTitle.isBoldShadow = true;
+        txtTitle.setTextBackARGB(70, 128, 64, 0);//255, 255, 255);
+        txtTitle.setTextBackStrokeWidthK(5f);
+        txtTitle.setMultiLineInterval(.9f);
+        txtTitle.setPoint(xTitle, yTitle);
+        txtTitle.isVerticalAlignCenter = true;
+        txtTitle.setText(R.string.game_title);
+        addDrawing(txtTitle);
+        */
+        //endregion
+
+        //region Menu + menu dialogs
+        btnMenu = new BtnBase(xMenu, yMenu, fdMenu, R.string.bmp_btn_menu);
+        btnMenu.name = "btn_menu";
+        btnMenu.setAlpha(210);
+        btnMenu.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable e) { showDialog(dlgMenu); }
+        });
+        addDrawingTouchable(btnMenu);
+
+        dlgMenu = new GrpMenuDialog();
+        dlgMenu.setListener(new IGrpDialogResultListener() {
+            @Override
+            public void handleOnResult(int result) {
+                switch (result) {
+                    case GrpMenuDialog.DIALOG_RESULT_OPTIONS:   showDialog(dlgOptions); break;
+                    case GrpMenuDialog.DIALOG_RESULT_INTRO:     MainActivityUtils.doShowIntro(); break;
+                    case GrpMenuDialog.DIALOG_RESULT_RESET:     showDialog(dlgReset); break;
+                    case GrpMenuDialog.DIALOG_RESULT_EXIT:      showDialog(dlgExit); break;
+                    case GrpMenuDialog.DIALOG_RESULT_PLAY:      hideDialog(); break;
+                }
+            }
+        });
+        dlgMenu.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        addDialog(dlgMenu);
+
+        dlgExit = new GrpExitDialog();//GrpDialog(.8f, .5f, R.drawable.btn_exit, Utils.getRes(R.string.dlg_Exit), R.drawable.btn_play, Utils.getRes(R.string.dlg_Play));
+        //dlgExit.setMessageText(Utils.getRes(R.string.dlg_ExitTheGame));
+        dlgExit.setListener(new IGrpDialogResultListener() {
+            @Override
+            public void handleOnResult(int result) {
+                switch (result) {
+                    case GrpExitDialog.DIALOG_RESULT_RATE: showDialog(dlgRate); break;
+                    default: hideDialog();
+                }
+            }
+        });
+        dlgExit.setListener(new IGrpDialogListener() {
+            @Override
+            public void handleOnOk() {
+                hideDialog();
+                MainActivityUtils.doExitGame();
+            }
+            @Override
+            public void handleOnCancel() {
+                hideDialog();
+            }
+        });
+        addDialog(dlgExit);
+
+        dlgReset = new GrpDialog(.8f, .5f, R.string.bmp_btn_repeat, R.string.dlg_Yes, R.string.bmp_btn_play, R.string.dlg_No, .62f);
+        dlgReset.name = "dlg_reset";
+        dlgReset.addCloseButton();
+        dlgReset.setMessageText(R.string.dlg_Reset_ResetTheGame, .5f, .3f);
+        dlgReset.setListener(new IGrpDialogListener() {
+            @Override
+            public void handleOnOk() {
+                hideDialog();
+                MainActivityUtils.doResetGame();
+                Utils.playSound(R.raw.restart02);
+            }
+
+            @Override
+            public void handleOnCancel() {
+                hideDialog();
+            }
+        });
+        addDialog(dlgReset);
+
+        dlgOptions = new GrpOptionsDialog();
+        dlgOptions.setListener(new IGrpDialogListener() {
+            @Override
+            public void handleOnOk() {
+                hideDialog(); }
+            @Override
+            public void handleOnCancel() {
+                hideDialog();
+            }
+        });
+        dlgOptions.setListener(new IGrpOptionsDialog() {
+            @Override
+            public void musicOn() { Utils.playMusic(getMusicId()); }
+            @Override
+            public void musicOff() { Utils.stopMusic(); }
+        });
+        addDialog(dlgOptions);
+        //endregion
+
+        //region Rating
+        btnRating = new BtnBase(xRating, yRating, fdRating, R.string.bmp_btn_rating);
+        btnRating.name = "btn_rating";
+        btnRating.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (!isOnBusy) {
+                    isOnBusy = true;
+                    MainActivityUtils.doShowRating();
+                }
+            }
+        });
+        addDrawingTouchable(btnRating);
+
+        /*
+        txtIndex = new DrawingText(Paint.Align.CENTER);
+        txtIndex.setFontSize(TextUtils.main_index);
+        txtIndex.setTextAlign(Paint.Align.RIGHT);
+        txtIndex.isBoldShadow = true;
+        txtIndex.setTextBackARGB(30, 255, 255, 255);
+        txtIndex.setTextBackStrokeWidthK(5f);
+        txtIndex.setPoint(xRating - .75f * btnFd, yIndex);
+        addDrawing(txtIndex);
+        */
+        //endregion
+
+        //region Lab
+        btnLab = new BtnBase(xLab, yLab, fdLab, R.string.bmp_btn_potion);
+        btnLab.name = "btn_lab";
+        btnLab.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (!isOnBusy) {
+                    isOnBusy = true;
+                    MainActivityUtils.doShowLab();
+                }
+            }
+        });
+        addDrawingTouchable(btnLab);
+
+        Glares labGlares = new Glares(xLab, yLab, fdLab, fdLab, fdLab / 4f, 1);
+        addDrawing(labGlares);
+        labGlares.show();
+        //endregion
+
+        grpCrown = new GrpCrown(xCrown, yCrown, fdCrown);
+        addDrawingGroup(grpCrown);
+
+        //region Drop
+        drop = new FunnyDrop(xDrop, yDrop, fdDrop);
+        drop.loadStatuses(new int[] {
+                //FunnyDrop.STATUS_10_SIMPLE,
+                //FunnyDrop.STATUS_11_SIMPLE_BLINK,
+                FunnyDrop.STATUS_20_INTEREST,
+                FunnyDrop.STATUS_21_INTEREST_BLINK,
+                //FunnyDrop.STATUS_30_SURPRISE,
+                //FunnyDrop.STATUS_40_JOKE,
+                FunnyDrop.STATUS_50_LAUGH,
+                //FunnyDrop.STATUS_60_HAPPY,
+                //FunnyDrop.STATUS_61_HAPPY_BLINK,
+                //FunnyDrop.STATUS_70_PUNCHED,
+                //FunnyDrop.STATUS_80_PRO,
+                FunnyDrop.STATUS_90_SLEEP,
+                //FunnyDrop.STATUS_100_WAIT,
+                //FunnyDrop.STATUS_101_WAIT_BLINK,
+        });
+        drop.setMessagePoint(.5f, yDrop);
+        //drop.setMessagePoint(xDrop, yDrop - .6f * fdDrop);
+        drop.setMessageFontSize(TextUtils.main_drop_message);
+        drop.addMessageTexts(
+                "progressInterest",
+                FunnyDrop.MES_INTEREST,
+                new int[] {
+                    0, 0, R.string.message_drop_interest_01,
+                    0, 1, R.string.message_drop_interest_02,
+                    0, 0, R.string.message_drop_interest_03,
+                    0, 1, R.string.message_drop_interest_04
+                });
+        //drop.addMessageTexts(
+        //          "progressPunched",
+        //          FunnyDrop.MES_PUNCHED,
+        //          new int [] {
+        //              0, 1, R.string.message_drop_punched_01,
+        //              0, 1, R.string.message_drop_punched_02,
+        //              0, 1, R.string.message_drop_punched_03,
+        //          });
+        drop.addMessageTexts(
+                "progressSleep",
+                FunnyDrop.MES_SLEEP,
+                new int[] {
+                    0, 0, R.string.message_drop_sleep_01,
+                    0, 0, R.string.message_drop_sleep_02,
+                    0, 0, R.string.message_drop_sleep_03,
+                });
+        drop.isAllowMotion = true;
+        addDrawingTouchable(drop);
+        //endregion
+
+        //region Score
+        txtScore = new DrawingText(DrawingHAlign.CENTER, TextUtils.main_score);
+        txtScore.setVerticalAlign(DrawingVAlign.TOP);
+        txtScore.setTextBack(8f, 32, 255, 255, 255);
+        txtScore.setPoint(xScore, yScore);
+        addDrawing(txtScore);
+
+        star = new DrawingBase(fdStar, R.string.bmp_star);
+        star.setPoint(xScore, yScore - fdStar / 4f);
+        addDrawing(star);
+        //endregion
+
+        //region Comment
+        txtComment = new DrawingText(DrawingHAlign.CENTER);
+        txtComment.setFontSize(TextUtils.main_comment);
+        txtComment.setTextBack(4f, 64, 0, 0, 0);
+        txtComment.setText(R.string.main_comment_score_empty);
+        txtComment.setPoint(xComment, yComment);
+        txtComment.setVerticalAlign(DrawingVAlign.TOP);
+        //txtComment.isPaintRect = true;
+        addDrawing(txtComment);
+        //endregion
+
+        //region Start game
+        float cellR = .38f * .62f * .62f;
+        float btnStartFr = cellR * .8f;
+
+        /*startStars = new BackStars(xStart - btnStartFr, yStart, btnStartFr * 2f, .5f, 20, 20000);
+        startStars.isMoving = true;
+        startStars.refresh();
+        addDrawing(startStars);*/
+
+        cell = new DrawingCell(cellR, 49, cellR / 35, cellR / 10);
+        cell.setWaves(0);
+        cell.setPodDuration(7000);
+        cell.isStarted = true;
+        cell.setPoint(xStart, yStart);
+        addDrawing(cell);
+
+        startHalo = new DrawingBase(xStart, yStart, 1.5f * cellR);
+        startHalo.setDefaultBitmap(R.string.bmp_halo_white_in);
+        startHalo.setAlpha(0);
+        addDrawing(startHalo);
+
+        btnStart = new BtnBase(xStart, yStart, btnStartFr * 2f, R.drawable.earth_green);// R.string.bmp_spot_white);
+        btnStart.name = "btn_start_game";
+        btnStart.clickSoundId = R.raw.start02;
+        btnStart.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                if (!isOnBusy) {
+                    if (CurrentSettings.isAuthorisationToPlay) {
+                        if (Utils.authManager.getCurrentProviderHash() == 0)
+                            showDialog(dlgLogin);
+                        else
+                            startGame();
+                    } else
+                        startGame();
+                }
+            }
+        });
+        addDrawingTouchable(btnStart);
+        /*circlesStart = new CirclesBase(.475f * btnFd, .85f * btnFd, 3000, false, true);
+        circlesStart.setPoint(xStart, yStart);
+        circlesStart.start();
+        addDrawing(circlesStart);*/
+
+        float offsetFxVideo = cellR / MetrixUtils.screen_K;
+        showVideo = new DrawingBase(xStart + offsetFxVideo, yStart - cellR, btnStartFr / 2f);
+        showVideo.setDefaultBitmap(R.string.bmp_video);
+        showVideo.setAngel(-15);
+        addDrawing(showVideo);
+        showVideoOk = new DrawingBase(xStart + offsetFxVideo, yStart - cellR, btnStartFr / 4f);
+        showVideoOk.setDefaultBitmap(R.string.bmp_aim_ok);
+        addDrawing(showVideoOk);
+        //endregion
+
+        //region Waves + Orden
+        ctrlProgressBarWaves = new CtrlProgressBar(xWaveBar, yWaveBar, fwWaveBar, fhWaveBar);
+        ctrlProgressBarWaves.isHideOnZero = false;
+        ctrlProgressBarWaves.setRGB(0, 255, 0);
+        addDrawing(ctrlProgressBarWaves);
+
+        wave = new DrawingBase(fdWave, R.string.bmp_wave);
+        wave.setPoint(xWave, yWave);
+        addDrawing(wave);
+
+        orden = new DrawingBase(fdOrden, R.drawable.orden);
+        orden.setPoint(xOrden, yOrden);
+        orden.hide();
+        addDrawing(orden);
+        //endregion
+
+        //region Help
+        addHelpItems(
+                new int[]{
+                        0, HelpItemInfo.TYPE_GAME,              R.string.dlg_Help_100_game_title,        R.string.dlg_Help_100_game_text,
+                        1, HelpItemInfo.TYPE_STARS,             R.string.dlg_Help_101_stars_title,       R.string.dlg_Help_101_stars_text,
+                        2, HelpItemInfo.TYPE_VIRAL_CELLS,       R.string.dlg_Help_102_signs_title,       R.string.dlg_Help_102_signs_text,
+                        3, HelpItemInfo.TYPE_WAVES,             R.string.dlg_Help_103_waves_title,       R.string.dlg_Help_103_waves_text,
+                        4, HelpItemInfo.TYPE_MEMBRANE,          R.string.dlg_Help_104_protection_title,  R.string.dlg_Help_104_protection_text,
+                        5, HelpItemInfo.TYPE_PROTECTION_LEVEL,  R.string.dlg_Help_105_multiplier_title,  R.string.dlg_Help_105_multiplier_text,
+                        6, HelpItemInfo.TYPE_ENERGY,            R.string.dlg_Help_106_energy_title,      R.string.dlg_Help_106_energy_text,
+                        7, HelpItemInfo.TYPE_DNA,               R.string.dlg_Help_107_dna_title,         R.string.dlg_Help_107_dna_text,
+                        8, HelpItemInfo.TYPE_DNA_ELEMENT,       R.string.dlg_Help_108_dna_element_title, R.string.dlg_Help_108_dna_element_text,
+                        9, HelpItemInfo.TYPE_DNA_BOMB,          R.string.dlg_Help_109_dna_bomb_title,    R.string.dlg_Help_109_dna_bomb_text,
+                });
+        //endregion
+
+        /*BtnBase btnAd = new BtnBase(.5f, .85f, .05f, R.string.bmp_btn_link);
+        btnAd.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable item) { MainActivityUtils.doShowVideoAd(); }});
+        addDrawingTouchable(btnAd);*/
+
+        addRepeater(7000, new Runnable() { @Override public void run() { animateControls(); } });
+        addRepeater(5000, new Runnable() { @Override public void run() { animateDrop(); } });
+
+        /* test
+        drop = new FunnyDrop();
+        drop.setPoint(.875f, .62f);
+        addDrawing(drop);
+
+        b100 = new BtnBase(.2f, .1f, .1f, R.drawable.btn_star);
+        b100.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { drop.setMotion(FunnyDrop.MOTION_IN); }
+        });
+        addDrawingTouchable(b100);
+        b1 = new BtnBase(.2f, .2f, .1f, R.drawable.btn_star);
+        b1.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { drop.setMotion(FunnyDrop.MOTION_JOKE); }
+        });
+        addDrawingTouchable(b1);
+        b2 = new BtnBase(.2f, .3f, .1f, R.drawable.btn_star);
+        b2.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { drop.setMotion(FunnyDrop.MOTION_SURPRISE); }
+        });
+        addDrawingTouchable(b2);
+        b3 = new BtnBase(.2f, .4f, .1f, R.drawable.btn_star);
+        b3.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { drop.setMotion(FunnyDrop.MOTION_HAPPY); }
+        });
+        addDrawingTouchable(b3);
+        b4 = new BtnBase(.2f, .5f, .1f, R.drawable.btn_star);
+        b4.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { drop.setMotion(FunnyDrop.MOTION_LAUGH); }
+        });
+        addDrawingTouchable(b4);
+        b101 = new BtnBase(.2f, .6f, .1f, R.drawable.btn_star);
+        b101.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(EventObject e) { drop.setMotion(FunnyDrop.MOTION_PUNCHED); }
+        });
+        addDrawingTouchable(b101);*/
+
+        /*BtnBase btnIntro = new BtnBase(.5f, .2f, .05f, R.drawable.aim_ok);
+        btnIntro.setListener(new IClickListener() {
+            @Override public void handleOnClick(ITouchable item) { MainActivityUtils.doShowIntro(); }
+        });
+        btnIntro.show();
+        addDrawingTouchable(btnIntro);*/
+    }
+
+    @Override
+    protected boolean isStars() { return true; }
+    @Override
+    protected boolean isStarsMoving() { return false; }
+
+    //region music
+    @Override
+    protected int getMusicId() { return 3000; }
+
+    public void startLoadMusic(int musicId) {
+        if (dlgOptions != null)
+            dlgOptions.startLoadMusic(musicId);
+    }
+
+    public void setMusicProgress(FileInfo fileInfo, float p) {
+        if (dlgOptions != null)
+            dlgOptions.setMusicProgress(fileInfo, p);
+    }
+    //endregion
+
+    //region connection
+    @Override
+    public void onConnectionOn() {
+        super.onConnectionOn();
+        refreshControls();
+    }
+    @Override
+    public void onConnectionOff() {
+        super.onConnectionOff();
+        updateDlgMenu();
+    }
+    @Override
+    public void onConnection(boolean isOnOff) {
+        super.onConnection(isOnOff);
+        if (!isOnOff)
+            setDropStatus(DROP_STATUS_SLEEP);
+    }
+    //endregion
+
+    @Override
+    protected void updateLoginInfo() {
+        super.updateLoginInfo();
+        updateDlgMenu();
+    }
+
+    //region show-hide-refresh
+    @Override
+    public void show() {
+        super.show();
+        isOnBusy = false;
+
+        refreshVideoControls();
+
+        // отобразим лучший результат пользователя
+        //setScore(Utils.ResultSettings().getStars());
+
+        //rays.setAlpha(0);
+        //rays.calc();
+
+        new AnimUtil()
+                .add(btnStart, "scale", 3f, .9f, 1f)
+                .add(btnStart, "alpha", 0, 255)
+                //.add(rays, "alpha", 0, 255)
+                .add(cell, "alpha", 0, 255)
+                .add(btnMenu, "scale", 0f, 1.1f, 1f)
+                .add(btnMenu, "alpha", 0, 210)
+                .add(btnRating, "scale", 0f, 1.1f, 1f)
+                .add(btnRating, "alpha", 0, 255)
+                .add(btnLab, "scale", 0f, 1.1f, 1f)
+                .add(btnLab, "alpha", 0, 255)
+                .startD(showDuration);
+
+        /*Animator aSS = ObjectAnimator.ofFloat(btnStart, "scale", 3f, .9f, 1f).setDuration(showDuration);
+        Animator aSA = ObjectAnimator.ofInt(btnStart, "alpha", 0, 255).setDuration(showDuration);
+        //Animator aRA1 = ObjectAnimator.ofInt(rays, "alpha", 0, 255).setDuration(showDuration);
+        Animator aCA1 = ObjectAnimator.ofInt(cell, "alpha", 0, 255).setDuration(showDuration);
+        Animator aMS = ObjectAnimator.ofFloat(btnMenu, "scale", 0f, 1.1f, 1f).setDuration(showDuration);
+        Animator aMA = ObjectAnimator.ofInt(btnMenu, "alpha", 0, 210).setDuration(showDuration);
+        Animator aRS = ObjectAnimator.ofFloat(btnRating, "scale", 0f, 1.1f, 1f).setDuration(showDuration);
+        Animator aRA = ObjectAnimator.ofInt(btnRating, "alpha", 0, 255).setDuration(showDuration);
+        Animator aLS = ObjectAnimator.ofFloat(btnLab, "scale", 0f, 1.1f, 1f).setDuration(showDuration);
+        Animator aLA = ObjectAnimator.ofInt(btnLab, "alpha", 0, 255).setDuration(showDuration);
+        AnimatorSet set = new AnimatorSet();
+        set.setDuration(showDuration);
+        set.setInterpolator(new DecelerateInterpolator());
+        set.playTogether(aSS, aSA, aCA1, aMS, aMA, aRS, aRA, aLS, aLA);
+        set.start();*/
+    }
+
+    @Override
+    protected void refreshControls() {
+        super.refreshControls();
+
+        // получим информацию по текущему пользователю
+        UserScoreInfo usi = Utils.dataBaseManager.currentUserScoreInfo;
+        int index = userScore != null ? userScore.index : 0; // индекс в рейтинге
+
+        if (usi != null)
+            setScore(usi.score, usi.waves, index);
+        else
+            setScore(0, -1, 0);
+
+        // установим изображение на кнопке лаборатории
+        if (userRowInfo != null && userRowInfo.userScoreInfo != null) {
+            if (userRowInfo.userScoreInfo.isPotionFinal())
+                btnLab.setDefaultBitmap(R.string.bmp_potion_10_final);
+            else
+                btnLab.setDefaultBitmap(R.string.bmp_btn_potion);
+            btnLab.refreshCurrentStatus();
+        }
+
+        updateDlgMenu();
+    }
+
+    private void updateDlgMenu() {
+        if (dlgMenu != null)
+            dlgMenu.update();
+    }
+
+    private void refreshVideoControls() {
+        if (CurrentSettings.isShowVideo) {
+            showVideo.show();
+            showVideoOk.show();
+        } else {
+            showVideo.hide();
+            showVideoOk.hide();
+        }
+    }
+
+    /*@Override
+    public long hide() {
+        super.hide();
+
+        //Animator aSS = ObjectAnimator.ofFloat(btnStart, "scale", 1f, isOnStart ? 1.2f : .8f).setDuration(hideDuration);
+        Animator aSA = ObjectAnimator.ofInt(btnStart, "alpha", 255, 0).setDuration(hideDuration);
+        //Animator aMS = ObjectAnimator.ofFloat(btnMenu, "scale", 1f, 0f).setDuration(hideDuration);
+        Animator aMA = ObjectAnimator.ofInt(btnMenu, "alpha", 255, 0).setDuration(hideDuration);
+        Animator aRA = ObjectAnimator.ofInt(btnRating, "alpha", 255, 0).setDuration(hideDuration);
+        Animator aLA = ObjectAnimator.ofInt(btnLab, "alpha", 255, 0).setDuration(hideDuration);
+
+        AnimatorSet set = new AnimatorSet();
+        set.setDuration(hideDuration);
+        set.setInterpolator(new DecelerateInterpolator());
+        set.playTogether(aSA, aMA, aRA, aLA);
+        set.start();
+
+        return hideDuration;
+    }*/
+
+    @Override
+    public long back() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_back_main");
+        //Utils.PlayClick();
+
+        if (isDialogOff())
+            return showDialog(dlgExit);
+        else
+            return hideDialog();
+    }
+    //endregion
+
+    private void startGame() {
+        if (CurrentSettings.isShowVideo) {
+            MainActivityUtils.doShowVideoAd(null);
+            CurrentSettings.isShowVideo = false;
+            refreshVideoControls();
+        } else {
+            isOnBusy = true;
+            //circlesStart.stop();
+            MainActivityUtils.doStartGame();
+        }
+    }
+    private void setScore(Integer score, Integer waves, final Integer index) {
+        if (score > 0) {
+            txtComment.setText("");
+            txtScore.setText(score.toString());//"934750");
+            star.setFx(xScore + 1.25f * fdStar + .5f * txtScore.getTextWidth() / MetrixUtils.screen_metrix_width);
+            star.show();
+        } else {
+            setDropStatus(DROP_STATUS_OFF);
+            txtComment.setText(R.string.main_comment_score_empty);
+            txtComment.setPoint(xComment, yComment);
+            txtScore.setText("");
+            star.hide();
+            crownShowHide(0);
+        }
+
+        if (waves > -1) {
+            ctrlProgressBarWaves.show();
+            float wavesProgress = (float) waves / CurrentSettings.signWavesCount;
+            if (wavesProgress < 1) {
+                wave.show();
+                ctrlProgressBarWaves.setPercent(wavesProgress);
+                orden.hide();
+            } else {
+                wave.hide();
+                ctrlProgressBarWaves.fill();
+                orden.show();
+            }
+        } else {
+            wave.hide();
+            ctrlProgressBarWaves.setPercent(0);
+            ctrlProgressBarWaves.hide();
+            orden.hide();
+        }
+
+        if (score > 0 && index > 0) { // место в Рейтинге показываем, если счет ненулевой
+            /*if (txtIndex != null) {
+                txtIndex.setText(index.toString());
+                txtIndex.show();
+            }*/
+
+            if (grpCrown != null) {
+                long delay = 0;
+                if (index < 4)
+                    delay = setDropStatus(DROP_STATUS_OFF);
+                else
+                    setDropStatus(DROP_STATUS_ON);
+                if (delay > 0) {
+                    TaskUtils.postDelayed(delay, new Runnable() {
+                        @Override
+                        public void run() { crownShowHide(index); }
+                    });
+                } else
+                    crownShowHide(index);
+            }
+
+        } else {
+            //if (txtIndex != null)
+            //    txtIndex.hide();
+            if (grpCrown != null)
+                crownShowHide(0);
+        }
+    }
+
+    private void crownShowHide(int index) {
+        if (index > 0)
+            grpCrown.setIndex(index);
+        else
+            grpCrown.hide();
+    }
+
+    //region animate
+    private static final long animDuration = 1000;
+    private boolean isOnAction = false;
+    private void animateControls() {
+        if (!isOnAction) {
+            isOnAction = true;
+            long dd = animDuration / 2;
+            if (btnStart.isVisible()) {
+                new AnimUtil(btnStart, "Scale", 1f, .95f, 1.05f, 1f).startSimple(animDuration);
+                //new AnimUtil(btnStart, "Scale", 1f, .9f, 1.1f, 1f).startSimple(animDuration);
+                new AnimUtil()
+                        .add(startHalo, "scale", 1f, 1.5f)
+                        .add(startHalo, "alpha", 0, 32, 0)
+                        .start(2 * animDuration, animDuration / 3);
+            }
+            if (orden.isVisible()) {
+                new AnimUtil()
+                        .add(orden, "Scale", 1f, .8f, 1.10f, 1f)
+                        .add(orden, "Angel", 0, 5, -5, 2, -2, 0)
+                        .startAD(animDuration, animDuration);
+            }
+            if (grpCrown != null) {
+                float ffy = grpCrown.getFy();
+                new AnimUtil(grpCrown, "fy", ffy, ffy + .005f, ffy - .01f, ffy).startSimple(animDuration, 3 * dd);
+            }
+            /*if (wave.isVisible()) {
+                ObjectAnimator wS = ObjectAnimator.ofFloat(wave, "Scale", 1f, .8f, 1.25f, 1f).setDuration(animDuration);
+                wS.setStartDelay(dd);
+                wS.start();
+            }*/
+            TaskUtils.postDelayed(3 * animDuration, new Runnable() { @Override public void run() { isOnAction = false; } }); 
+        }
+    }
+
+    private static final long animDropDuration = 1000;
+    private void animateDrop() {
+        if (dropStatusId == DROP_STATUS_ON) {
+            if (!drop.isOnAction) {
+                drop.startAnimAD(animDropDuration,
+                        new AnimUtil()
+                            .add(drop, "widthScale", 1f, .95f, 1.05f, 1f)
+                            .add(drop, "heightScale", 1f, 1.05f, .95f, 1f)
+                            .getAnimatorSet(animDropDuration));
+            }
+        }
+    }
+    //endregion
+
+    private static final int DROP_STATUS_OFF = 0;
+    private static final int DROP_STATUS_ON = 1;
+    private static final int DROP_STATUS_SLEEP = 2;
+    private int dropStatusId = DROP_STATUS_OFF;
+    private long setDropStatus(int dropStatusId) {
+        long duration = 0;
+        if (this.dropStatusId != dropStatusId) {
+            switch (dropStatusId) {
+                case DROP_STATUS_ON:
+                    if (this.dropStatusId == DROP_STATUS_OFF) {
+                        drop.setPoint(xDrop, -.3f);
+                        drop.setStatus(FunnyDrop.STATUS_20_INTEREST);
+                        duration = 1000;
+                        // старт анимации движения
+                        drop.startAnimAD(duration,
+                                new AnimUtil()
+                                        .add(drop, "fy", -.3f, yDrop + .02f, yDrop)
+                                        .add(drop, "widthScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                                        .add(drop, "heightScale", 1f, .95f, .975f, 1f, 1f)
+                                        .getAnimatorSet(duration));
+                        drop.showMessage(duration, FunnyDrop.MES_INTEREST);
+                    } else if (this.dropStatusId == DROP_STATUS_SLEEP) {
+                        drop.setPoint(xDrop, yDrop);
+                        drop.setStatus(FunnyDrop.STATUS_20_INTEREST);
+                        drop.showMessage(duration, FunnyDrop.MES_INTEREST);
+                        duration = 1000;
+                        // старт анимации движения
+                        drop.startAnimAD(duration,
+                                new AnimUtil()
+                                        .add(drop, "widthScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                                        .add(drop, "heightScale", 1f, .95f, .975f, 1f, 1f)
+                                        .getAnimatorSet(duration));
+                    }
+                    Utils.playSound(R.raw.drop01, duration / 2);
+                    break;
+                case DROP_STATUS_OFF:
+                    duration = 500;
+                    // старт анимации движения
+                    drop.startAnimAD(duration,
+                            new AnimUtil()
+                                    .add(drop, "fy", yDrop, yDrop + .02f, -.3f)
+                                    .add(drop, "widthScale", 1f, 1.2f, 1.1f, 1f, 1f)
+                                    .add(drop, "heightScale", 1f, .95f, .975f, 1f, 1f)
+                                    .getAnimatorSet(duration));
+                    drop.hide(duration);
+                    break;
+                case DROP_STATUS_SLEEP:
+                    if (this.dropStatusId == DROP_STATUS_ON) {
+                        duration = 1000;
+                        drop.setMotion(DropMotionType.SLEEP);
+                        drop.showMessage(duration, FunnyDrop.MES_SLEEP);
+                    }
+                    break;
+            }
+            this.dropStatusId = dropStatusId;
+        } else if (dropStatusId == DROP_STATUS_ON) { // статус не изменился
+            if (!drop.isOnAction) {
+                duration = 1000;
+                // старт анимации движения
+                drop.startAnimAD(duration,
+                        new AnimUtil()
+                                .add(drop, "widthScale", 1f, 1.1f, .975f, 1f)
+                                .add(drop, "heightScale", 1f, .975f, 1.1f, 1f)
+                                .getAnimatorSet(duration));
+            }
+        }
+        return duration;
+    }
+
+    /*@Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+        drawColors(c);
+    }*/
+
+    //region test
+    private void drawColors(Canvas c) {
+        Paint p1 = SignInfos.getPaintBySignInfo(SignStrength.SIMPLE);
+        Paint p2 = SignInfos.getPaintBySignInfo(SignStrength.NORMAL);
+        Paint p3 = SignInfos.getPaintBySignInfo(SignStrength.HARD);
+        Paint p4 = SignInfos.getPaintBySignInfo(SignStrength.INSANE);
+        Paint p5 = SignInfos.getPaintBySignInfo(SignStrength.CRAZY);
+
+        float r = 10f;
+        c.drawCircle(20, 20, r, p1);
+        c.drawCircle(40, 20, r, p2);
+        c.drawCircle(60, 20, r, p3);
+        c.drawCircle(80, 20, r, p4);
+        c.drawCircle(100, 20, r, p5);
+        c.drawCircle(20, 40, r, p(p1, p2));
+        c.drawCircle(40, 40, r, p(p2, p2));
+        c.drawCircle(60, 40, r, p(p3, p2));
+        c.drawCircle(80, 40, r, p(p4, p2));
+        c.drawCircle(100, 40, r, p(p5, p2));
+        c.drawCircle(20, 60, r, p(p1, p3));
+        c.drawCircle(40, 60, r, p(p2, p3));
+        c.drawCircle(60, 60, r, p(p3, p3));
+        c.drawCircle(80, 60, r, p(p4, p3));
+        c.drawCircle(100, 60, r, p(p5, p3));
+        c.drawCircle(20, 80, r, p(p1, p4));
+        c.drawCircle(40, 80, r, p(p2, p4));
+        c.drawCircle(60, 80, r, p(p3, p4));
+        c.drawCircle(80, 80, r, p(p4, p4));
+        c.drawCircle(100, 80, r, p(p5, p4));
+        c.drawCircle(20, 100, r, p(p1, p5));
+        c.drawCircle(40, 100, r, p(p2, p5));
+        c.drawCircle(60, 100, r, p(p3, p5));
+        c.drawCircle(80, 100, r, p(p4, p5));
+        c.drawCircle(100, 100, r, p(p5, p5));
+
+        Paint py = PaintUtils.getPaint(255, 255, 255,   0); // yellow
+        Paint pr = PaintUtils.getPaint(255, 255,   0,   0); // red
+        Paint pg = PaintUtils.getPaint(255,   0, 255,   0); // green
+        Paint pb = PaintUtils.getPaint(255,   0,   0, 255); // blue
+        Paint pv = PaintUtils.getPaint(255, 255,   0, 255); // violet
+        Paint pc = PaintUtils.getPaint(255,   0, 255, 255); // cyan
+        d(c, pr, pg, 100);
+        d(c, pr, pb, 130);
+        d(c, pg, pb, 160);
+
+        d(c, pv, pr, 200);
+        d(c, pv, pg, 230); // grey
+        d(c, pv, pb, 260);
+
+        d(c, py, pr, 290);
+        d(c, py, pg, 320);
+        d(c, py, pb, 350); // grey
+
+        d(c, pc, pr, 380);
+        d(c, pc, pg, 410);
+        d(c, pc, pb, 440);
+
+        d(c, py, pv, 480);
+        d(c, py, pc, 510);
+        d(c, pc, pv, 540);
+    }
+
+    private void d(Canvas c, Paint p1, Paint p2, int y) {
+        p1.setStrokeWidth(2);
+        p2.setStrokeWidth(2);
+        for (int i = 0; i < 100; i++)
+        {
+            int x = i * 2 + 50;
+            c.drawCircle(15, y + 15, 10, p1);
+            c.drawCircle(35, y + 15, 10, p2);
+            c.drawLine(x, y, x, y + 30, p1);
+            c.drawLine(x + 1, y, x + 1, y + 30, p2);
+            c.drawCircle(250, y + 15, 10, p(p1, p2));
+            c.drawCircle(300, y + 15, 10, pp(p1, p2));
+        }
+    }
+
+    private Paint p(Paint p1, Paint p2) {
+        int c1 = p1.getColor();
+        int r1 = Color.red(c1);
+        int g1 = Color.green(c1);
+        int b1 = Color.blue(c1);
+
+        int c2 = p2.getColor();
+        int r2 = Color.red(c2);
+        int g2 = Color.green(c2);
+        int b2 = Color.blue(c2);
+
+        return PaintUtils.getPaint(255, (r1 + r2) / 2, (g1 + g2) / 2, (b1 + b2) / 2);
+    }
+
+    private Paint pp(Paint p1, Paint p2) {
+        int c1 = p1.getColor();
+        int r1 = 255 - Color.red(c1);
+        int g1 = 255 - Color.green(c1);
+        int b1 = 255 - Color.blue(c1);
+
+        int c2 = p2.getColor();
+        int r2 = 255 - Color.red(c2);
+        int g2 = 255 - Color.green(c2);
+        int b2 = 255 - Color.blue(c2);
+
+        return PaintUtils.getPaint(255, (r1 + r2) / 2, (g1 + g2) / 2, (b1 + b2) / 2);
+    }
+    //endregion
+}

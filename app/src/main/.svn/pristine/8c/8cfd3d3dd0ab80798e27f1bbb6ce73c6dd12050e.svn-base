@@ -1,0 +1,845 @@
+package com.softigress.magicsigns.Game;
+
+import android.animation.ObjectAnimator;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.os.SystemClock;
+import android.view.animation.AccelerateDecelerateInterpolator;
+
+import com.softigress.magicsigns.Activities.MainActivity.MainActivityUtils;
+import com.softigress.magicsigns.Activities._base.ActivityGroupBase;
+import com.softigress.magicsigns.Game.Dna.ProgressDna.ProgressDna;
+import com.softigress.magicsigns.Game.Signs.GrpSigns;
+import com.softigress.magicsigns.Game.Signs.IGrpSignsListener;
+import com.softigress.magicsigns.R;
+import com.softigress.magicsigns.UI.FinishedResult.FinishedResultInfo;
+import com.softigress.magicsigns.UI.FinishedResult.GrpFinishedResult;
+import com.softigress.magicsigns.UI.FinishedResult.IGrpFinishedResultListener;
+import com.softigress.magicsigns.UI.Rating.RatingRow.ScoreInfo;
+import com.softigress.magicsigns.UI.Rating.RatingRow.UserRatingRowInfo;
+import com.softigress.magicsigns.UI._Main.Dialogs.GrpPauseMenuDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Login.GrpLoginDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Options.GrpOptionsDialog;
+import com.softigress.magicsigns.UI._Main.Dialogs.Options.IGrpOptionsDialog;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.BtnBase;
+import com.softigress.magicsigns.UI._base.Controls._base.Buttons.IClickListener;
+import com.softigress.magicsigns.UI._base.Controls._base.Counters.CtrlCounterInv;
+import com.softigress.magicsigns.UI._base.Controls._base.Counters.CtrlMultiplier;
+import com.softigress.magicsigns.UI._base.Controls.Drop.FunnyDrop;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.GrpDialog;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogHideListener;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogListener;
+import com.softigress.magicsigns.UI._base.Groups.Dialogs.IGrpDialogResultListener;
+import com.softigress.magicsigns._Base.ArrayRecyclable;
+import com.softigress.magicsigns._Base._Drawing._interfaces.ITouchable;
+import com.softigress.magicsigns._system.BitmapManager;
+import com.softigress.magicsigns._system.FireBase.Analytics.AnalyticsManager;
+import com.softigress.magicsigns._system.FireBase.Authentication.AuthManager;
+import com.softigress.magicsigns._system.FireBase.DataBase.IDataBaseManagerListener;
+import com.softigress.magicsigns._system.FireBase.DataBase.IUserScoreInfoListener;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserScoreInfo;
+import com.softigress.magicsigns._system.FireBase.DataBase.UserVideoCount;
+import com.softigress.magicsigns._system.FireBase.RemoteConfig.FileInfos.FileInfo;
+import com.softigress.magicsigns._system.FireBase.Storage.LoadFileTasks.IAsyncLoadFile;
+import com.softigress.magicsigns._system.Settings.CurrentSettings;
+import com.softigress.magicsigns._system.Utils.AnimUtil;
+import com.softigress.magicsigns._system.Utils.TaskUtils;
+import com.softigress.magicsigns._system.Utils.TextUtils;
+import com.softigress.magicsigns._system.Utils.Utils;
+
+public class GrpGame extends ActivityGroupBase {
+
+    private boolean isFinished = false;
+    private boolean isOnExit = false;
+
+    private final static float xDrop =      .13f, yDrop =      1.20f;
+    //private final static float xMenu =      .05f, yMenu =       .038f, fdMenu =    .050f;
+    //private final static float xBack =      .15f, yBack =       .038f, fdBack =    .050f;
+    //private final static float xOptions =   .25f, yOptions =    .038f, fdOptions = .050f;
+    private final static float xPause =     .05f, yPause =      .038f, fdPause =   .050f;
+
+    //private ArrayRecyclable<DrawingGroup> objectGroups;
+    private GrpSigns grpSigns;
+    private final FunnyDrop drop;
+    /*private final BtnBase btnMenu;
+    private final BtnBase btnBack;
+    private final BtnBase btnOptions;*/
+    private final BtnBase btnPause;
+    private final GrpOptionsDialog dlgOptions;
+    private final GrpDialog dlgExit;
+    private final GrpPauseMenuDialog dlgPause;
+    private final GrpFinishedResult grpFinishedResult;
+    private final GrpLoginDialog dlgLogin;
+
+    public GrpGame() {
+        super(true); //R.drawable.back_12, true // NoConnectionDialog ON
+
+        //grpWaves = new GrpWaves(10);
+        //addDrawingGroup(grpWaves);
+
+        //region drop
+        drop = new FunnyDrop(xDrop, yDrop);
+        drop.loadStatuses(new int[] {
+                //FunnyDrop.STATUS_10_SIMPLE,
+                //FunnyDrop.STATUS_11_SIMPLE_BLINK,
+                FunnyDrop.STATUS_20_INTEREST,
+                FunnyDrop.STATUS_21_INTEREST_BLINK,
+                FunnyDrop.STATUS_30_SURPRISE,
+                FunnyDrop.STATUS_40_JOKE,
+                FunnyDrop.STATUS_50_LAUGH,
+                FunnyDrop.STATUS_60_HAPPY,
+                FunnyDrop.STATUS_61_HAPPY_BLINK,
+                FunnyDrop.STATUS_70_PUNCHED,
+                FunnyDrop.STATUS_80_PRO,
+                //FunnyDrop.STATUS_90_SLEEP,
+                //FunnyDrop.STATUS_100_WAIT,
+                //FunnyDrop.STATUS_101_WAIT_BLINK,
+        });
+        drop.isAllowMotion = true;
+        drop.setMessagePoint(.5f, .73f);
+        drop.setMessageFontSize(TextUtils.game_drop_message);
+        drop.addMessageTexts(
+                "dropInterest",
+                FunnyDrop.MES_INTEREST,
+                new int[] {
+                    0, 1, R.string.message_game_drop_interest_01,
+                    0, 1, R.string.message_game_drop_interest_02,
+                    0, 0, R.string.message_game_drop_interest_03,
+                    1, 1, R.string.message_game_drop_interest_04,
+                    1, 0, R.string.message_game_drop_interest_05,
+                    1, 0, R.string.message_game_drop_interest_06,
+                    1, 0, R.string.message_game_drop_interest_07,
+                    1, 1, R.string.message_game_drop_interest_08,
+                    1, 1, R.string.message_game_drop_interest_09
+                });
+        drop.addMessageTexts(
+                "progressSurprise",
+                FunnyDrop.MES_SURPRISE,
+                new int[] {
+                    0, -1, R.string.message_game_drop_surprise_01,
+                    0, -1, R.string.message_game_drop_surprise_02,
+                    0, -1, R.string.message_game_drop_surprise_03,
+                    0, -1, R.string.message_game_drop_surprise_04,
+                    0, 1, R.string.message_game_drop_surprise_05
+                });
+        drop.addMessageTexts(
+                "progressJoke",
+                FunnyDrop.MES_JOKE,
+                new int[] {
+                    0, 1, R.string.message_game_drop_joke_01,
+                    0, 1, R.string.message_game_drop_joke_02,
+                    0, 1, R.string.message_game_drop_joke_03,
+                    0, 1, R.string.message_game_drop_joke_04
+                });
+        drop.addMessageTexts(
+                "progressLaugh",
+                FunnyDrop.MES_LAUGH,
+                new int[] {
+                    0, 1, R.string.message_game_drop_laugh_01,
+                    0, 1, R.string.message_game_drop_laugh_02,
+                    0, 1, R.string.message_game_drop_laugh_03,
+                    0, 1, R.string.message_game_drop_laugh_04
+                });
+        drop.addMessageTexts(
+                "progressHappy",
+                FunnyDrop.MES_HAPPY,
+                new int[] {
+                    0, 1, R.string.message_game_drop_happy_01,
+                    0, 1, R.string.message_game_drop_happy_02,
+                    0, 1, R.string.message_game_drop_happy_03,
+                    0, 1, R.string.message_game_drop_happy_04,
+                });
+        drop.addMessageTexts(
+                "progressPunched",
+                FunnyDrop.MES_PUNCHED,
+                new int[] {
+                    0, -1, R.string.message_game_drop_punched_01,
+                    0, 0, R.string.message_game_drop_punched_02,
+                    0, 1, R.string.message_game_drop_punched_03
+                });
+        drop.addMessageTexts(
+                "progressPro",
+                FunnyDrop.MES_PRO,
+                new int[] {
+                    0, 1, R.string.message_game_drop_pro_01,
+                    0, 1, R.string.message_game_drop_pro_02,
+                    0, 1, R.string.message_game_drop_pro_03,
+                    0, 1, R.string.message_game_drop_pro_04
+                });
+        drop.addMessageTexts(
+                "progressBomb0",
+                FunnyDrop.MES_BOMB_0,
+                new int[] {
+                    0, -1, R.string.message_game_drop_bomb_01,
+                    0, -1, R.string.message_game_drop_bomb_02,
+                    0, -1, R.string.message_game_drop_bomb_03,
+                });
+        drop.addMessageTexts(
+                "progressBomb1",
+                FunnyDrop.MES_BOMB_1,
+                new int[] {
+                    0, 0, R.string.message_game_drop_bomb_11,
+                    1, 1, R.string.message_game_drop_bomb_12,
+                    0, 1, R.string.message_game_drop_bomb_13,
+                });
+        drop.addMessageTexts(
+                "progressBomb2",
+                FunnyDrop.MES_BOMB_2,
+                new int[] {
+                    0, 1, R.string.message_game_drop_bomb_21,
+                    0, 1, R.string.message_game_drop_bomb_22,
+                    0, 1, R.string.message_game_drop_bomb_23,
+                });
+        drop.addMessageTexts(
+                "progressBomb3",
+                FunnyDrop.MES_BOMB_3,
+                new int[] {
+                    0, 1, R.string.message_game_drop_bomb_31,
+                    0, 1, R.string.message_game_drop_bomb_32,
+                    0, 1, R.string.message_game_drop_bomb_33,
+                });
+        addDrawingTouchable(drop);
+        //endregion
+
+        isDrawDialogs = false; // отключаем прорисовку диалогов в drawFrame() рисуем их поверх всего методом drawDialogs
+
+        //region SignIn dialog
+        dlgLogin = new GrpLoginDialog();
+        dlgLogin.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        addDialog(dlgLogin);
+        //endregion
+
+        //region Menu Back Options buttons
+        /*btnMenu = new BtnBase(xMenu, yMenu, fdMenu, R.string.bmp_btn_menu);
+        btnMenu.name = "btn_menu";
+        btnMenu.setAlpha(128);
+        btnMenu.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable e) { showhideMenu(true); } });
+        addDrawingTouchable(btnMenu);
+
+        btnBack = new BtnBase(xBack, -.2f, fdBack, R.string.bmp_btn_exit);
+        btnBack.name = "btn_back";
+        btnBack.setAlpha(196);
+        btnBack.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                showhideMenu(false);
+                onBack();
+            }
+        });
+        addDrawingTouchable(btnBack);
+
+        btnOptions = new BtnBase(xOptions, -.2f, fdOptions, R.string.bmp_btn_options);
+        btnOptions.name = "btn_options";
+        btnOptions.setAlpha(196);
+        btnOptions.setListener(new IClickListener() {
+            @Override
+            public void handleOnClick(ITouchable e) {
+                showhideMenu(false);
+                showDialog(dlgOptions);
+            }
+        });
+        addDrawingTouchable(btnOptions);*/
+        //endregion
+
+        //region Pause button
+        btnPause = new BtnBase(xPause, -.2f, fdPause, R.string.bmp_btn_menu);
+        btnPause.name = "btn_pause";
+        btnPause.setAlpha(128);
+        btnPause.setListener(new IClickListener() { @Override public void handleOnClick(ITouchable e) { onPauseGame(dlgPause); } });
+        addDrawingTouchable(btnPause);
+        //endregion
+
+        //region Options dialog
+        dlgOptions = new GrpOptionsDialog();
+        dlgOptions.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        dlgOptions.setListener(new IGrpOptionsDialog() {
+            @Override public void musicOn() { playMusic(); }
+            @Override public void musicOff() { stopMusic(); }
+        });
+        dlgOptions.setListener(new IGrpDialogHideListener() {
+            @Override public void handleOnHide() { onResumeGame(); }
+        });
+        addDialog(dlgOptions);
+        //endregion
+
+        //region Exit dialog
+        dlgExit = new GrpDialog(.8f, .62f, R.string.bmp_btn_exit, R.string.dlg_Exit, R.string.bmp_btn_play, R.string.dlg_Play, .375f);
+        dlgExit.name = "dlg_exit_game";
+        dlgExit.setDlgMessageText(R.string.dlg_Exit_Title, .5f, .15f);
+        dlgExit.setDlgIdeaText(R.string.dlg_Exit_IdeaText, .5f, .725f);
+        //dlgExit.setDrawing(R.drawable.star, .8f, .68f, .1666f);
+        dlgExit.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { exitGame(); }
+            @Override public void handleOnCancel() {
+                hideDialog();
+            }
+        });
+        dlgExit.setListener(new IGrpDialogHideListener() {
+            @Override public void handleOnHide() { onResumeGame(); }
+        });
+        addDialog(dlgExit);
+        //endregion
+
+        //region Pause dialog
+        dlgPause = new GrpPauseMenuDialog();
+        dlgPause.setListener(new IGrpDialogResultListener() {
+            @Override
+            public void handleOnResult(int result) {
+                switch (result) {
+                    case GrpPauseMenuDialog.DIALOG_RESULT_OPTIONS:   onPauseGame(dlgOptions); break;
+                    case GrpPauseMenuDialog.DIALOG_RESULT_EXIT:      onPauseGame(dlgExit); break;
+                    case GrpPauseMenuDialog.DIALOG_RESULT_PLAY:      hideDialog(); break;
+                }
+            }
+        });
+        dlgPause.setListener(new IGrpDialogListener() {
+            @Override public void handleOnOk() { hideDialog(); }
+            @Override public void handleOnCancel() { hideDialog(); }
+        });
+        dlgPause.setListener(new IGrpDialogHideListener() {
+            @Override public void handleOnHide() { onResumeGame(); }
+        });
+        addDialog(dlgPause);
+        //endregion
+
+        grpFinishedResult = new GrpFinishedResult(new IGrpFinishedResultListener() {
+            @Override
+            public void handleOnRepeat() { // нажатие на кнопку "Продолжить"
+                setDataBaseListenerOff();
+                TaskUtils.postDelayed(grpFinishedResult.hide(), new Runnable() { @Override public void run() { show(); } });
+            }
+            @Override
+            public void handleOnOrdenTouchUp() { // нажатие на Орден
+                Utils.playSoundClick();
+                drop.showMessage(GrpFinishedResult.getOrdenMessage());
+            }
+        });
+        addDrawingGroup(grpFinishedResult);
+    }
+
+    @Override
+    protected boolean isStars() { return true; }
+    @Override
+    protected boolean isStarsMoving() { return false; }
+
+    //region music
+    @Override
+    protected int getMusicId() { return 3000; }
+
+    public void startLoadMusic(int musicId) {
+        if (dlgOptions != null)
+            dlgOptions.startLoadMusic(musicId);
+    }
+
+    public void setMusicProgress(FileInfo fileInfo, float p) {
+        if (dlgOptions != null)
+            dlgOptions.setMusicProgress(fileInfo, p);
+    }
+    //endregion
+
+    private long startGameTicks = 0;
+    private void CreateGame(){
+        isOnExit = false;
+
+        // скроем меню с кнопками выхода и настроек
+        //showhideMenu(false);
+
+        // отобразим кнопку паузы
+        showhidePause(true);
+
+        // reset results
+        if (grpFinishedResult != null)
+            grpFinishedResult.reset();
+
+        startGameTicks = SystemClock.elapsedRealtime();
+        //synchronized (perf) {
+        //    perf.reset();
+        //}
+
+        isFinished = false;
+        finishedResult = null; // сбрасываем рузульт
+        isObjectsVisible = false; // объекты невидимы
+
+        // устанавливаем координаты сообщения
+        drop.setMessagePoint(.5f, .73f);
+
+        grpSigns = new GrpSigns();
+        grpSigns.setListener(new IGrpSignsListener() {
+            @Override
+            public void handleOnDnaTouch() {
+                Utils.playSoundClick();
+                drop.showMessage(ProgressDna.getMessage());
+            }
+            @Override
+            public void handleOnDnaBombTouch() {
+                Utils.playSoundClick();
+                drop.showMessage(CtrlCounterInv.getMessage());
+            }
+            @Override
+            public void handleOnMultiplierTouch() {
+                Utils.playSoundClick();
+                drop.showMessage(CtrlMultiplier.getMessage());
+            }
+            @Override
+            public void handleOnWin() { onFinish(true); }
+            @Override
+            public void handleOnGameOver() { onFinish(false); }
+        });
+        grpSigns.setEnabled(true); // включаем puncher и energies
+        grpSigns.drop = drop;
+        grpSigns.isCheckCollision = true;
+
+        //objectGroups = new ArrayRecyclable<>();
+        //objectGroups.add(grpSigns);
+    }
+
+    //region pause / resume game
+    @Override
+    public void onPauseGroup(GrpDialog dlg) { onPauseGame(dlg); }
+    @Override
+    public void onResumeGroup() { onResumeGame(); }
+
+    private long onPauseGame(GrpDialog dlg) {
+        if (dlg == null)
+            dlg = dlgPause;
+
+        long duration = 0;
+        if (!isFinished && !isCurrentDialog(dlg)) {
+            duration = showDialog(dlg);
+            if (grpSigns != null)
+                grpSigns.pause();
+        }
+        return duration;
+    }
+    private void onResumeGame() {
+        if (!isFinished) {
+            if (grpSigns != null)
+                grpSigns.resume();
+        }
+    }
+    //endregion
+
+    private void onFinish(boolean isWin) {
+        if (!isOnExit && !isFinished) {
+            isFinished = true;
+            grpSigns.setEnabled(false); // выключаем puncher и energies
+            grpSigns.hide();
+            showhidePause(false);
+            // время проведенное в текущей игре
+            long currentGameTicks = SystemClock.elapsedRealtime() - startGameTicks;
+            CurrentSettings.gameDurationCurrent += currentGameTicks;
+            int score = grpSigns.getScore();
+            finishedResult = new FinishedResultInfo(isWin, score, currentGameTicks);
+
+            setDataBaseListenerOn();
+            // если пользователь не залогинен, но счет больше 0, отображаем диалог логина
+            if (Utils.dataBaseManager.currentUserScoreInfo == null && score > 0)
+                showDialog(dlgLogin);
+            else {
+                saveResult(); // сохраняем результат в БД
+                showResult(); // отображаем рузультат
+            }
+        }
+    }
+
+    //region finished result
+    private FinishedResultInfo finishedResult = null;
+    private void applyResult() {
+        if (finishedResult != null) {
+            // получим информацию о пользователе
+            if (Utils.dataBaseManager.currentUserScoreInfo == null)
+                Utils.dataBaseManager.getUserScoreInfo(new IUserScoreInfoListener() {
+                    @Override
+                    public void handle(UserScoreInfo usi) {
+                        Utils.dataBaseManager.currentUserScoreInfo = usi;
+                        saveResult(); // сохраняем результат в БД
+                    }
+                });
+            else
+                saveResult(); // сохраняем результат в БД
+        }
+    }
+
+    private void saveResult() {
+        if (Utils.dataBaseManager.currentUserScoreInfo != null) {
+            UserScoreInfo usi = Utils.dataBaseManager.currentUserScoreInfo;
+            usi.ticks = Utils.getTime();
+            usi.upGames(finishedResult.ticks); // увеличиваем количество игр и время проведенное в игре
+            int prevScore = usi.score;
+            if (finishedResult.score > prevScore) // если рекорд по количеству очков улучшен
+                usi.score = finishedResult.score; // сохраняем новый рекорд
+            int prevWaves = usi.waves;
+            Integer waves = finishedResult.isWin ? CurrentSettings.signWavesCount : grpSigns.getFinishedWavesCount();
+            if (waves > prevWaves)   // если пройдено больше волн
+                usi.waves = waves; // сохраняем большее количество пройденых волн
+
+            // сохраняем статистику (количество signs разного типа)
+            usi.setStatistics(grpSigns.sStatistics);
+
+            // сохраняем данные пользователя
+            Utils.dataBaseManager.saveUserScoreInfo(usi);
+
+            // сохранение значения достигнутой волны в игре
+            Utils.SetUserProperty(AnalyticsManager.MS_UP_WAVE, waves.toString());
+            // сохранение результата игры (выйгрыш/пройгрыш)
+            Utils.SetUserProperty(AnalyticsManager.MS_UP_WON, finishedResult.isWin);
+        }
+    }
+
+    private void showResult() {
+        // отображаем результат
+        grpFinishedResult.setResult(finishedResult);
+        grpFinishedResult.showResult();
+        TaskUtils.postDelayed(GrpFinishedResult.showDuration * 2,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        grpFinishedResult.showControls();
+                        Utils.saveSettings();
+                        // отобразим меню с кнопками выхода и настроек
+                        //TaskUtils.postDelayed(grpFinishedResult.showDuration, new Runnable() { @Override public void run() { showhideMenu(true); } });
+                    }
+                });
+    }
+    //endregion
+
+    //region database listener
+    private void setDataBaseListenerOn() {
+        Utils.dataBaseManager.setListener(new IDataBaseManagerListener() {
+            @Override
+            public void onRatingChanged(ScoreInfo userScore, ArrayRecyclable<ScoreInfo> scores) {
+                if (userScore != null && finishedResult != null)
+                    if (finishedResult.score >= userScore.score)
+                        grpFinishedResult.setIndex(userScore.index);
+            }
+            @Override
+            public void onTopUserInfosChanged(ArrayRecyclable<UserRatingRowInfo> rowInfos) { }
+            @Override
+            public void onCurrentUserInfoChanged(UserRatingRowInfo rowInfo) {
+                if (rowInfo != null)
+                    Utils.dataBaseManager.currentUserScoreInfo = rowInfo.userScoreInfo;
+            }
+            @Override
+            public void onCurrentUserVideoCountsChanged(UserVideoCount userVideoCount) { }
+        });
+        Utils.dataBaseManager.setRatingListenerOn();
+        Utils.dataBaseManager.setUserListenerOn();
+    }
+    private void setDataBaseListenerOff() {
+        Utils.dataBaseManager.setRatingListenerOff();
+        Utils.dataBaseManager.setUserListenerOff();
+    }
+    //endregion
+
+    //region Connection
+    @Override
+    public void onConnection(boolean isOnOff) {
+        super.onConnection(isOnOff);
+        // обновим информацию в диалоге логина
+        updateDlgLogin();
+        loadUserPhoto();
+    }
+    //endregion
+
+    //region SignIn
+    @Override
+    public void onAuthChanged() {
+        super.onAuthChanged();
+        // при аутентификации сразу обновим информацию в диалоге логина
+        updateDlgLogin();
+        loadUserPhoto();
+        // Если результат игры получен, сохраняем его
+        applyResult();
+    }
+
+    private void updateDlgLogin() {
+        if (dlgLogin != null)
+            dlgLogin.update();
+    }
+
+    private void loadUserPhoto() {
+        int hash = Utils.authManager.getCurrentProviderHash();
+        if (hash == AuthManager.PROVIDER_ID_FIREBASE)
+            setUserPhoto(Utils.getBitmap(R.string.bmp_logo_firebase));
+        else
+            Utils.authManager.getUserPhoto(new IAsyncLoadFile() {
+                @Override public void onProgress(FileInfo fileInfo, float progress) { }
+                @Override
+                public void onFinish(FileInfo fileInfo) {
+                    if (fileInfo.file != null) {
+                        Bitmap b = BitmapFactory.decodeFile(fileInfo.file.getAbsolutePath());
+                        setUserPhoto(b);
+                    }
+                }
+                @Override public void onError(Throwable t) {
+                    setUserPhoto(null);
+                }
+            });
+    }
+
+    private void setUserPhoto(Bitmap b) {
+        if (dlgLogin != null)
+            dlgLogin.setUserPhoto(b);
+    }
+    //endregion
+
+    //region dialogs
+    @Override
+    public long showDialog(GrpDialog dlgToShow) {
+        grpSigns.setEnabled(false); // выключаем puncher и energies
+        return super.showDialog(dlgToShow);
+    }
+    @Override
+    public long hideDialog() {
+        grpSigns.setEnabled(true); // включаем puncher и energies
+        if (isCurrentDialog(dlgLogin))
+            showResult();
+        return super.hideDialog();
+    }
+    //endregion
+
+    //region load-show-hide-back
+    @Override
+    public long hide() {
+        showhidePause(false);
+        return super.hide();
+    }
+
+    @Override
+    public void show() {
+        CreateGame();
+        super.show();
+        showObjects(10);
+    }
+
+    private boolean isObjectsVisible = false;
+    private void showObjects(long delay) {
+        TaskUtils.postDelayed(delay,
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // делаем объекты видимыми
+                        isObjectsVisible = true;
+                        /*if (objectGroups != null)
+                            for (DrawingGroup g : objectGroups)
+                                if (g != null) g.show();*/
+                        if (grpSigns != null)
+                            grpSigns.show();
+
+                        TaskUtils.postDelayed(10,
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (grpSigns != null)
+                                            grpSigns.start();
+                                    }
+                                });
+                    }});
+    }
+
+    @Override
+    public long back() {
+        Utils.LogEvent(AnalyticsManager.MS_EVENT_ACTION, "act_back_game");
+        //Utils.PlayClick();
+
+        return onBack();
+    }
+
+    //region Menu buttons anim
+    /*private AnimatorSet menuAnimSet = null;
+    private boolean isMenuVisible = false;
+    private boolean isOnMenuAction = false;
+    private void showhideMenu(boolean showhide) {
+        int duration = 1000;
+        if (showhide) {
+            if (!isMenuVisible) {
+                if (!isOnMenuAction) {
+                    onMenuAction(duration);
+                    isMenuVisible = true;
+                    if (menuAnimSet != null && menuAnimSet.isStarted())
+                        menuAnimSet.cancel();
+                    // show
+                    ObjectAnimator yB = ObjectAnimator.ofFloat(btnBack, "fy", -.2f, yBack + fdBack / 3f, yBack).setDuration(duration);
+                    ObjectAnimator yO = ObjectAnimator.ofFloat(btnOptions, "fy", -.2f, yOptions + fdOptions / 3f, yOptions).setDuration(duration);
+                    menuAnimSet = new AnimatorSet();
+                    menuAnimSet.playTogether(yB, yO);
+                    menuAnimSet.setInterpolator(new AccelerateDecelerateInterpolator());
+                    menuAnimSet.start();
+                    Utils.playSound(R.raw.ui_dialog_show02);
+                }
+            }
+        } else {
+            if (isMenuVisible) {
+                if (!isOnMenuAction) {
+                    onMenuAction(duration);
+                    isMenuVisible = false;
+                    if (menuAnimSet != null && menuAnimSet.isStarted())
+                        menuAnimSet.cancel();
+                    // hide
+                    ObjectAnimator yB = ObjectAnimator.ofFloat(btnBack, "fy", btnBack.getFy(), -.2f).setDuration(duration);
+                    ObjectAnimator yO = ObjectAnimator.ofFloat(btnOptions, "fy", btnOptions.getFy(), -.2f).setDuration(duration);
+                    menuAnimSet = new AnimatorSet();
+                    menuAnimSet.playTogether(yB, yO);
+                    menuAnimSet.setInterpolator(new AccelerateDecelerateInterpolator());
+                    menuAnimSet.start();
+                    Utils.playSound(R.raw.ui_dialog_hide02);
+                }
+            }
+        }
+    }
+
+    private void onMenuAction(int duration) {
+        isOnMenuAction = true;
+        TaskUtils.postDelayed(duration, new Runnable() { @Override public void run() { isOnMenuAction = false; } });
+    }*/
+    //endregion
+
+    //region Pause button anim
+    private ObjectAnimator pauseAnim = null;
+    private boolean isPauseVisible = false;
+    private boolean isOnPauseAction = false;
+    private void showhidePause(boolean showhide) {
+        int duration = 1000;
+        if (showhide) {
+            if (!isPauseVisible) {
+                if (!isOnPauseAction) {
+                    onPauseAction(duration);
+                    isPauseVisible = true;
+                    if (pauseAnim != null && pauseAnim.isStarted())
+                        pauseAnim.cancel();
+                    // show
+                    pauseAnim = ObjectAnimator.ofFloat(btnPause, "fy", -.2f, yPause + fdPause / 3f, yPause).setDuration(duration);
+                    pauseAnim.setInterpolator(new AccelerateDecelerateInterpolator());
+                    pauseAnim.start();
+                    Utils.playSound(R.raw.ui_dialog_show02);
+                }
+            }
+        } else {
+            if (isPauseVisible) {
+                if (!isOnPauseAction) {
+                    onPauseAction(duration);
+                    isPauseVisible = false;
+                    if (pauseAnim != null && pauseAnim.isStarted())
+                        pauseAnim.cancel();
+                    // hide
+                    pauseAnim = ObjectAnimator.ofFloat(btnPause, "fy", -.2f, btnPause.getFy(), -.2f).setDuration(duration);
+                    pauseAnim.setInterpolator(new AccelerateDecelerateInterpolator());
+                    pauseAnim.start();
+                    Utils.playSound(R.raw.ui_dialog_hide02);
+                }
+            }
+        }
+    }
+
+    private void onPauseAction(int duration) {
+        isOnPauseAction = true;
+        TaskUtils.postDelayed(duration, new Runnable() { @Override public void run() { isOnPauseAction = false; } });
+    }
+    //endregion
+
+    private long onBack() {
+        if (grpFinishedResult.isVisible)
+            return exitGame();
+        else if (grpSigns.getScore() > 0)
+            return onPauseGame(dlgExit);
+        else
+            return exitGame();
+    }
+
+    private long exitGame() {
+        isOnExit = true;
+        grpSigns.isCheckCollision = false;
+        setDataBaseListenerOff();
+        long delay = Math.max(grpFinishedResult.hide(), hideDialog());
+        MainActivityUtils.doShowMain();
+        return delay;
+    }
+    //endregion
+
+    //region Touch
+    public boolean onTouch(int x, int y) {
+        super.onTouch(x, y);
+        /*if (objectGroups != null)
+            for (DrawingGroup g : objectGroups)
+                if (g != null) g.onTouch(x, y);*/
+        if (grpSigns != null)
+            grpSigns.onTouch(x, y);
+        //if (grpLevelInvMenu != null)
+        //    grpLevelInvMenu.onTouch(x, y);
+        return false;
+    }
+    public boolean onTouchUp(int x, int y) {
+        super.onTouchUp(x, y);
+        //showhideMenu(false);
+        /*if (objectGroups != null)
+            for (DrawingGroup g : objectGroups)
+                if (g != null) g.onTouchUp(x, y);*/
+        if (grpSigns != null)
+            grpSigns.onTouchUp(x, y);
+        //if (grpLevelInvMenu != null)
+        //    grpLevelInvMenu.onTouchUp(x, y);
+        return false;
+    }
+    public void onMoveTo(int x, int y) {
+        super.onMoveTo(x, y);
+        /*if (objectGroups != null)
+            for (DrawingGroup g : objectGroups)
+                if (g != null) g.onMoveTo(x, y);*/
+        if (grpSigns != null)
+            grpSigns.onMoveTo(x, y);
+        //if (grpLevelInvMenu != null)
+        //    grpLevelInvMenu.onMoveTo(x, y);
+    }
+    //endregion
+
+    //region Draw
+    @Override
+    public void calc() {
+        super.calc();
+        /*if (objectGroups != null)
+            for (DrawingGroup g : objectGroups)
+                if (g != null) g.calc();*/
+        if (grpSigns != null)
+            grpSigns.calc();
+    }
+
+    @Override
+    public void drawFrame(Canvas c) {
+        super.drawFrame(c);
+
+        if (isObjectsVisible) {
+            if (grpSigns != null) {
+                grpSigns.drawFrame(c);
+                grpSigns.drawPuncher(c);
+            }
+        }
+        if (isFinished)
+            grpFinishedResult.drawFrame(c);
+
+        super.drawDialogs(c);
+        //float dr = MetrixUtils.screen_metrix_width * .1f;
+        //c.drawRoundRect(bounds, dr, dr, PaintUtils.getPaintStrokeWhite(80, PaintUtils.getStrokeWidth()));
+    }
+    //endregion
+
+    @Override
+    public void recycle() {
+        super.recycle();
+
+        /*if (objectGroups != null)
+            objectGroups.recycle();
+        objectGroups = null;*/
+
+        if (grpSigns != null)
+            grpSigns.recycle();
+        grpSigns = null;
+    }
+}
+

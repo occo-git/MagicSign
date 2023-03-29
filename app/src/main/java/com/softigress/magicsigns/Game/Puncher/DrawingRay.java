@@ -1,0 +1,211 @@
+package com.softigress.magicsigns.Game.Puncher;
+
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.Point;
+
+import com.softigress.magicsigns._system.Utils.PaintUtils;
+
+class DrawingRay {
+
+    private static final int minCount = 3;
+    private int pointsCount = minCount;
+    private Point[] points;
+
+    //private int maxAlpha = 110;
+    //private int deltaAlpha = maxAlpha / minCount;
+    private final float maxPaintWidth;
+    private final float paintWidthDelta;
+    private final Paint paint;
+    private Point p0, p1, p2;
+    private Path rayPath = new Path();
+
+    DrawingRay(int count) {
+        pointsCount = count > minCount ? count : minCount;
+        maxPaintWidth = PaintUtils.strokeWidth * 4;
+        paintWidthDelta = maxPaintWidth / pointsCount;
+        paint = PaintUtils.getPaintStrokeWhite(255, maxPaintWidth);
+        //paint.setDither(true);                    // set the dither to true
+        paint.setAntiAlias(true);
+        paint.setStrokeCap(Paint.Cap.ROUND);        // set the paint cap to round
+        //paint.setStrokeJoin(Paint.Join.ROUND);
+        //rayPath.setFillType(Path.FillType.WINDING);
+        reset();
+    }
+
+    //private Point point0 = new Point();
+    //private long nextPointTicks = 1;
+    //private long nextPointStart = 0;
+    public boolean nextPoint(int x, int y) {
+        if (points == null) return false;
+        //long ticks = SystemClock.uptimeMillis();
+        //if (nextPointStart == 0)
+        //    nextPointStart = ticks;
+        //if (ticks - nextPointStart > nextPointTicks) {
+        //    nextPointStart = 0;
+            /*
+            // добавление промежуточной точки
+            Point p0 = points[0];
+            boolean isExtended = false;
+            if (p0 != null) {
+                float dx = p0.x - x;
+                if (dx < 0) dx = -dx;
+                float dy = p0.y - y;
+                if (dy < 0) dy = -dy;
+                if (dx > MetrixUtils.screen_metrix_width10 || dy > MetrixUtils.screen_metrix_height10)
+                    isExtended = true;
+            }
+            if (isExtended) {
+                // move all points
+                for (int i = this.pointsCount; i > 2; i--)
+                    if (points[i - 3] != null)
+                        points[i - 2] = points[i - 3];
+                points[1] = new Point((int) (x + p0.x) / 2, (int) (y + p0.y) / 2);
+                points[0] = new Point((int) x, (int) y);
+            } else {*/
+
+                // move all points
+                for (int i = this.pointsCount; i > 1; i--)
+                    if (points[i - 2] != null)
+                        points[i - 1] = points[i - 2];
+
+                points[0] = new Point(x, y); // TODO remove
+
+            //}
+        //}
+
+        return true;
+    }
+
+    public void reset() {
+        clearPath();
+        points = new Point[pointsCount];
+    }
+
+    private void clearPath() {
+        if (points != null) {
+            for (Point p : points)
+                p = null;
+        }
+        if (rayPath != null)
+            rayPath.reset();
+    }
+
+    //DrawingCellSign drawingCellSign = null;
+    /*public SignInfo onTouchUp() {
+        RaySign raySign = new RaySign(points);
+        SignInfo info = SignInfos.getFitSignInfo(raySign);
+        //drawingCellSign = info != null ? new DrawingCellSign(info, 0) : null;
+        return info;
+    }*/
+
+    public RaySign getRaySign() {
+        return new RaySign(points);
+    }
+
+    /*private Path getRayQuadPath() {
+        Path path = new Path();
+        Point p = points[0];
+        if (p != null) path.moveTo(p.x, p.y);
+        for (int i = 1; i < this.pointsCount; i++)
+            pathQuadTo(path, points[i-1], points[i]);
+        return path;
+    }
+
+    private void pathQuadTo(Path path, Point p0, Point p1) {
+        if (p0 != null && p1 != null) {
+            int x = (p0.x + p1.x) / 2;
+            int y = (p0.y + p1.y) / 2;
+            path.quadTo(p0.x, p0.y, x, y);
+        }
+    }*/
+
+    /*public void drawFrame(Canvas c, Paint p) {
+        c.drawPath(getRayQuadPath(), p);
+    }*/
+
+    public void drawFrame(Canvas c) {
+        p0 = points[0];
+        if (p0 != null) {
+            int xx = p0.x;
+            int yy = p0.y;
+            float paintWidth = maxPaintWidth;
+            boolean isDrawPath = true;
+            for (int i = 2; i < this.pointsCount; i++) {
+                paint.setStrokeWidth(paintWidth -= paintWidthDelta);
+                rayPath.moveTo(xx, yy);
+                p1 = points[i - 1];
+                if (p1 != null) { // && xx != p1.x && yy != p1.y) {
+                    p2 = points[i];
+                    if (p2 != null && p1.x != p2.x && p1.y != p2.y) {
+                        xx = (p1.x + p2.x) / 2;
+                        yy = (p1.y + p2.y) / 2;
+                        rayPath.quadTo(p1.x, p1.y, xx, yy);
+                    } else if (xx != p1.x && yy != p1.y) {
+                        xx = p1.x;
+                        yy = p1.y;
+                        rayPath.lineTo(xx, yy);
+                    }
+                } else
+                    isDrawPath = false;
+
+                if (isDrawPath)
+                    c.drawPath(rayPath, paint);
+                rayPath.reset();
+            }
+        }
+    }
+
+    /*private Point drawPoint;
+    public void drawFrame(Canvas c) {
+        //if (drawingCellSign != null)
+        //    drawingCellSign.drawFrame(c);
+        drawPoint = points[0];
+        float paintWidth = maxPaintWidth;
+        //paint.setStrokeCap(Paint.Cap.BUTT);
+        //paint.setStrokeCap(Paint.Cap.ROUND);
+        for (int i = 2; i < this.pointsCount; i++) {
+            paint.setStrokeWidth(paintWidth -= paintWidthDelta);
+            drawPoint = drawPoints(drawPoint, points[i - 1], points[i], c, paint);
+        }
+    }
+
+    private Path rayPath = new Path();
+    private Point daPoint;
+    private Point drawPoints(Point p0, Point p1, Point p2, Canvas c, Paint paint) {
+        if (p0 != null) {
+            //final Point daPoint;
+            //c.drawCircle(p0.x, p0.y, paint.getStrokeWidth() / 2f, paint1);
+            rayPath.moveTo(p0.x, p0.y);
+            if (p1 != null) {
+                if (p2 != null) {
+                    int x2 = (p1.x + p2.x) / 2;
+                    int y2 = (p1.y + p2.y) / 2;
+                    //c.drawCircle(x2, y2, paint.getStrokeWidth() / 2f, paint1);
+                    rayPath.quadTo(p1.x, p1.y, x2, y2);
+                    if (daPoint == null)
+                        daPoint = new Point(x2, y2);
+                    else {
+                        daPoint.x = x2;
+                        daPoint.y = y2;
+                    }
+                } else {
+                    //c.drawCircle(p1.x, p1.y, paint.getStrokeWidth() / 2f, paint1);
+                    rayPath.lineTo(p1.x, p1.y);
+                    daPoint = p1;
+                }
+            } else
+                daPoint = null;
+            c.drawPath(rayPath, paint);
+            rayPath.reset();
+            return daPoint;
+        }
+        return null;
+    }*/
+
+    public void recycle() {
+        clearPath();
+        rayPath = null;
+    }
+}
